@@ -2,9 +2,6 @@ package com.github.ddm4j.api.document.common.exception;
 
 /**
  * 参数校验失败枚举类
- * 
- * @author DDM
- *
  */
 public enum ParamCheckError {
 	/*

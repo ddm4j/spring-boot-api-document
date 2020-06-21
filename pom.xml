@@ -9,8 +9,9 @@
 	<artifactId>spring-boot-api-document</artifactId>
 	<name>spring-boot-api-document</name>
 	<version>2.1.0</version>
-	<!-- -SNAPSHOT -->
 	<packaging>jar</packaging>
+	<url>https://github.com/ddm4j/spring-boot-api-document</url>
+	<description>spring boot api document</description>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -182,6 +183,5 @@
 		</dependency>
 
 	</dependencies>
-
 
 </project>

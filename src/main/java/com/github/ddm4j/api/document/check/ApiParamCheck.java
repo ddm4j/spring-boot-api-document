@@ -25,10 +25,7 @@ import com.github.ddm4j.api.document.common.exception.ParamCheckException;
 import com.github.ddm4j.api.document.config.ApiDocumentConfig;
 
 /**
- * 校验值
- * 
- * @author DDM
- *
+ * 校验接口传递值
  */
 @Aspect
 @Component
@@ -41,8 +38,6 @@ public class ApiParamCheck {
 
 	/**
 	 * 全局校验
-	 * 
-	 * @author DDM 2019年11月27日
 	 * @param jp
 	 *            参数对象
 	 * @param apiParams
