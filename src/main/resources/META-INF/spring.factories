@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.github.ddm4j.api.document.config.ApiDocumentConfig
