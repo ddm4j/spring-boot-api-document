@@ -8,7 +8,7 @@
 	<groupId>com.github.ddm4j</groupId>
 	<artifactId>spring-boot-api-document</artifactId>
 	<name>spring-boot-api-document</name>
-	<version>2.1.1</version>
+	<version>2.2.1</version>
 	<packaging>jar</packaging>
 	<url>https://github.com/ddm4j/spring-boot-api-document</url>
 	<description>spring boot api document</description>
@@ -174,13 +174,13 @@
 			<optional>true</optional>
 		</dependency>
 
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>fastjson</artifactId>
 			<version>1.2.68</version>
 			<scope>provided</scope>
 			<optional>true</optional>
-		</dependency>
+		</dependency> -->
 
 	</dependencies>
 

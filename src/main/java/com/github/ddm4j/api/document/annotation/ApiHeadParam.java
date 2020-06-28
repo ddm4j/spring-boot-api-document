@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.TYPE })
 public @interface ApiHeadParam {
 	/**
 	 * 字段名
@@ -33,6 +33,27 @@ public @interface ApiHeadParam {
 	 * @return 是否必须
 	 */
 	public boolean required() default true;
+
+	/**
+	 * 正则表达式
+	 * 
+	 * @return 正则表达式
+	 */
+	public String regexp() default "";
+
+	/**
+	 * 最小长度，数值为 最小值
+	 * 
+	 * @return 最小值
+	 */
+	public int min() default -2147483648;
+
+	/**
+	 * 最大长度，数值为最大值
+	 * 
+	 * @return 最大值
+	 */
+	public int max() default 2147483647;
 
 	/**
 	 * 示例说明

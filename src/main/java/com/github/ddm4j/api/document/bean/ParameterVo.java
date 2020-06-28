@@ -4,17 +4,10 @@ import java.io.Serializable;
 
 public class ParameterVo extends ParamChildrenVo<ParameterVo> implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private String reg;
+	private String regexp;
 	private Integer min;
 	private Integer max;
-
-	public String getReg() {
-		return reg;
-	}
-
-	public void setReg(String reg) {
-		this.reg = reg;
-	}
+	private boolean url;
 
 	public Integer getMin() {
 		return min;
@@ -30,6 +23,22 @@ public class ParameterVo extends ParamChildrenVo<ParameterVo> implements Seriali
 
 	public void setMax(Integer max) {
 		this.max = max;
+	}
+
+	public String getRegexp() {
+		return regexp;
+	}
+
+	public void setRegexp(String regexp) {
+		this.regexp = regexp;
+	}
+
+	public boolean isUrl() {
+		return url;
+	}
+
+	public void setUrl(boolean url) {
+		this.url = url;
 	}
 
 }

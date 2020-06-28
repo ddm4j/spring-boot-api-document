@@ -1,8 +1,5 @@
 package com.github.ddm4j.api.document.controller;
 
-import java.util.List;
-
-import com.github.ddm4j.api.document.bean.ControllerVo;
 import com.github.ddm4j.api.document.bean.InterfaceJsonDoc;
 import com.github.ddm4j.api.document.utils.ScanControllerUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,15 +7,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.github.ddm4j.api.document.config.ApiDocumentConfig;
+import com.github.ddm4j.api.document.config.CheckConfig;
+import com.github.ddm4j.api.document.config.DocumentConfig;
 
 @Controller
 public class ApiDocumentController {
 
+	// @Autowired
+	// ApiDocumentConfig config;
 	@Autowired
-	ApiDocumentConfig config;
+	DocumentConfig config;
+	@Autowired
+	CheckConfig chConfig;
 
-	private List<ControllerVo> vos = null;
+	// private List<ControllerVo> vos = null;
 
 	/**
 	 * 获取数据
@@ -46,32 +48,32 @@ public class ApiDocumentController {
 			return doc;
 		}
 		// 未设置扫描包路径，等同为关闭
-		if (null == vos && (null == config.getController() || "".equals(config.getController().trim()))) {
+		if ((null == config.getPath() || "".equals(config.getPath().trim()))) {
 			// 文档关闭
 			doc.setCode(1001);
 			return doc;
 		}
 
-		if (config.isLogin()) {
+		if (config.getLogin().isEnable()) {
 			doc.setCode(2001);
-			if (null != config.getAccount() && !"".equals(config.getAccount().trim())) {
+			if (null != config.getLogin().getAccount() && !"".equals(config.getLogin().getAccount().trim())) {
 				if (null == account || "".equals(account.trim())) {
 					doc.setCode(3001);
 					return doc;
 				}
 
-				if (!account.trim().equals(config.getAccount().trim())) {
+				if (!account.trim().equals(config.getLogin().getAccount().trim())) {
 					return doc;
 				}
 			}
 
-			if (null != config.getPassword() && !"".equals(config.getPassword().trim())) {
+			if (null != config.getLogin().getPassword() && !"".equals(config.getLogin().getPassword().trim())) {
 				if (null == password || "".equals(password.trim())) {
 					doc.setCode(3001);
 					return doc;
 				}
 
-				if (!password.trim().equals(config.getPassword().trim())) {
+				if (!password.trim().equals(config.getLogin().getPassword().trim())) {
 					return doc;
 				}
 			}
@@ -79,23 +81,36 @@ public class ApiDocumentController {
 		// 权限都校验成功了
 		doc.setCode(1000);
 		// 判断是否扫描过了
-		if (null == vos) {
-			// 路径前缀处理
-			String path = config.getPath();
-			if (null != path && !"".equals(path)) {
-				if (!path.startsWith("/")) {
-					path = "/" + path;
-				}
-
-				if (path.endsWith("/") && path.length() > 2) {
-					path = path.substring(0, path.length() - 2);
-				}
+		// if (null == vos) {
+		// 路径前缀处理
+		String path = config.getContextPath();
+		if (null != path && !"".equals(path)) {
+			if (!path.startsWith("/")) {
+				path = "/" + path;
 			}
-			// 扫描
-			vos = ScanControllerUtil.scan(config.getController(), path);
-		}
 
-		doc.setControllers(vos);
+			if (path.endsWith("/") && path.length() > 2) {
+				path = path.substring(0, path.length() - 1);
+			}
+		}
+		// 前缀
+		String prefix = config.getPrefix();
+		if (null != prefix && !"".equals(prefix.trim())) {
+			if (!prefix.startsWith("/")) {
+				prefix = "/" + prefix;
+			}
+
+			if (prefix.endsWith("/") && path.length() > 2) {
+				prefix = prefix.substring(0, prefix.length() - 1);
+			}
+			path = prefix + path;
+		}
+		ScanControllerUtil util = new ScanControllerUtil(chConfig);
+		// 扫描
+		doc.setControllers(util.scan(config.getPath(), path));
+		// }
+
+		// doc.setControllers(vos);
 		return doc;
 	}
 }

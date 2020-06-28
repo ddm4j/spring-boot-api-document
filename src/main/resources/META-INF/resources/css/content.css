@@ -1,4 +1,4 @@
-/* 登录 */
+/* 鐧诲綍 */
 #login{
 	padding-top: 5%;
 	text-align: center;
@@ -80,14 +80,14 @@
 }
 
 
-/* 头 -------------------------------------------- */
+/* 澶� -------------------------------------------- */
 .menu-header{
     height: 50px;
     line-height: 50px;
 }
 
 
-/* 头部 */
+/* 澶撮儴 */
 .content-head .title {
     line-height: 60px;
     font-size: 28px;
@@ -113,7 +113,7 @@
     font-size: 14px;
 }
 
-/* controller 说明*/
+/* controller 璇存槑*/
 .content-controller {
     margin-left: 20px;
 }
@@ -124,7 +124,7 @@
     line-height: 40px;
 }
 
-/* 接口说明 */
+/* 鎺ュ彛璇存槑 */
 .content-interface {
     margin-left: 20px;
 }
@@ -148,7 +148,7 @@
     /*border: thin solid #555;*/
     border-radius: 25px;
     background-color: #88be04;
-    padding-left: 12px;
+    padding-left: 10px;
     padding-right: 10px;
     line-height: 40px;
     height: 40px;
@@ -156,7 +156,7 @@
 
 
 
-/* 表格 */
+/* 琛ㄦ牸 */
 .content-table {
     margin-left: 20px;
     margin-top: 10px;
@@ -196,7 +196,7 @@ table .reg{
 	width: 250px;
 }
 
-/* 页尾 */
+/* 椤靛熬 */
 .content-footer{
     position: fixed;
     bottom: 5px;
@@ -216,22 +216,22 @@ table .reg{
     color: #0b46ff;
 }
 
-/* 字段缩进标识颜色 */
+/* 瀛楁缂╄繘鏍囪瘑棰滆壊 */
 .param_love {
 	color: #88be04;
 	font-size: 20px;
 	font-weight: 700;
 }
-/* 是否必须： 是 的颜色 */
+/* 鏄惁蹇呴』锛� 鏄� 鐨勯鑹� */
 .required_true {
 	color: red
 }
-/* 是否必须：否 的颜色 */
+/* 鏄惁蹇呴』锛氬惁 鐨勯鑹� */
 .required_false {
 	
 }
 
-/* 复制按钮 */
+/* 澶嶅埗鎸夐挳 */
 .copy_btn{
 	margin-right: 20px;
     background-color: #39ef7e;

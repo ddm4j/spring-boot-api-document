@@ -32,7 +32,7 @@ public @interface ApiParam {
 	 * 
 	 * @return 正则校验
 	 */
-	public String reg() default "";
+	public String regexp() default "";
 
 	/**
 	 * 最小长度，数值为 最小值
@@ -54,4 +54,11 @@ public @interface ApiParam {
 	 * @return 示例说明
 	 */
 	public String describe() default "";
+
+	/**
+	 * 校验错误消息
+	 * 
+	 * @return 校验错误消息
+	 */
+	public String message() default "";
 }

@@ -7,18 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * PI请求头说明，限制只能用于Controller和方法上
+ * 用于标识 param bean, 用于方法参数上
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE })
-public @interface ApiHeader {
-
+@Target(ElementType.PARAMETER)
+public @interface ApiMark {
 	/**
-	 * 参数名，如果为空，不处理
+	 * 是否是 bean
 	 * 
-	 * @return 参数名
+	 * @return
 	 */
-	public ApiHeadParam[] value() default {};
-
+	public boolean value() default true;
 }

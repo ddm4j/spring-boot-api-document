@@ -1,7 +1,14 @@
 package com.github.ddm4j.api.document.check;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.aspectj.lang.JoinPoint;
@@ -13,16 +20,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestBody;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
+import com.github.ddm4j.api.document.annotation.ApiMark;
 import com.github.ddm4j.api.document.annotation.ApiParam;
 import com.github.ddm4j.api.document.annotation.ApiParams;
-import com.github.ddm4j.api.document.common.exception.ParamCheckError;
-import com.github.ddm4j.api.document.common.exception.ParamCheckException;
-import com.github.ddm4j.api.document.config.ApiDocumentConfig;
+import com.github.ddm4j.api.document.common.exception.ApiCheckError;
+import com.github.ddm4j.api.document.common.exception.ApiCheckException;
+import com.github.ddm4j.api.document.common.exception.bean.ApiCheckInfo;
+import com.github.ddm4j.api.document.config.CheckConfig;
+import com.github.ddm4j.api.document.config.bean.MessageBean;
 
 /**
  * 校验接口传递值
@@ -32,12 +38,13 @@ import com.github.ddm4j.api.document.config.ApiDocumentConfig;
 public class ApiParamCheck {
 
 	@Autowired
-	ApiDocumentConfig config;
+	CheckConfig config;
 	// 日志对象
 	static Logger logger = LoggerFactory.getLogger(ApiParamCheck.class);
 
 	/**
 	 * 全局校验
+	 * 
 	 * @param jp
 	 *            参数对象
 	 * @param apiParams
@@ -47,7 +54,7 @@ public class ApiParamCheck {
 	 */
 	@Before("execution(public * *(..)) && @annotation(apiParams)")
 	public void checkParam(JoinPoint jp, ApiParams apiParams) throws Exception {
-		if (null == config || !config.isCheck()) {
+		if (null == config || !config.isEnable()) {
 			// 未开校验
 			return;
 		}
@@ -63,246 +70,446 @@ public class ApiParamCheck {
 			return;
 		}
 		// 判断是不是JSON
-		boolean isJson = false;// 是否是JSON（也就是是否加了 @RequestBoty 注解）
-		Integer index = null;// 参数索引
+
 		MethodSignature signature = (MethodSignature) jp.getSignature();
+		// 获取参数参数名
+		LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
+		String[] names = u.getParameterNames(signature.getMethod());
+		// 获取参数上的注解
 		Annotation[][] parameterAnnotations = signature.getMethod().getParameterAnnotations();
+		// 循环处理取出
+		Map<String, Object> paramObjs = new HashMap<String, Object>();
 		for (int i = 0; i < parameterAnnotations.length; i++) {
 			for (Annotation annotation : parameterAnnotations[i]) {
-				if (annotation instanceof RequestBody) {
-					isJson = true;
-					index = i;
-					break;
+				if (annotation instanceof ApiMark) {
+					Object obj = jp.getArgs()[i];
+					paramObjs.put(names[i], obj);
 				}
 			}
-			if (isJson) {
-				break;
-			}
 		}
+		// 校验
+		checkParam(paramObjs, names, params);
+	}
 
-		if (isJson && index != null) {
-			// 是JSON, 取出第一个参数
-			Object param = jp.getArgs()[index];
-			if (null == param) {
-				for (ApiParam ap : apiParams.value()) {
-					if (ap.required() == true) {
-						throw new ParamCheckException(ap.field(), ParamCheckError.EMPTY, ap.describe(), "不能为空");
+	// 校验参数
+	public void checkParam(Map<String, Object> params, String[] names, ApiParam[] apiParams)
+			throws Exception, Exception {
+		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
+
+		for (ApiParam apiParam : apiParams) {
+			System.out.println("--1-- " + apiParam.field() + " - -------------------------------------- ");
+			boolean empty = true;
+			for (Entry<String, Object> param : params.entrySet()) {
+				System.out.println("--2-- " + param.getKey() + " --- " + param.getValue());
+				// 判断是否为空
+				if (null == param.getValue()) {
+					if (apiParam.field().equals(param.getKey())) {
+						empty = false;
+						System.out.println("--2-1-- ");
+						// 查询消息
+						MessageBean message = getMessage(apiParam);
+						ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
+						if (null != info) {
+							infos.add(info);
+						}
+					}
+				} else
+				// 判断是否是接口类型或是否是基本类型
+				if (param.getValue().getClass().isInterface()
+						|| Number.class.isAssignableFrom(param.getValue().getClass())
+						|| param.getValue().getClass() == String.class) {
+
+					if (apiParam.field().equals(param.getKey())) {
+						empty = false;
+						System.out.println("--3-1-- ");
+						// 查询消息
+						MessageBean message = getMessage(apiParam);
+						ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
+						if (null != info) {
+							infos.add(info);
+						}
+					} else {
+						continue;
+					}
+				} else {
+					System.out.println("--3-2-- ");
+					empty = false;
+					String[] keys = apiParam.field().split("\\.");
+					Field field = null;
+					Class<?> cla = param.getValue().getClass();
+					Object value = param.getValue();
+
+					boolean array = false;
+
+					for (int i = 0; i < keys.length; i++) {
+						String key = keys[i];
+						System.out.println("--3-1-2-- " + key + " cla --" + cla);
+						field = getField(cla, key);
+						if (null != field) {
+							if (i < keys.length - 1) {
+								//cla = field.getType();
+								field.setAccessible(true);
+								value = field.get(value);
+								cla = value.getClass();
+								
+								System.out.println("--3-1-value-- " + value);
+								// 针对集合处理
+								if (value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())
+										|| Set.class.isAssignableFrom(value.getClass())) {
+									array = true;
+									System.out.println("--3-1-array-- " + key + " cla --" + value);
+									// 查询消息
+									MessageBean message = getMessage(apiParam);
+									ApiCheckInfo info = checkParamArray(value, keys, i, apiParam, message);
+									if (null != info) {
+										infos.add(info);
+									}
+									break;
+								}
+							}
+						} else {
+							break;
+						}
+					}
+					// 集合在上面已经处理过了
+					if (array) {
+						continue;
+					}
+
+					if (null != field) {
+
+						// 设置可以访问私有属性
+						field.setAccessible(true);
+						value = field.get(value);
+						System.out.println("--3-1-3-- " + param.getKey() + " --- " + value);
+						// 查询消息
+						MessageBean message = getMessage(apiParam);
+						// 校验值
+						ApiCheckInfo info = checkValue(value, apiParam, message);
+						if (null != info) {
+							infos.add(info);
+						}
+
+					} else {
+						System.out.println("--3-1-4-- " + param.getKey() + " --- " + apiParam.field());
+						// 判断是不是同一个
+						if (param.getKey().trim().equals(apiParam.field().trim())) {
+							// 查询消息
+							MessageBean message = getMessage(apiParam);
+							ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
+							if (null != info) {
+								infos.add(info);
+							}
+						} else {
+							// 找不到对应key
+							logger.error("未找field:" + apiParam.field() + "  跳过校验");
+						}
+
 					}
 				}
-				return;
+				if (!config.isAll()) {
+					throw new ApiCheckException(infos);
+				}
+			}
+			// 循环完了，是否还是空的
+			if (empty && apiParam.required()) {
+				// 查询消息
+				MessageBean message = getMessage(apiParam);
+				infos.add(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired()));
+			}
+			if (!config.isAll()) {
+				throw new ApiCheckException(infos);
 			}
 
-			// 校验
-			checkByJson(param, params);
-		} else {
-			// 普通校验
-			LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
-			String[] names = u.getParameterNames(signature.getMethod());
-			for (int j = 0; j < names.length; j++) {
-				checkParam(jp.getArgs()[j], names[j], params);
-			}
 		}
+		if (infos.size() > 0) {
+			throw new ApiCheckException(infos);
+		}
+
 	}
 
-	/**
-	 * 获取对应的注解对象
-	 * 
-	 * @param params
-	 *            集合对象
-	 * @param name
-	 *            字段名
-	 * @return 注解对象
-	 */
-	private static ApiParam getParam(ApiParam[] params, String name) {
-		for (ApiParam apiParam : params) {
-			if (apiParam.field().equals(name)) {
-				return apiParam;
+	@SuppressWarnings("unchecked")
+	private ApiCheckInfo checkParamArray(Object value, String[] keys, int index, ApiParam apiParam, MessageBean message)
+			throws Exception {
+
+		if (value.getClass().isArray()) {
+			Object[] objs = (Object[]) value;
+			for (Object obj : objs) {
+				ApiCheckInfo info = checkFieldArrayValue(obj, keys, index, apiParam, message, obj);
+				if (null != info) {
+					return info;
+				}
+			}
+		} else if (List.class.isAssignableFrom(value.getClass())) {
+			List<Object> objs = (List<Object>) value;
+			for (Object obj : objs) {
+				ApiCheckInfo info = checkFieldArrayValue(obj, keys, index, apiParam, message, obj);
+				if (null != info) {
+					return info;
+				}
+			}
+		} else {
+			Set<Object> objs = (Set<Object>) value;
+			for (Object obj : objs) {
+				ApiCheckInfo info = checkFieldArrayValue(obj, keys, index, apiParam, message, obj);
+				if (null != info) {
+					return info;
+				}
+			}
+		}
+		return null;
+	}
+
+	private ApiCheckInfo checkFieldArrayValue(Object value, String[] keys, int index, ApiParam apiParam,
+			MessageBean message, Object obj) throws IllegalAccessException, Exception {
+		System.out.println("array 1---------- " + value);
+		Object value2 = value;
+		Field field = null;
+		for (int i = index + 1; i < keys.length; i++) {
+			System.out.println("array 2---------- " + keys[i]);
+			field = getField(obj.getClass(), keys[i]);
+			if (null != field) {
+				if (i < keys.length - 1) {
+					field.setAccessible(true);
+					value2 = field.get(obj);
+					if (value2.getClass().isArray() || List.class.isAssignableFrom(value2.getClass())
+							|| Set.class.isAssignableFrom(value2.getClass())) {
+						// 递归校验
+						ApiCheckInfo info = checkParamArray(value2, keys, i, apiParam, message);
+						if (null != info) {
+							return info;
+						}
+						// 不用在让下面校验了
+						field = null;
+					}
+				}
+			}
+		}
+		// 校验值
+		if (null != field) {
+			System.out.println("array end---------- " + value2);
+			field.setAccessible(true);
+			Object v = field.get(value2);
+			// 校验值
+			ApiCheckInfo info = checkValue(v, apiParam, message);
+			if (null != info) {
+				return info;
 			}
 		}
 		return null;
 	}
 
 	/**
-	 * 普通校验
+	 * 校验值
 	 * 
-	 * @param param
-	 *            参数对象
-	 * @param name
-	 *            名称
-	 * @param apiParams
+	 * @param value
+	 *            值
+	 * @param apiParam
 	 *            注解对象
-	 * @throws ParamCheckException
-	 *             校验异常
-	 * @throws Exception
-	 *             未知异常
 	 */
-	private static void checkParam(Object param, String name, ApiParam[] apiParams)
-			throws ParamCheckException, Exception {
-		ApiParam apiParam = null;
-		if (null == param) {
-			apiParam = getParam(apiParams, name);
+	private ApiCheckInfo checkValue(Object value, ApiParam apiParam, MessageBean bean) {
+
+		if (null == value) {
 			if (apiParam.required()) {
-				throw new ParamCheckException(apiParam.field(), ParamCheckError.EMPTY, apiParam.describe(), "不能为空");
+				return getCheckInfo(apiParam, ApiCheckError.EMPTY, bean.getRequired());
 			}
-			return;
+			return null;
 		}
+		if (value.getClass().isInterface()) {
+			// 判断是不是接口类型，接口类型只判断是为空
+			if (apiParam.required()) {
+				return getCheckInfo(apiParam, ApiCheckError.EMPTY, bean.getRequired());
+			}
+		} else if (Number.class.isAssignableFrom(value.getClass())) {
+			// 数字类型
+			Double dou = Double.parseDouble(value.toString());
 
-		Integer checkType = checkParamType(param);
-
-		switch (checkType) {
-		case 1:// object;
-				// SpringBoot 不能直接接收该类型的数据
-			break;
-		case 2:// Number Or String
-			apiParam = getParam(apiParams, name);
-
-			// 判断是不是，是不是，只用来描述，是直接跳过
-			if (null == apiParam || (apiParam.required() == false && "".equals(apiParam.reg())
-					&& apiParam.max() == 2147483647 && apiParam.min() == -2147483648)) {
-				return;
+			if (dou < apiParam.min()) {
+				return getCheckInfo(apiParam, ApiCheckError.MIN, bean.getMin());
 			}
 
-			checkJsonValue(param, apiParam);
-
-			break;
-		case 3:// Array
-			apiParam = getParam(apiParams, name);
-
-			// 判断是不是，是不是，只用来描述，是直接跳过
-			if (null == apiParam || (apiParam.required() == false && "".equals(apiParam.reg())
-					&& apiParam.max() == 2147483647 && apiParam.min() == -2147483648)) {
-				return;
+			if (dou > apiParam.max()) {
+				return getCheckInfo(apiParam, ApiCheckError.MAX, bean.getMax());
+			}
+			String regexp = getRegexp(apiParam.regexp());
+			if (!isEmpty(regexp) && !value.toString().matches(regexp)) {
+				return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
 			}
 
-			Object[] objs = exArray(param);
-			if (null != objs && objs.length > 0) {
-				for (Object object : objs) {
-					checkJsonValue(object, apiParam);
+		} else if (value.getClass() == String.class) {
+			String str = value.toString().trim();
+
+			if (str.length() < apiParam.min()) {
+				return getCheckInfo(apiParam, ApiCheckError.MIN, bean.getMin());
+			}
+
+			if (str.length() > apiParam.max()) {
+				return getCheckInfo(apiParam, ApiCheckError.MAX, bean.getMax());
+			}
+
+			// 字符串类型
+			String regexp = getRegexp(apiParam.regexp());
+			if (!isEmpty(regexp) && !str.matches(regexp)) {
+				return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
+			}
+
+		} else
+		// 判断是不是 list
+		if (List.class.isAssignableFrom(value.getClass())) {
+			@SuppressWarnings("unchecked")
+			List<Object> values = (List<Object>) value;
+			for (Object obj : values) {
+				ApiCheckInfo info = checkValue(obj, apiParam, bean);
+				if (null != info) {
+					return info;
 				}
 			}
-			break;
-		case 4:// List
-				// SpringBoot 不能直接接收该类型的数据
-			break;
-		case 5:// Set
-				// SpringBoot 不能直接接收该类型的数据
-			break;
-		case 6:// 自定义
-			checkByJson(param, apiParams);
-			break;
-		}
-
-	}
-
-	/**
-	 * 提取集合
-	 * 
-	 * @param param
-	 *            对象
-	 * @return 集合对象
-	 */
-	private static Object[] exArray(Object param) {
-		if (param instanceof Object[]) {
-			return (Object[]) param;
-		} else if (param instanceof int[]) {
-			int[] ints = (int[]) param;
-
-			Object[] objs = new Integer[ints.length];
-			if (ints.length > 0) {
-				for (int i = 0; i < ints.length; i++) {
-					Integer temp = ints[i];
-					objs[i] = temp;
+		} else
+		// 判断是不是 set
+		if (Set.class.isAssignableFrom(value.getClass())) {
+			@SuppressWarnings("unchecked")
+			Set<Object> values = (Set<Object>) value;
+			for (Object obj : values) {
+				ApiCheckInfo info = checkValue(obj, apiParam, bean);
+				if (null != info) {
+					return info;
 				}
 			}
-			return objs;
-		} else if (param instanceof byte[]) {
-			byte[] ints = (byte[]) param;
-
-			Object[] objs = new Integer[ints.length];
-			if (ints.length > 0) {
-				for (int i = 0; i < ints.length; i++) {
-					Byte temp = ints[i];
-					objs[i] = temp;
+		} else
+		// 判断是不是数组
+		if (value.getClass().isArray()) {
+			Object[] values = (Object[]) value;
+			for (Object obj : values) {
+				ApiCheckInfo info = checkValue(obj, apiParam, bean);
+				if (null != info) {
+					return info;
 				}
 			}
-			return objs;
-		} else if (param instanceof short[]) {
-			short[] ints = (short[]) param;
-
-			Object[] objs = new Integer[ints.length];
-			if (ints.length > 0) {
-				for (int i = 0; i < ints.length; i++) {
-					Short temp = ints[i];
-					objs[i] = temp;
+		} else
+		// 判断是不是日期类型
+		if (Date.class.isAssignableFrom(value.getClass())) {
+			String regexp = getRegexp(apiParam.regexp());
+			if (!isEmpty(regexp)) {
+				SimpleDateFormat sdf = null;
+				String key = apiParam.regexp();
+				if (key.startsWith("${") && key.endsWith("}") && key.length() > 3) {
+					key = key.substring(2, key.length() - 1);
+				} else {
+					// 判断是否自定义了 格式化方式
+					if (isEmpty(config.getDateFormat())) {
+						key = "default";
+					} else {
+						key = "custom";
+					}
 				}
-			}
-			return objs;
-		} else if (param instanceof long[]) {
-			long[] ints = (long[]) param;
+				try {
+					switch (key) {
+					case "custom":
+						sdf = new SimpleDateFormat("yyyy-MM-dd HH");
+						break;
+					case "date":
+						sdf = new SimpleDateFormat("yyyy-MM-dd");
+						break;
+					case "date_M":
+						sdf = new SimpleDateFormat("yyyy-MM");
+						break;
+					case "date_Md":
+						sdf = new SimpleDateFormat("MM-dd");
+						break;
+					case "time":
+						sdf = new SimpleDateFormat("HH:mm:ss");
+						break;
+					case "time_Hm":
+						sdf = new SimpleDateFormat("HH:mm");
+						break;
+					case "time_ms":
+						sdf = new SimpleDateFormat("mm:ss");
+						break;
+					case "dateTime_Hm":
+						sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+						break;
+					case "dateTime_H":
+						sdf = new SimpleDateFormat("yyyy-MM-dd HH");
+						break;
+					default:
+						sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+						break;
+					}
+					Date date = (Date) value;
 
-			Object[] objs = new Integer[ints.length];
-			if (ints.length > 0) {
-				for (int i = 0; i < ints.length; i++) {
-					Long temp = ints[i];
-					objs[i] = temp;
-				}
-			}
-			return objs;
-		} else if (param instanceof double[]) {
-			double[] ints = (double[]) param;
+					String str = sdf.format(date);
 
-			Object[] objs = new Integer[ints.length];
-			if (ints.length > 0) {
-				for (int i = 0; i < ints.length; i++) {
-					Double temp = ints[i];
-					objs[i] = temp;
-				}
-			}
-			return objs;
-		} else if (param instanceof float[]) {
-			float[] ints = (float[]) param;
+					if (!str.matches(regexp)) {
+						return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
+					}
 
-			Object[] objs = new Integer[ints.length];
-			if (ints.length > 0) {
-				for (int i = 0; i < ints.length; i++) {
-					Float temp = ints[i];
-					objs[i] = temp;
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
+
 			}
-			return objs;
+		} else {
+			// System.out.println(value.getClass());
+			// System.out.println("null");
+			// 未找到,非基本数据类型或String类型只能校验是否为空
 		}
 		return null;
 	}
 
-	/**
-	 * 检查类型
-	 * 
-	 * @param obj
-	 *            对象
-	 * @return 1 Object 2 Number Or String 3 Array 4 List 5 Set 6 自定义
-	 */
-
-	public static int checkParamType(Object obj) {
-		// 判断是不是基本类型或 String类型
-		if (obj.getClass().getTypeName().equals(Object.class.getTypeName())) {
-			// Object 类型
-			return 1;
-		} else if (Number.class.isAssignableFrom(obj.getClass()) || obj.getClass() == String.class) {
-			// 基本类型
-			return 2;
-		} else if (obj.getClass().isArray()) {
-			// 数组
-			return 3;
-		} else if (List.class.isAssignableFrom(obj.getClass())) {
-			// List 集合
-			return 4;
-		} else if (Set.class.isAssignableFrom(obj.getClass())) {
-			// Set 集合
-			return 5;
-		} else {
-			// 自定义类
-			return 6;
+	// 获致正则表达式
+	private String getRegexp(String regexp) {
+		if (isEmpty(regexp)) {
+			return null;
 		}
+		if (regexp.startsWith("${") && regexp.endsWith("}")) {
+			String key = regexp.substring(2, regexp.length() - 1);
+			String reg = config.getRegexps().get(key);
+			if (isEmpty(reg)) {
+				logger.error("参数校验：" + regexp + " 正则表达式,不存在");
+				return null;
+			}
+			return reg;
+		}
+		return regexp;
+	}
+
+	// 获取错误消息
+	private MessageBean getMessage(ApiParam apiParam) {
+		MessageBean bean = null;
+		if (!isEmpty(apiParam.message())) {
+
+			bean = config.getMessages().get(apiParam.message());
+		}
+
+		if (null == bean) {
+			bean = config.getMessages().get("default");
+		}
+		return bean;
+	}
+
+	// 生成校验详情
+	private ApiCheckInfo getCheckInfo(ApiParam apiParam, ApiCheckError error, String message) {
+		ApiCheckInfo info = new ApiCheckInfo();
+		info.setDescribe(apiParam.describe());
+		info.setError(error);
+		info.setField(apiParam.field());
+		info.setMessage(message);
+		return info;
+	}
+
+	// 获取属性
+	public static Field getField(Class<?> cla, String key) {
+		Field field = null;
+		try {
+			field = cla.getDeclaredField(key);
+		} catch (NoSuchFieldException ex) {
+
+		}
+		// 没有找到，就去父级找
+		if (null == field && Object.class != cla.getSuperclass()) {
+			return getField(cla.getSuperclass(), key);
+		}
+		return field;
 	}
 
 	/**
@@ -318,141 +525,4 @@ public class ApiParamCheck {
 		}
 		return false;
 	}
-
-	/**
-	 * 开始 json 校验
-	 * 
-	 * @param param
-	 *            检查对象
-	 * @param apiParams
-	 *            注解集合
-	 * @throws Exception
-	 *             检验失败对象
-	 */
-	public static void checkByJson(Object param, ApiParam[] apiParams) throws Exception {
-		JSONObject json = JSON.parseObject(JSON.toJSONString(param));
-		// 根据注解集合来循环
-		for (ApiParam apiParam : apiParams) {
-			// 判断是不是，是不是，只用来描述，是直接跳过
-			if (null == apiParam || (apiParam.required() == false && "".equals(apiParam.reg())
-					&& apiParam.max() == 2147483647 && apiParam.min() == -2147483648)) {
-				continue;
-			}
-			// 分割字段key
-			String[] keys = apiParam.field().split("\\.");
-			// 校验
-			takenJsonValue(json, keys, 0, apiParam);
-		}
-	}
-
-	/**
-	 * 校验值
-	 * 
-	 * @param json
-	 *            转成 json 后的对象
-	 * @param keys
-	 *            提取注解后的 key
-	 * @param index
-	 *            索引，可能会递归校验
-	 * @param param
-	 *            要校验的注解对象
-	 */
-	private static void takenJsonValue(JSONObject json, String[] keys, int index, ApiParam param) {
-		// 判断是否为空
-		if (!json.containsKey(keys[index]) || null == json.get(keys[index])) {
-			if (param.required()) {
-				throw new ParamCheckException(param.field(), ParamCheckError.EMPTY, param.describe(), "不能为空");
-			}
-			return;
-		}
-
-		if (index + 1 < keys.length) {
-			// key 不存在，跳过
-			if (!json.containsKey(keys[index])) {
-				return;
-			}
-			Object obj = json.get(keys[index]);
-			if (obj.getClass().isArray() || obj instanceof List<?>) {
-				JSONArray array = json.getJSONArray(keys[index]);
-				for (int i = 0; i < array.size(); i++) {
-
-					takenJsonValue(array.getJSONObject(i), keys, index + 1, param);
-				}
-			} else {
-				takenJsonValue(json.getJSONObject(keys[index]), keys, index + 1, param);
-			}
-		} else {
-			// key 不存在，跳过
-			if (!json.containsKey(keys[index])) {
-				return;
-			}
-			Object value = json.get(keys[index]);
-			if (value.getClass().isArray() || value instanceof List<?>) {
-				JSONArray array = json.getJSONArray(keys[index]);
-				for (int i = 0; i < array.size(); i++) {
-					checkJsonValue(array.get(i), param);
-				}
-			} else {
-				checkJsonValue(value, param);
-			}
-		}
-	}
-
-	/**
-	 * 校验值
-	 * 
-	 * @param value
-	 *            值
-	 * @param apiParam
-	 *            注解对象
-	 */
-	private static void checkJsonValue(Object value, ApiParam apiParam) {
-		if (Number.class.isAssignableFrom(value.getClass())) {
-			// 数字类型
-			Double dou = Double.parseDouble(value.toString());
-
-			if (dou < apiParam.min()) {
-				throw new ParamCheckException(apiParam.field(), ParamCheckError.MIN, apiParam.describe(),
-						"不能低于" + apiParam.min());
-			}
-
-			if (dou > apiParam.max()) {
-				throw new ParamCheckException(apiParam.field(), ParamCheckError.MAX, apiParam.describe(),
-						"不能高于" + apiParam.max());
-			}
-
-			if (!isEmpty(apiParam.reg())) {
-				if (!value.toString().matches(apiParam.reg())) {
-					throw new ParamCheckException(apiParam.field(), ParamCheckError.REGULAR, apiParam.describe(),
-							"正则校验失败");
-				}
-			}
-
-		} else if (value.getClass() == String.class) {
-			String str = value.toString().trim();
-
-			if (str.length() < apiParam.min()) {
-				throw new ParamCheckException(apiParam.field(), ParamCheckError.MIN, apiParam.describe(),
-						"长度不能低于" + apiParam.min());
-			}
-
-			if (str.length() > apiParam.max()) {
-				throw new ParamCheckException(apiParam.field(), ParamCheckError.MAX, apiParam.describe(),
-						"长度不能高于" + apiParam.max());
-			}
-
-			// 字符串类型
-			if (!isEmpty(apiParam.reg())) {
-				if (!str.matches(apiParam.reg())) {
-					throw new ParamCheckException(apiParam.field(), ParamCheckError.REGULAR, apiParam.describe(),
-							"正则校验失败");
-				}
-			}
-
-		} else {
-			// 未找到
-			logger.error("参数校验：field: " + apiParam.field() + " 不是基本类型或其封装类型，不能校验");
-		}
-	}
-
 }

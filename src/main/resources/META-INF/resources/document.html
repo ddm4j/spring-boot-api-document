@@ -171,6 +171,9 @@ body {
 								<th class="type">类型</th>
 								<th class="required">必填</th>
 								<th class="left">示例说明</th>
+								<th class="reg">正则校验</th>
+								<th class="length">最小</th>
+								<th class="length">最大</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -185,6 +188,9 @@ body {
 									class="required_true">是</span> <span v-if="!item.required"
 									class="required_false">否</span></td>
 								<td class="left">{{item.describe}}</td>
+								<td class="reg">{{item.regexp}}</td>
+								<td class="length">{{item.min}}</td>
+								<td class="length">{{item.max}}</td>
 							</tr>
 						</tbody>
 					</table>
@@ -202,15 +208,12 @@ body {
 						<thead>
 							<tr>
 								<th class="left field">字段</th>
-
 								<th class="type">类型</th>
 								<th class="required">必填</th>
 								<th class="left">示例说明</th>
 								<th class="reg">正则校验</th>
 								<th class="length">最小</th>
 								<th class="length">最大</th>
-
-
 							</tr>
 						</thead>
 						<tbody>
@@ -218,7 +221,9 @@ body {
 							<!-- 第一层 -->
 							<tr>
 								<td class="left field"><input type="button"
-									@Click="copyStr(item.field)" class="copy_btn" value="复制">{{item.field}}
+									@Click="copyStr(item.field)" class="copy_btn" value="复制">
+									<span v-if="item.url" class="tag">GET</span>
+									{{item.field}}
 								</td>
 
 								<td class="type">{{item.type}}</td>
@@ -226,11 +231,9 @@ body {
 									class="required_true">是</span> <span v-if="!item.required"
 									class="required_false">否</span></td>
 								<td class="left">{{item.describe}}</td>
-								<td class="reg">{{item.reg}}</td>
+								<td class="reg">{{item.regexp}}</td>
 								<td class="length">{{item.min}}</td>
 								<td class="length">{{item.max}}</td>
-
-
 							</tr>
 							<template v-if="item.children" v-for="item2 in item.children">
 							<!-- 第二层 -->
@@ -244,11 +247,9 @@ body {
 									class="required_true">是</span> <span v-if="!item2.required"
 									class="required_false">否</span></td>
 								<td class="left">{{item2.describe}}</td>
-								<td class="reg">{{item2.reg}}</td>
+								<td class="reg">{{item2.regexp}}</td>
 								<td class="length">{{item2.min}}</td>
 								<td class="length">{{item2.max}}</td>
-
-
 							</tr>
 							<template v-if="item2.children" v-for="item3 in item2.children">
 							<!-- 第三层 -->
@@ -264,7 +265,7 @@ body {
 									class="required_true">是</span> <span v-if="!item3.required"
 									class="required_false">否</span></td>
 								<td class="left">{{item3.describe}}</td>
-								<td class="reg">{{item3.reg}}</td>
+								<td class="reg">{{item3.regexp}}</td>
 								<td class="length">{{item3.min}}</td>
 								<td class="length">{{item3.max}}</td>
 							</tr>
@@ -282,7 +283,7 @@ body {
 									class="required_true">是</span> <span v-if="!item4.required"
 									class="required_false">否</span></td>
 								<td class="left">{{item4.describe}}</td>
-								<td class="reg">{{item4.reg}}</td>
+								<td class="reg">{{item4.regexp}}</td>
 								<td class="length">{{item4.min}}</td>
 								<td class="length">{{item4.max}}</td>
 							</tr>
@@ -372,7 +373,7 @@ body {
 		</div>
 		<!-- 页尾 -->
 		<div class="content-footer">
-			<span class="title">GitHub:&nbsp;&nbsp;<a href="https://github.com/ddm4j/spring-boot-api-document" target="_blank"> DDM - Springboot API document - V2.1</a></span>
+			<span class="title">GitHub:&nbsp;&nbsp;<a href="https://github.com/ddm4j/spring-boot-api-document" target="_blank"> DDM - Springboot API document - V2.2</a></span>
 <!--			<span class="version">V1.1</span>-->
 		</div>
 		
