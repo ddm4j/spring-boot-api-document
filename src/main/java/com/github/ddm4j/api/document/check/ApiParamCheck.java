@@ -97,15 +97,16 @@ public class ApiParamCheck {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
-			System.out.println("--1-- " + apiParam.field() + " - -------------------------------------- ");
+			// System.out.println("--1-- " + apiParam.field() + " -
+			// -------------------------------------- ");
 			boolean empty = true;
 			for (Entry<String, Object> param : params.entrySet()) {
-				System.out.println("--2-- " + param.getKey() + " --- " + param.getValue());
+				// System.out.println("--2-- " + param.getKey() + " --- " + param.getValue());
 				// 判断是否为空
 				if (null == param.getValue()) {
 					if (apiParam.field().equals(param.getKey())) {
 						empty = false;
-						System.out.println("--2-1-- ");
+						// System.out.println("--2-1-- ");
 						// 查询消息
 						MessageBean message = getMessage(apiParam);
 						ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
@@ -121,7 +122,7 @@ public class ApiParamCheck {
 
 					if (apiParam.field().equals(param.getKey())) {
 						empty = false;
-						System.out.println("--3-1-- ");
+						// System.out.println("--3-1-- ");
 						// 查询消息
 						MessageBean message = getMessage(apiParam);
 						ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
@@ -132,7 +133,7 @@ public class ApiParamCheck {
 						continue;
 					}
 				} else {
-					System.out.println("--3-2-- ");
+					// System.out.println("--3-2-- ");
 					empty = false;
 					String[] keys = apiParam.field().split("\\.");
 					Field field = null;
@@ -143,21 +144,21 @@ public class ApiParamCheck {
 
 					for (int i = 0; i < keys.length; i++) {
 						String key = keys[i];
-						System.out.println("--3-1-2-- " + key + " cla --" + cla);
+						// System.out.println("--3-1-2-- " + key + " cla --" + cla);
 						field = getField(cla, key);
 						if (null != field) {
 							if (i < keys.length - 1) {
-								//cla = field.getType();
+								// cla = field.getType();
 								field.setAccessible(true);
 								value = field.get(value);
 								cla = value.getClass();
-								
-								System.out.println("--3-1-value-- " + value);
+
+								// System.out.println("--3-1-value-- " + value);
 								// 针对集合处理
 								if (value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())
 										|| Set.class.isAssignableFrom(value.getClass())) {
 									array = true;
-									System.out.println("--3-1-array-- " + key + " cla --" + value);
+									// System.out.println("--3-1-array-- " + key + " cla --" + value);
 									// 查询消息
 									MessageBean message = getMessage(apiParam);
 									ApiCheckInfo info = checkParamArray(value, keys, i, apiParam, message);
@@ -181,7 +182,7 @@ public class ApiParamCheck {
 						// 设置可以访问私有属性
 						field.setAccessible(true);
 						value = field.get(value);
-						System.out.println("--3-1-3-- " + param.getKey() + " --- " + value);
+						// System.out.println("--3-1-3-- " + param.getKey() + " --- " + value);
 						// 查询消息
 						MessageBean message = getMessage(apiParam);
 						// 校验值
@@ -191,7 +192,8 @@ public class ApiParamCheck {
 						}
 
 					} else {
-						System.out.println("--3-1-4-- " + param.getKey() + " --- " + apiParam.field());
+						// System.out.println("--3-1-4-- " + param.getKey() + " --- " +
+						// apiParam.field());
 						// 判断是不是同一个
 						if (param.getKey().trim().equals(apiParam.field().trim())) {
 							// 查询消息
@@ -262,11 +264,11 @@ public class ApiParamCheck {
 
 	private ApiCheckInfo checkFieldArrayValue(Object value, String[] keys, int index, ApiParam apiParam,
 			MessageBean message, Object obj) throws IllegalAccessException, Exception {
-		System.out.println("array 1---------- " + value);
+		// System.out.println("array 1---------- " + value);
 		Object value2 = value;
 		Field field = null;
 		for (int i = index + 1; i < keys.length; i++) {
-			System.out.println("array 2---------- " + keys[i]);
+			// System.out.println("array 2---------- " + keys[i]);
 			field = getField(obj.getClass(), keys[i]);
 			if (null != field) {
 				if (i < keys.length - 1) {
@@ -287,7 +289,7 @@ public class ApiParamCheck {
 		}
 		// 校验值
 		if (null != field) {
-			System.out.println("array end---------- " + value2);
+			// System.out.println("array end---------- " + value2);
 			field.setAccessible(true);
 			Object v = field.get(value2);
 			// 校验值
@@ -477,7 +479,14 @@ public class ApiParamCheck {
 	private MessageBean getMessage(ApiParam apiParam) {
 		MessageBean bean = null;
 		if (!isEmpty(apiParam.message())) {
-
+			String key = apiParam.message();
+			if (key.startsWith("${") && key.endsWith("}")) {
+				if (key.length() <= 3) {
+					key = "default";
+				} else {
+					key = key.substring(2, key.length() - 1);
+				}
+			}
 			bean = config.getMessages().get(apiParam.message());
 		}
 
@@ -520,7 +529,7 @@ public class ApiParamCheck {
 	 * @return 结果： true 为空 ,false 不为空
 	 */
 	public static boolean isEmpty(String str) {
-		if (null == str || "".equals(str)) {
+		if (null == str || "".equals(str.trim())) {
 			return true;
 		}
 		return false;

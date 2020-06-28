@@ -36,16 +36,9 @@ public @interface ApiMethod {
 	public String author() default "";
 
 	/**
-	 * 版本，默认V1.0
+	 * 版本，默认V1.0.0
 	 * 
 	 * @return 版本
 	 */
-	public String version() default "V1.0";
-
-	/**
-	 * 设置不能要扫描的请求参数
-	 * 
-	 * @return 隐藏参数
-	 */
-	public String[] hides() default {};
+	public String version() default "V1.0.0";
 }
