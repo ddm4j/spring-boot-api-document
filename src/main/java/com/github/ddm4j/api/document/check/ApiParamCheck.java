@@ -405,42 +405,41 @@ public class ApiParamCheck {
 					}
 				}
 				try {
-					switch (key) {
-					case "custom":
-						sdf = new SimpleDateFormat("yyyy-MM-dd HH");
-						break;
-					case "date":
-						sdf = new SimpleDateFormat("yyyy-MM-dd");
-						break;
-					case "date_M":
-						sdf = new SimpleDateFormat("yyyy-MM");
-						break;
-					case "date_Md":
-						sdf = new SimpleDateFormat("MM-dd");
-						break;
-					case "time":
-						sdf = new SimpleDateFormat("HH:mm:ss");
-						break;
-					case "time_Hm":
-						sdf = new SimpleDateFormat("HH:mm");
-						break;
-					case "time_ms":
-						sdf = new SimpleDateFormat("mm:ss");
-						break;
-					case "dateTime_Hm":
-						sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-						break;
-					case "dateTime_H":
-						sdf = new SimpleDateFormat("yyyy-MM-dd HH");
-						break;
-					default:
+					// 区分是否是自定义，或默认
+					if("custom".equals(key)) {
+						sdf = new SimpleDateFormat(config.getDateFormat());
+					}else if(key.startsWith("default")) {
+						// 默认
 						sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-						break;
+					}else if(key.startsWith("time")) {
+						if(key.endsWith("Hm")) {
+							sdf = new SimpleDateFormat("HH:mm");
+						}else if(key.endsWith("ms")) {
+							sdf = new SimpleDateFormat("mm:ss");
+						}else {
+							sdf = new SimpleDateFormat("HH:mm:ss");
+						}
+					}else if(key.startsWith("dateTime")) {
+						if(key.endsWith("Hm")) {
+							sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+						}else if(key.endsWith("H")) {
+							sdf = new SimpleDateFormat("yyyy-MM-dd HH");
+						}else {
+							sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+						}
+					}else {
+						if(key.endsWith("M")) {
+							sdf = new SimpleDateFormat("yyyy-MM");
+						}else if(key.endsWith("Md")) {
+							sdf = new SimpleDateFormat("MM-dd");
+						}else {
+							sdf = new SimpleDateFormat("yyyy-MM-dd");
+						}
 					}
+					
 					Date date = (Date) value;
 
 					String str = sdf.format(date);
-
 					if (!str.matches(regexp)) {
 						return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
 					}

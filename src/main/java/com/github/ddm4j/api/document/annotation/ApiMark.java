@@ -13,10 +13,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 public @interface ApiMark {
-	/**
-	 * 是否是 bean
-	 * 
-	 * @return
-	 */
-	public boolean value() default true;
+
 }
