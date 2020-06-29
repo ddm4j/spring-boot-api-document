@@ -7,11 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 限制只能用于方法上，用来表示该方法请求不需要请求头
+ * 用来表示该方法请求不需要请求头
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target({ ElementType.METHOD, ElementType.TYPE })
 public @interface ApiHeaderCancel {
-
+	/**
+	 * 要隐藏展示请求头的字段，为空，代表取消全部。
+	 * 
+	 * @return
+	 */
+	public String[] value() default "";
 }

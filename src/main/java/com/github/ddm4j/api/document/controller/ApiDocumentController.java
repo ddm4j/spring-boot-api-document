@@ -13,14 +13,10 @@ import com.github.ddm4j.api.document.config.DocumentConfig;
 @Controller
 public class ApiDocumentController {
 
-	// @Autowired
-	// ApiDocumentConfig config;
 	@Autowired
 	DocumentConfig config;
 	@Autowired
 	CheckConfig chConfig;
-
-	// private List<ControllerVo> vos = null;
 
 	/**
 	 * 获取数据
@@ -80,8 +76,6 @@ public class ApiDocumentController {
 		}
 		// 权限都校验成功了
 		doc.setCode(1000);
-		// 判断是否扫描过了
-		// if (null == vos) {
 		// 路径前缀处理
 		String path = config.getContextPath();
 		if (null != path && !"".equals(path)) {
@@ -105,12 +99,9 @@ public class ApiDocumentController {
 			}
 			path = prefix + path;
 		}
-		ScanControllerUtil util = new ScanControllerUtil(chConfig);
+		ScanControllerUtil util = new ScanControllerUtil(chConfig, config);
 		// 扫描
 		doc.setControllers(util.scan(config.getPath(), path));
-		// }
-
-		// doc.setControllers(vos);
 		return doc;
 	}
 }

@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.springframework.beans.BeanUtils;
@@ -13,19 +14,21 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.ddm4j.api.document.annotation.ApiController;
-import com.github.ddm4j.api.document.annotation.ApiHeadParam;
-import com.github.ddm4j.api.document.annotation.ApiHeader;
 import com.github.ddm4j.api.document.annotation.ApiHeaderCancel;
 import com.github.ddm4j.api.document.bean.ControllerVo;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
 import com.github.ddm4j.api.document.config.CheckConfig;
+import com.github.ddm4j.api.document.config.DocumentConfig;
+import com.github.ddm4j.api.document.config.bean.RequestHeaderBean;
 
 public class ScanControllerUtil {
 	CheckConfig config;
+	DocumentConfig documentConfig;
 
-	public ScanControllerUtil(CheckConfig config) {
+	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig) {
 		this.config = config;
+		this.documentConfig = documentConfig;
 	}
 
 	public List<ControllerVo> scan(String packagePath, String base_path) {
@@ -41,6 +44,9 @@ public class ScanControllerUtil {
 
 		MethodRequestUtil requestUtil = new MethodRequestUtil(config);
 		MethodResponseUtil responseUtil = new MethodResponseUtil();
+
+		// 提取上的请求头信息
+		List<HeadVo> headVosConfig = extractHeaderInfo();
 		// 循环操作
 		for (Class<?> cla : classList) {
 
@@ -50,9 +56,9 @@ public class ScanControllerUtil {
 			}
 			// 提取Controller基本信息
 			ControllerVo cvo = extractControllerInfo(cla, base_path);
-			// 提取Controller 上的请求头信息
-			List<HeadVo> headVos = extractHeaderInfo(cla);
-			// System.out.println("提取Controller：" + cla.getName());
+			// 处理取消请求头信息
+			List<HeadVo> headVos = handleHeaderCancel(headVosConfig, cla.getAnnotation(ApiHeaderCancel.class));
+
 			// 提取方法
 			List<InterfaceVo> interfaces = null;
 			Method[] methods = cla.getMethods();
@@ -63,16 +69,11 @@ public class ScanControllerUtil {
 					if (null != ivo) {
 
 						// 提取方法上的请求头信息
-						ApiHeaderCancel headerCancel = method.getAnnotation(ApiHeaderCancel.class);
-						if (null == headerCancel) {
-							if (null != headVos && headVos.size() > 0) {
-								for (HeadVo head : headVos) {
-									if (null == ivo.getHeads()) {
-										ivo.setHeads(new ArrayList<HeadVo>());
-									}
-									ivo.getHeads().add(head);
-								}
-							}
+						List<HeadVo> methodVos = handleHeaderCancel(headVos,
+								method.getAnnotation(ApiHeaderCancel.class));
+
+						if (null != methodVos) {
+							handleMethodHander(ivo, methodVos);
 						}
 
 						// 提取方法上的返回值
@@ -131,6 +132,56 @@ public class ScanControllerUtil {
 
 		return controllers;
 	}
+	
+	// 处理方法上的请求头
+	private void handleMethodHander(InterfaceVo ivo, List<HeadVo> methodVos) {
+		if (null != methodVos && methodVos.size() > 0) {
+			for (HeadVo head : methodVos) {
+
+				if (null == ivo.getHeads()) {
+					ivo.setHeads(new ArrayList<HeadVo>());
+				}
+				boolean isOk = true;
+				for (HeadVo vo : ivo.getHeads()) {
+					if (vo.getField().equals(head.getField())) {
+						isOk = false;
+						break;
+					}
+				}
+				if (isOk) {
+					ivo.getHeads().add(head);
+				}
+
+			}
+		}
+	}
+
+	// 处理取消请求头
+	private List<HeadVo> handleHeaderCancel(List<HeadVo> headVosConfig, ApiHeaderCancel headerCancel) {
+		if (null == headerCancel) {
+			return headVosConfig;
+		}
+		List<HeadVo> headVos = new ArrayList<HeadVo>();
+		if (headerCancel.value().length == 1) {
+			// 为空，取消全部
+			if (!FieldUtil.isEmpty(headerCancel.value()[0])) {
+				// 不为空，取消指定的
+				for (HeadVo headVo : headVosConfig) {
+					boolean isOk = true;
+					for (String key : headerCancel.value()) {
+						if (key.equals(headVo.getField())) {
+							isOk = false;
+							break;
+						}
+					}
+					if (isOk) {
+						headVos.add(headVo);
+					}
+				}
+			}
+		}
+		return headVos;
+	}
 
 	/**
 	 * 提取类上面的请求头信息
@@ -138,50 +189,24 @@ public class ScanControllerUtil {
 	 * @param cla
 	 * @return
 	 */
-	private static List<HeadVo> extractHeaderInfo(Class<?> cla) {
-		ApiHeader ah = cla.getAnnotation(ApiHeader.class);
-		List<HeadVo> headVos = null;
-		if (null != ah) {
-			ApiHeadParam[] ahps = ah.value();
-			if (null != ahps && ahps.length > 0) {
-				headVos = new ArrayList<HeadVo>();
-				for (ApiHeadParam ap : ahps) {
-					HeadVo head = new HeadVo();
+	private List<HeadVo> extractHeaderInfo() {
+		List<HeadVo> headVos = new ArrayList<HeadVo>();
 
-					head.setField(ap.value());
-					head.setRequired(ap.required());
-					head.setType(ap.type());
-					head.setDescribe(ap.describe());
-					head.setRegexp(ap.regexp());
-					head.setMax(2147483647 == ap.max() ? null : ap.max());
-					head.setMin(-2147483648 == ap.min() ? null : ap.min());
-					
-					// 保存到列表
-					headVos.add(head);
-				}
+		for (Entry<String, RequestHeaderBean> bean : documentConfig.getHeader().entrySet()) {
+			HeadVo vo = new HeadVo();
+
+			vo.setField(bean.getKey());
+			if (null != bean.getValue()) {
+				vo.setDescribe(bean.getValue().getDescribe());
+				vo.setMax(bean.getValue().getMax());
+				vo.setMin(bean.getValue().getMin());
+				vo.setRegexp(bean.getValue().getRegexp());
+				vo.setRequired(bean.getValue().getRequired());
+				vo.setType(bean.getValue().getType());
 			}
+			headVos.add(vo);
 		}
 
-		ApiHeadParam ap = cla.getAnnotation(ApiHeadParam.class);
-		if (null != ap) {
-
-			if (null == headVos) {
-				headVos = new ArrayList<HeadVo>();
-			}
-
-			HeadVo head = new HeadVo();
-			head.setDescribe(ap.describe());
-			head.setField(ap.value());
-
-			head.setRequired(ap.required());
-			head.setType(ap.type());
-			head.setRegexp(ap.regexp());
-			
-			head.setMax(2147483647 == ap.max() ? null : ap.max());
-			head.setMin(-2147483648 == ap.min() ? null : ap.min());
-			
-			headVos.add(head);
-		}
 		return headVos;
 	}
 

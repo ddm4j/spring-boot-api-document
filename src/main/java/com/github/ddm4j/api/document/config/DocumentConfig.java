@@ -1,10 +1,14 @@
 package com.github.ddm4j.api.document.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import com.github.ddm4j.api.document.config.bean.LoginBean;
+import com.github.ddm4j.api.document.config.bean.RequestHeaderBean;
 
 /**
  * 文档配置
@@ -26,6 +30,8 @@ public class DocumentConfig {
 	private String describe;
 	// 登录配置
 	private LoginBean login;
+	// 请求头配置
+	private Map<String, RequestHeaderBean> header = new HashMap<String, RequestHeaderBean>();
 
 	// 获取统一路径
 	@Value("${server.servlet.context-path:}")
@@ -93,6 +99,14 @@ public class DocumentConfig {
 
 	public void setContextPath(String contextPath) {
 		this.contextPath = contextPath;
+	}
+
+	public Map<String, RequestHeaderBean> getHeader() {
+		return header;
+	}
+
+	public void setHeader(Map<String, RequestHeaderBean> header) {
+		this.header = header;
 	}
 
 }
