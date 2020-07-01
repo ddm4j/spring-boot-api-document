@@ -29,7 +29,7 @@ public class ApiDocumentController {
 	 * 
 	 */
 	@ResponseBody
-	@RequestMapping("/api/document")
+	@RequestMapping("/ddm4j/document")
 	public InterfaceJsonDoc document(String account, String password) {
 		// 数据返回对象
 		InterfaceJsonDoc doc = new InterfaceJsonDoc();
@@ -88,17 +88,17 @@ public class ApiDocumentController {
 			}
 		}
 		// 前缀
-		String prefix = config.getPrefix();
-		if (null != prefix && !"".equals(prefix.trim())) {
-			if (!prefix.startsWith("/")) {
-				prefix = "/" + prefix;
-			}
-
-			if (prefix.endsWith("/") && path.length() > 2) {
-				prefix = prefix.substring(0, prefix.length() - 1);
-			}
-			path = prefix + path;
-		}
+		// String prefix = config.getPrefix();
+		// if (null != prefix && !"".equals(prefix.trim())) {
+		// if (!prefix.startsWith("/")) {
+		// prefix = "/" + prefix;
+		// }
+		//
+		// if (prefix.endsWith("/") && path.length() > 2) {
+		// prefix = prefix.substring(0, prefix.length() - 1);
+		// }
+		// path = prefix + path;
+		// }
 		ScanControllerUtil util = new ScanControllerUtil(chConfig, config);
 		// 扫描
 		doc.setControllers(util.scan(config.getPath(), path));

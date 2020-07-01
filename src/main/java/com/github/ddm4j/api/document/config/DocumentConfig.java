@@ -21,7 +21,7 @@ public class DocumentConfig {
 	// 扫描路径
 	private String path;
 	// 前缀
-	private String prefix;
+	// private String prefix;
 	// 项目名称
 	private String name;
 	// 项目版本
@@ -53,13 +53,13 @@ public class DocumentConfig {
 		this.path = path;
 	}
 
-	public String getPrefix() {
-		return prefix;
-	}
-
-	public void setPrefix(String prefix) {
-		this.prefix = prefix;
-	}
+	// public String getPrefix() {
+	// return prefix;
+	// }
+	//
+	// public void setPrefix(String prefix) {
+	// this.prefix = prefix;
+	// }
 
 	public String getName() {
 		return name;

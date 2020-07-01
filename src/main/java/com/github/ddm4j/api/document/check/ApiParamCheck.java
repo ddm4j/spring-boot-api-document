@@ -134,7 +134,7 @@ public class ApiParamCheck {
 					}
 				} else {
 					// System.out.println("--3-2-- ");
-					empty = false;
+					
 					String[] keys = apiParam.field().split("\\.");
 					Field field = null;
 					Class<?> cla = param.getValue().getClass();
@@ -157,6 +157,7 @@ public class ApiParamCheck {
 								// 针对集合处理
 								if (value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())
 										|| Set.class.isAssignableFrom(value.getClass())) {
+									empty = false;
 									array = true;
 									// System.out.println("--3-1-array-- " + key + " cla --" + value);
 									// 查询消息
@@ -178,7 +179,7 @@ public class ApiParamCheck {
 					}
 
 					if (null != field) {
-
+						empty = false;
 						// 设置可以访问私有属性
 						field.setAccessible(true);
 						value = field.get(value);
@@ -196,6 +197,7 @@ public class ApiParamCheck {
 						// apiParam.field());
 						// 判断是不是同一个
 						if (param.getKey().trim().equals(apiParam.field().trim())) {
+							empty = false;
 							// 查询消息
 							MessageBean message = getMessage(apiParam);
 							ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
@@ -203,8 +205,7 @@ public class ApiParamCheck {
 								infos.add(info);
 							}
 						} else {
-							// 找不到对应key
-							logger.error("未找field:" + apiParam.field() + "  跳过校验");
+							
 						}
 
 					}
@@ -218,6 +219,9 @@ public class ApiParamCheck {
 				// 查询消息
 				MessageBean message = getMessage(apiParam);
 				infos.add(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired()));
+			}else if(empty) {
+				// 找不到对应key
+				logger.error("未找field:" + apiParam.field() + "  跳过校验");
 			}
 			if (!config.isAll()) {
 				throw new ApiCheckException(infos);

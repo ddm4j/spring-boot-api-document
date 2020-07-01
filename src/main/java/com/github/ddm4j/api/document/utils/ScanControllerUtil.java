@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +28,8 @@ public class ScanControllerUtil {
 	CheckConfig config;
 	DocumentConfig documentConfig;
 
+	Logger logger = LoggerFactory.getLogger(ScanControllerUtil.class);
+	
 	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig) {
 		this.config = config;
 		this.documentConfig = documentConfig;
@@ -36,7 +40,7 @@ public class ScanControllerUtil {
 		Set<Class<?>> classList = ClassUtil.getClasses(packagePath);
 
 		if (null == classList || classList.size() == 0) {
-			System.out.println("没有找到：" + packagePath);
+			logger.error("没有找到 Controller 路径：" + packagePath);
 			return null;
 		}
 
