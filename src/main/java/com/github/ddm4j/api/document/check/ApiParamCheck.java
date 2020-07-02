@@ -217,6 +217,7 @@ public class ApiParamCheck {
 			// 循环完了，是否还是空的
 			if (empty && apiParam.required()) {
 				// 查询消息
+				logger.error("未找到 field:" + apiParam.field());
 				MessageBean message = getMessage(apiParam);
 				infos.add(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired()));
 			}else if(empty) {

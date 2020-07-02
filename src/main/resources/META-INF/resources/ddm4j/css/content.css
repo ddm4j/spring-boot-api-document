@@ -1,0 +1,276 @@
+/* 登录 */
+#login{
+	padding-top: 5%;
+	text-align: center;
+	text-transform: uppercase;
+	
+	font-family: 'Montserrat', sans-serif;
+	text-rendering : optimizeLegibility;
+	-webkit-font-smoothing : antialiased;
+}
+
+
+.login {
+	width: 600px;
+	height: 500px;
+	background-color: #fff;
+	padding-top: 30px;
+	
+	padding-left: 50px;
+	padding-right: 50px;
+	
+	margin: 0 auto;
+}
+
+.login h1 {
+	margin-top: 30px;
+	font-weight: bold;
+	font-size: 60px;
+	letter-spacing: 3px;
+}
+
+.login form {
+	max-width: 420px;
+	margin: 30px auto;
+}
+
+.login .btn {
+	border-radius: 50px;
+	text-transform: uppercase;
+	font-weight: bold;
+	letter-spacing: 2px;
+	font-size: 20px;
+	padding: 14px;
+	background-color: #00B72E;
+	margin-top: 20px;
+	
+	width: 100%;
+	border: 0px;
+}
+
+.form-group input {
+	font-size: 20px;
+	font-weight: lighter;
+	border: none;
+	background-color: #F0F0F0;
+	color: #465347!important;
+	padding: 26px 30px;
+	border-radius: 50px;
+	transition : 0.2s;
+	
+	height: 60px;
+	width: 100%;
+	margin-bottom: 20px;
+}
+
+
+.forgot-password {
+	text-align: right;
+	float: right;
+	font-weight: bold;
+}
+
+.forgot-password a {
+	color: #00B72E;
+	opacity: 0.6;
+}
+
+.forgot-password a:hover {
+	opacity: 1;
+}
+
+
+/* 正文 -------------------------------------------- */
+.menu-header{
+    height: 50px;
+    line-height: 50px;
+}
+
+
+/* controller  */
+.content-head .title {
+    line-height: 60px;
+    font-size: 28px;
+    margin-left: 30px;
+}
+.content-head .head-system {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    line-height: 60px;
+    text-align: center;
+    font-size: 20px;
+    /*margin: 0 auto;*/
+}
+
+.content-head .desc {
+    position: absolute;
+    top: 0;
+    right: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* controller 容器*/
+.content-controller {
+    margin-left: 20px;
+}
+
+.content-controller .controller-title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 40px;
+}
+
+/* 接口描述 */
+.content-interface {
+    margin-left: 20px;
+}
+
+.content-interface .interface-title {
+    font-size: 16px;
+    font-weight: 700;
+    /* line-height: 40px; */
+}
+.content-interface .interface-uri {
+    line-height: 25px;
+}
+.interface-uri {
+	margin-top: 3px;	
+}
+.content-interface .other{
+    margin-right: 30px;
+}
+
+.tag{
+    /*border: thin solid #555;*/
+    border-radius: 25px;
+    background-color: #88be04;
+    padding-left: 10px;
+    padding-right: 10px;
+    line-height: 40px;
+    height: 40px;
+}
+
+
+
+/* table */
+.content-table {
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.content-table .title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 40px;
+}
+
+.content-table .desc {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+table .field{
+	width: 350px;
+}
+
+table .type{
+	width: 200px;
+}
+
+table .left{
+    text-align: left;
+}
+
+table .required{
+	width: 100px;
+}
+table .length{
+	width: 150px;
+}
+
+table .reg{
+	width: 250px;
+}
+
+/* 页脚 */
+.content-footer{
+    position: fixed;
+    bottom: 5px;
+    margin-top: 30px;
+    height: 60px;
+    width: 98%;
+    background-color: rgba(43, 43, 43, 0.25);
+    text-align: center;
+    line-height: 60px;
+}
+
+.content-footer .title{
+    font-size: 20px;
+    color: #4e4949;
+}
+.content-footer .version{
+    color: #0b46ff;
+}
+
+/* 嵌套符号 */
+.param_love {
+	color: #88be04;
+	font-size: 20px;
+	font-weight: 700;
+}
+/* 是否必须颜色*/
+.required_true {
+	color: red
+}
+/*是否必须颜色 */
+.required_false {
+	
+}
+
+/* 复制按钮 */
+.copy_btn{
+	margin-right: 20px;
+    background-color: #39ef7e;
+    color: white;
+    outline: none;
+    border: none;
+    border-radius: 4px;
+    line-height: 30px;
+    padding: 0px 20px;
+    font-size: 22px;
+    font-family: cursive;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.my_tip{
+	position: fixed;
+	top:70px;
+	width: 99%;
+}
+
+.copy_tip{
+	
+	/* left: 45%; */
+	color: white;
+	border-radius: 5px;
+	
+	margin: 0 auto;
+	width: 500px;
+	line-height:40px;
+	padding-left:40px;
+	padding-right:40px;
+	text-align:center;
+	background-color: #62e49f;
+}
+
+.tip_error{
+	background-color: #ff0000;
+}
+
+
+

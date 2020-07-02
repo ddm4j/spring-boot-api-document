@@ -1,0 +1,576 @@
+﻿<!DOCTYPE html>
+<html lang="cn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>DDM接口文档工具</title>
+<!-- CSS 导入 -->
+<link href="css/jquery-accordion-menu.css" rel="stylesheet"
+	type="text/css" />
+<link href="css/font-awesome.css" rel="stylesheet" type="text/css" />
+<link href="css/content-table.css" rel="stylesheet" type="text/css" />
+<link href="css/content.css" rel="stylesheet" type="text/css" />
+
+<style type="text/css">
+* {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
+
+body {
+	background: #f0f0f0;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+}
+#vue_app{
+	width: 100%;
+	padding-left: 1%;
+	padding-right: 1%;
+}
+.content {
+	width: 100%;
+	height: 100%;
+	margin: 0 auto;
+}
+
+/* 输入框 */
+.filterinput {
+	background-color: rgba(249, 244, 244, 0);
+	border-radius: 15px;
+	width: 90%;
+	height: 30px;
+	border: thin solid #555;
+	text-indent: 0.5em;
+	font-weight: bold;
+	color: #4e4949;
+}
+
+/*菜单列表*/
+#menu-list a {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	white-space: nowrap;
+	width: 100%;
+}
+
+.content-head {
+	width: 100%;
+	height: 60px;
+	background-color: #88be04;
+	position: relative;
+}
+
+.content-menu {
+	width: 260px;
+	height: 100%;
+}
+
+.content-right {
+	margin-left: 260px;
+	width: calc(100% - 260px);
+	height: 100%;
+	margin-bottom: 80px;
+}
+</style>
+<!-- JS 导入 -->
+<script src="js/jquery-1.11.2.min.js" type="text/javascript"></script>
+<script src="js/vue.min.js" type="text/javascript"></script>
+<script src="js/jquery-accordion-menu.js" type="text/javascript"></script>
+<script src="js/clipboard.min.js" type="text/javascript"></script>
+</head>
+<body>
+	<div id="vue_app">
+		
+		
+		<div class="content-head">
+			<div class="title">DDM4J API Document</div>
+			<div class="head-system">{{system}}</div>
+			<div class="desc">
+				<div>{{(version==null || version == '')?"V1.0":version}}</div>
+				<div v-if="describe && describe != ''">{{describe}}</div>
+			</div>
+		</div>
+		<!-- 登录 -->
+		<div v-if="!login"  class="container" id="login">
+          	<div class="login">
+	        	<h1>Login</h1>
+              	<div class="form-group">
+                	<input type="email" v-model="account" placeholder="account">
+              	</div>
+              	<div class="form-group">
+                	<input type="password" v-model="password" placeholder="password">
+              	</div>
+              	<input type="button" @Click="loadData" value="Sign in" class="btn btn-lg btn-block btn-success">
+    		</div>
+		</div>
+		<!-- 正文 -->
+		<div class="content" v-if="login">
+			<!-- 菜单 -->
+			<div class="content-menu">
+				<div id="jquery-accordion-menu" class="jquery-accordion-menu white">
+					<div class="jquery-accordion-menu-header" id="form">
+						<input class="filterinput" type="text" v-model="scan_str"
+							v-on:input="sacn()">
+					</div>
+					<ul id="menu-list">
+						<li v-for="item,index in interfaceDatas" v-show="!item.hide"><a
+							href="#">{{item.name}} </a>
+							<ul class="submenu">
+								<li v-for="interface in item.interfaces"
+									v-show="!interface.hide" @click="myClickOne(item,interface)">
+									<a href="#">{{interface.name}}<br> {{interface.uri}}
+								</a>
+								</li>
+							</ul></li>
+					</ul>
+				</div>
+			</div>
+			<!-- 正文内容 -->
+			<div class="content-right">
+				<!-- controller 说明 -->
+				<div class="content-controller">
+					<div class="controller-title">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;{{selectionController.controller}}</div>
+					<div class="controller-version">
+						<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}};&nbsp;&nbsp;</span>
+						版本：{{selectionController.version}}
+					</div>
+					<!-- <div class="controller-uri" v-if="selectionController.uri">请求路径:
+						&nbsp;&nbsp;{{selectionController.uri}}</div> -->
+					<div class="controller-desc" v-if="selectionController.describe">描述说明：&nbsp;&nbsp;{{selectionController.describe}}</div>
+				</div>
+				<hr>
+				<!-- 接口说明 -->
+				<div class="content-interface">
+					<div class="interface-title">{{selectionInterface.name}}&nbsp;:&nbsp;&nbsp;{{selectionInterface.version}}</div>
+					<div class="interface-uri">
+						请求路径: <span class="interface-method tag"
+							v-show="selectionInterface.method">{{selectionInterface.method}}</span>
+						&nbsp;&nbsp;{{selectionInterface.uri}} <input type="button"
+							@Click="copyStr(selectionInterface.uri)" class="copy_btn"
+							style="margin-left: 20px;" value="复制">
+					</div>
+					<div class="controller-desc" v-if="selectionInterface.describe">描述说明：&nbsp;&nbsp;{{selectionInterface.describe}}</div>
+					<div class="other" v-if="selectionInterface.author">
+						<span class="interface-author">作者：&nbsp;&nbsp;{{selectionInterface.author}}</span>
+					</div>
+				</div>
+				<!-- 请求头 -->
+				<div class="content-table"
+					v-if="selectionInterface.heads && selectionInterface.heads.length > 0">
+					<div class="title">Headers：请求头</div>
+					<table class="bordered">
+						<thead>
+							<tr>
+								<th class="left field">字段</th>
+
+								<th class="type">类型</th>
+								<th class="required">必填</th>
+								<th class="left">示例说明</th>
+								<th class="reg">正则校验</th>
+								<th class="length">最小</th>
+								<th class="length">最大</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="item in selectionInterface.heads">
+								<td class="left field"><input type="button"
+									@Click="copyStr(item.field)" class="copy_btn" value="复制">
+									{{item.field}}</td>
+								</td>
+
+								<td class="type">{{item.type}}</td>
+								<td class="required"><span v-if="item.required"
+									class="required_true">是</span> <span v-if="!item.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item.describe}}</td>
+								<td class="reg">{{item.regexp}}</td>
+								<td class="length">{{item.min}}</td>
+								<td class="length">{{item.max}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<!-- 请求参数 -->
+				<div class="content-table"
+					v-if="selectionInterface.parameters && selectionInterface.parameters.length > 0">
+					<div class="title">
+						Params：请求参数&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
+							v-show="selectionInterface.json">JSON</span> <span class="tag"
+							v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; <span
+							class="tag" v-show="selectionInterface.paramArray">Array</span>
+					</div>
+					<table class="bordered">
+						<thead>
+							<tr>
+								<th class="left field">字段</th>
+								<th class="type">类型</th>
+								<th class="required">必填</th>
+								<th class="left">示例说明</th>
+								<th class="reg">正则校验</th>
+								<th class="length">最小</th>
+								<th class="length">最大</th>
+							</tr>
+						</thead>
+						<tbody>
+							<template v-for="item in selectionInterface.parameters">
+							<!-- 第一层 -->
+							<tr>
+								<td class="left field"><input type="button"
+									@Click="copyStr(item.field)" class="copy_btn" value="复制">
+									<span v-if="item.url" class="tag">GET</span>
+									{{item.field}}
+								</td>
+
+								<td class="type">{{item.type}}</td>
+								<td class="required"><span v-if="item.required"
+									class="required_true">是</span> <span v-if="!item.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item.describe}}</td>
+								<td class="reg">{{item.regexp}}</td>
+								<td class="length">{{item.min}}</td>
+								<td class="length">{{item.max}}</td>
+							</tr>
+							<template v-if="item.children" v-for="item2 in item.children">
+							<!-- 第二层 -->
+							<tr>
+								<td class="left field"><input type="button"
+									@Click="copyStr(item2.field)" class="copy_btn" value="复制">
+									<span class="param_love">-></span>&nbsp;{{item2.field}}</td>
+
+								<td class="type">{{item2.type}}</td>
+								<td class="required"><span v-if="item2.required"
+									class="required_true">是</span> <span v-if="!item2.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item2.describe}}</td>
+								<td class="reg">{{item2.regexp}}</td>
+								<td class="length">{{item2.min}}</td>
+								<td class="length">{{item2.max}}</td>
+							</tr>
+							<template v-if="item2.children" v-for="item3 in item2.children">
+							<!-- 第三层 -->
+							<tr>
+								<td class="left field"><input type="button"
+									@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
+									class="param_love">->&nbsp;</span><span class="param_love" style="color: #9c27b0;">->&nbsp;</span>{{item3.field}}</td>
+								<td class="type">{{item3.type}}</td>
+								<td class="required"><span v-if="item3.required"
+									class="required_true">是</span> <span v-if="!item3.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item3.describe}}</td>
+								<td class="reg">{{item3.regexp}}</td>
+								<td class="length">{{item3.min}}</td>
+								<td class="length">{{item3.max}}</td>
+							</tr>
+							<!-- 第四层 -->
+							<tr v-if="item3.children" v-for="item4 in item3.children">
+								<td class="left field"><input type="button"
+									@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
+									class="param_love">->&nbsp;<span class="param_love" style="color: #9c27b0;">->&nbsp;</span>
+										<span class="param_love" style="color: red;">->&nbsp;</span>
+								</span>{{item4.field}}</td>
+
+
+								<td class="type">{{item4.type}}</td>
+								<td class="required"><span v-if="item4.required"
+									class="required_true">是</span> <span v-if="!item4.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item4.describe}}</td>
+								<td class="reg">{{item4.regexp}}</td>
+								<td class="length">{{item4.min}}</td>
+								<td class="length">{{item4.max}}</td>
+							</tr>
+							</template> </template> </template>
+						</tbody>
+					</table>
+				</div>
+				<!-- 返回数据 -->
+				<div class="content-table">
+					<div class="title">
+						Response：返回数据&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
+							v-show="selectionInterface.responseMethod">{{selectionInterface.responseMethod}}</span>
+					</div>
+					<table class="bordered">
+						<thead>
+							<tr>
+								<th class="left field">字段</th>
+
+								<th class="type">类型</th>
+								<th class="required">必填</th>
+								<th class="left">示例说明</th>
+							</tr>
+						</thead>
+						<tbody>
+							<template v-for="item in selectionInterface.responses">
+							<!-- 第一层 -->
+							<tr>
+								<td class="left field"><input type="button"
+									@Click="copyStr(item.field)" class="copy_btn" value="复制">{{item.field}}</td>
+
+								<td class="type">{{item.type}}</td>
+								<td class="required"><span v-if="item.required"
+									class="required_true">是</span> <span v-if="!item.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item.describe}}</td>
+							</tr>
+							<template v-if="item.children" v-for="item2 in item.children">
+							<!-- 第二层 -->
+							<tr>
+								<td class="left" field><input type="button"
+									@Click="copyStr(item2.field)" class="copy_btn" value="复制">
+									<span class="param_love">->&nbsp;</span> {{item2.field}}</td>
+
+								<td class="type">{{item2.type}}</td>
+								<td class="required"><span v-if="item2.required"
+									class="required_true">是</span> <span v-if="!item2.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item2.describe}}</td>
+							</tr>
+							<template v-if="item2.children" v-for="item3 in item2.children">
+							<!-- 第三层 -->
+							<tr>
+								<td class="left field"><input type="button"
+									@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
+									class="param_love">->&nbsp; <span
+										style="color: #9c27b0;">-></span> &nbsp;
+								</span>{{item3.field}}</td>
+
+								<td class="type">{{item3.type}}</td>
+								<td class="required"><span v-if="item3.required"
+									class="required_true">是</span> <span v-if="!item3.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item3.describe}}</td>
+							</tr>
+							<!-- 第四层 -->
+							<tr v-if="item3.children" v-for="item4 in item3.children">
+								<td class="left field"><input type="button"
+									@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
+									class="param_love">->&nbsp; <span
+										style="color: #9c27b0;">-></span> &nbsp;<span
+										style="color: red;">-></span> &nbsp;
+								</span>{{item4.field}}</td>
+
+								<td class="type">{{item4.type}}</td>
+								<td class="required"><span v-if="item4.required"
+									class="required_true">是</span> <span v-if="!item4.required"
+									class="required_false">否</span></td>
+								<td class="left">{{item4.describe}}</td>
+							</tr>
+							</template> </template> </template>
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+			
+		</div>
+		<!-- 页尾 -->
+		<div class="content-footer">
+			<span class="title">GitHub:&nbsp;&nbsp;<a href="https://github.com/ddm4j/spring-boot-api-document" target="_blank"> DDM - Springboot API document - V2.2</a></span>
+<!--			<span class="version">V1.1</span>-->
+		</div>
+		
+		<div class="my_tip">
+			<div class="copy_tip" v-show="copy_tip">已复制到剪切板：{{copy_str}}</div>
+		</div>
+		<div class="my_tip">
+			<div class="copy_tip tip_error"  v-show="login_tip">{{login_str}}</div>
+		</div>
+		
+		
+	</div>
+	<script>
+	
+    var vm = new Vue({
+        el: '#vue_app',
+        data: {
+            system:"DDM API Document",
+            version:"V1.0",
+            describe:"高效,快速，免费的接口文档工具",
+            // 复制提示
+            copy_str:"",
+            copy_tip:false,
+            // 登录提示
+            login_tip: false,
+            login_str: "",
+            // 账号密码
+            account: null,
+            password: null,
+            // 是否登录
+            login: false,
+            // 是否初始化
+            is_init: true,
+            // 是否启用
+            enable: true,
+            // 接口数据
+            interfaceDatas: [
+                {name: "a"},
+                {name: "b"}
+            ],
+            selectionController: {},// 选择的Controller
+            selectionInterface: {},// 选择的接口
+            scan_str: "",
+        },
+
+        created(){
+            var that = this;
+            that.loadData();
+        },
+        methods: {
+        	copyStr(str){
+        		var that = this;
+        		this.copy_str = str;
+        		this.copy_tip = true;
+        		// 倒计时，消失
+        		setTimeout(function(){
+        			that.copy_tip = false;
+        		},3000)
+        		
+        		 var clipboard = new Clipboard('.copy_btn', {
+                     text: function() {
+                         return str;
+                     }
+                 });
+             		clipboard.on('success', function(e) {
+                     console.log(e);
+                 });
+
+                 clipboard.on('error', function(e) {
+                     console.log(e);
+                 });
+        	},
+        	// 输入框搜索事件
+        	sacn: function(e){
+        		var that = this;
+        		console.log(that.scan_str)
+        		
+        		for(var i=0;i<this.interfaceDatas.length;i++){
+        			var hide = true;
+        			
+        			for(var j=0;j<this.interfaceDatas[i].interfaces.length;j++){
+        				var hideSub = true;
+        				if(this.interfaceDatas[i].interfaces[j].name.toLowerCase().indexOf(this.scan_str.toLowerCase()) != -1){
+        					hide = false;
+        					hideSub = false;
+        				}else if(this.interfaceDatas[i].interfaces[j].uri.toLowerCase().indexOf(this.scan_str.toLowerCase()) != -1){
+        					hide = false;
+        					hideSub = false;
+        				}
+        				this.interfaceDatas[i].interfaces[j].hide = hideSub;
+        			}
+        			if(hide){
+        				if(this.interfaceDatas[i].name.toLowerCase().indexOf(this.scan_str.toLowerCase()) != -1){
+        					hide = false;
+        				}
+        			}
+        			this.interfaceDatas[i].hide = hide;
+        		}
+        		
+        	},
+        	// 初始化加载数据
+            loadData: function () {
+                var that = this;
+                
+                // 加载数据
+                $.ajax(
+                        {
+                            url: "document",
+                            type: "post",
+                            data: {
+                            	account: that.account,
+                            	password: that.password
+                            },
+                            success: function (data) {
+                                console.log("收到数据：", data);
+                               
+                                if(data.name){
+                                	that.system = data.name;
+                                }
+                               	if(data.version){
+                               	 	that.version = data.version;
+                               	}
+                               	if(data.describe){
+                               		that.describe = data.describe;
+                               	}
+                                
+                                if (1000 == data.code) {
+                                	
+                                	that.login = true;
+                                	
+                                    // datas = data.content;
+                                    //console.log("请求成功,开始加载数据", data.content);
+                                    that.interfaceDatas = data.controllers;
+                                    // 延时初始化插件，由使用 jQuery 菜单，所以要延时
+                                    
+                                    that.selectionController = data.controllers[0];
+                                    that.selectionInterface = data.controllers[0].interfaces[0];
+                                    
+                                    
+
+                                    setTimeout(function () {
+                                        jQuery("#jquery-accordion-menu").jqueryAccordionMenu();
+                                        //绑定顶部导航切换
+                                        $("#menu-list li").on("click", function () {
+                                            $("#menu-list li.active").removeClass("active");
+                                            $(this).addClass("active");
+                                        });
+                                    }, 500)
+
+                                }else if(2001 == data.code){
+                                	
+                                	if(that.is_init){
+                                		that.login = false;
+                                	}else{
+                                    	that.login_tip = true;
+                                    	that.login_str = "账号或密码错误，请重新输入！";
+                            			
+                            			setTimeout(function(){
+                                			that.login_tip = false;
+                                		},3000)
+                                	}
+                                	
+                                }else if(3001 == data.code){
+                                	if(that.is_init){
+                                		that.login = false;
+                                	}else{
+	                                	that.login_tip = true;
+	                                	that.login_str = "账号或密码不能为空！";
+	                        			
+	                        			setTimeout(function(){
+	                            			that.login_tip = false;
+	                            		},3000)
+                                	}
+                                }else if(1001 == data.code){
+                                	that.login = false;
+	                               	that.login_tip = true;
+	                               	that.login_str = "接口文档已禁止浏览，请联系开发人员！";
+	                               	that.enable = false;
+                                }else{
+                                	that.login_tip = true;
+                                	that.login_str = "系统异常！";
+                        			
+                        			setTimeout(function(){
+                            			that.login_tip = false;
+                            		},3000)
+                                }
+                                that.is_init = false;
+
+                            }
+                        }
+                )
+            },
+            // 点击菜单事件
+            myClickOne: function (item, interfaces) {
+                this.selectionController = item;
+                this.selectionInterface = interfaces;
+            }
+
+        }
+    })
+</script>
+</body>
+</html>
