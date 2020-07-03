@@ -2,15 +2,16 @@ package com.github.ddm4j.api.document.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import com.github.ddm4j.api.document.annotation.ApiField;
-import com.github.ddm4j.api.document.annotation.ApiResponseHides;
-import com.github.ddm4j.api.document.annotation.ApiResponseParam;
+import com.github.ddm4j.api.document.annotation.ApiIgnore;
+import com.github.ddm4j.api.document.annotation.ApiResponseIgnore;
+import com.github.ddm4j.api.document.annotation.ApiResponse;
 import com.github.ddm4j.api.document.annotation.ApiResponses;
 import com.github.ddm4j.api.document.bean.ResponseVo;
 import com.github.ddm4j.api.document.common.model.FieldType;
@@ -18,6 +19,7 @@ import com.github.ddm4j.api.document.common.model.FieldType;
 public class MethodResponseUtil {
 
 	public List<ResponseVo> getResponseVo(Method method) {
+
 		// 提取返回值注解
 		ApiResponses response = method.getAnnotation(ApiResponses.class);
 
@@ -30,8 +32,12 @@ public class MethodResponseUtil {
 
 		List<ResponseVo> list = getResponseFields(method.getReturnType(), genType);
 
+		if (null == list) {
+			return list;
+		}
+
 		// 删除隐藏的
-		ApiResponseHides hides = method.getAnnotation(ApiResponseHides.class);
+		ApiResponseIgnore hides = method.getAnnotation(ApiResponseIgnore.class);
 		if (null != hides && null != hides.value() && hides.value().length > 0) {
 			for (String field : hides.value()) {
 				FieldUtil.removeField(list, field);
@@ -39,7 +45,7 @@ public class MethodResponseUtil {
 		}
 		// 注解替换
 		if (null != response && response.value().length > 0) {
-			for (ApiResponseParam param : response.value()) {
+			for (ApiResponse param : response.value()) {
 				replaceResponseField(param, list);
 			}
 		}
@@ -55,7 +61,7 @@ public class MethodResponseUtil {
 	 * @param list
 	 *            返回值对象
 	 */
-	private void replaceResponseField(ApiResponseParam param, List<ResponseVo> list) {
+	private void replaceResponseField(ApiResponse param, List<ResponseVo> list) {
 		String[] keys = param.field().split("\\.");
 		ResponseVo tempVo = null;
 		List<ResponseVo> tempChildren = list;
@@ -86,7 +92,21 @@ public class MethodResponseUtil {
 		List<ResponseVo> list = new ArrayList<ResponseVo>();
 
 		Field[] fis = cla.getDeclaredFields();
+		if (null == fis || fis.length == 0) {
+			return null;
+		}
 		for (Field field : fis) {
+
+			// 判断是否忽略了，下一个
+			ApiIgnore ignore = field.getAnnotation(ApiIgnore.class);
+			if (null != ignore) {
+				continue;
+			}
+
+			// 属性是静态的或Final 修饰的，不处理
+			if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
+				return null;
+			}
 
 			FieldType type = FieldUtil.checkFieldType(field.getGenericType());
 			ResponseVo vo = null;
@@ -173,7 +193,7 @@ public class MethodResponseUtil {
 		switch (FieldUtil.checkBaseClass(cla2)) {
 		case -2:
 			return null;
-			
+
 		case 1:// Number
 			if (array) {
 				vo.setType("Array<Number>");

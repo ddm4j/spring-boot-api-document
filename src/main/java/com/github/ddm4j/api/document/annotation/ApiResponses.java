@@ -18,5 +18,5 @@ public @interface ApiResponses {
 	 * 
 	 * @return 数据
 	 */
-	ApiResponseParam[] value() default {};
+	ApiResponse[] value() default {};
 }

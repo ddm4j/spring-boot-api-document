@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ApiResponseParam {
+public @interface ApiResponse {
 	/**
 	 * 字段，多层请用点， 如 a.b
 	 * 

@@ -14,9 +14,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.TYPE })
 public @interface ApiHeaderCancel {
 	/**
-	 * 要隐藏展示请求头的字段，为空，代表取消全部。
-	 * 
-	 * @return 隐藏字段
+	 * @return 要隐藏展示请求头的字段，为空，代表取消全部。
 	 */
 	public String[] value() default "";
 }

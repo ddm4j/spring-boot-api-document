@@ -199,7 +199,7 @@ body {
 				<div class="content-table"
 					v-if="selectionInterface.parameters && selectionInterface.parameters.length > 0">
 					<div class="title">
-						Params：请求参数&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
+						Request：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
 							v-show="selectionInterface.json">JSON</span> <span class="tag"
 							v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; <span
 							class="tag" v-show="selectionInterface.paramArray">Array</span>
@@ -222,7 +222,7 @@ body {
 							<tr>
 								<td class="left field"><input type="button"
 									@Click="copyStr(item.field)" class="copy_btn" value="复制">
-									<span v-if="item.url" class="tag">GET</span>
+									<span v-if="item.url" class="tag">URI</span>
 									{{item.field}}
 								</td>
 
@@ -291,7 +291,7 @@ body {
 				<!-- 返回数据 -->
 				<div class="content-table">
 					<div class="title">
-						Response：返回数据&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
+						Response：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
 							v-show="selectionInterface.responseMethod">{{selectionInterface.responseMethod}}</span>
 					</div>
 					<table class="bordered">

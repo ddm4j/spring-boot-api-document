@@ -7,12 +7,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 需要隐藏的字段
+ * 需要隐藏的字段,为空表示，只留下被 ApiParam 标识的字段
  *
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface ApiParamHides {
+public @interface ApiParamIgnore {
 	public String[] value() default "";
 }

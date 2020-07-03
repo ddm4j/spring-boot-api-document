@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
 
-import com.github.ddm4j.api.document.annotation.ApiMark;
+import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.annotation.ApiParam;
 import com.github.ddm4j.api.document.annotation.ApiParams;
 import com.github.ddm4j.api.document.common.exception.ApiCheckError;
@@ -80,11 +80,16 @@ public class ApiParamCheck {
 		// 循环处理取出
 		Map<String, Object> paramObjs = new HashMap<String, Object>();
 		for (int i = 0; i < parameterAnnotations.length; i++) {
+			boolean ignore = false;
 			for (Annotation annotation : parameterAnnotations[i]) {
-				if (annotation instanceof ApiMark) {
-					Object obj = jp.getArgs()[i];
-					paramObjs.put(names[i], obj);
+				if (annotation instanceof ApiIgnore) {
+					ignore = true;
+					break;
 				}
+			}
+			if (!ignore) {
+				Object obj = jp.getArgs()[i];
+				paramObjs.put(names[i], obj);
 			}
 		}
 		// 校验
@@ -134,7 +139,7 @@ public class ApiParamCheck {
 					}
 				} else {
 					// System.out.println("--3-2-- ");
-					
+
 					String[] keys = apiParam.field().split("\\.");
 					Field field = null;
 					Class<?> cla = param.getValue().getClass();
@@ -205,7 +210,7 @@ public class ApiParamCheck {
 								infos.add(info);
 							}
 						} else {
-							
+
 						}
 
 					}
@@ -220,7 +225,7 @@ public class ApiParamCheck {
 				logger.error("未找到 field:" + apiParam.field());
 				MessageBean message = getMessage(apiParam);
 				infos.add(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired()));
-			}else if(empty) {
+			} else if (empty) {
 				// 找不到对应key
 				logger.error("未找field:" + apiParam.field() + "  跳过校验");
 			}
@@ -411,37 +416,37 @@ public class ApiParamCheck {
 				}
 				try {
 					// 区分是否是自定义，或默认
-					if("custom".equals(key)) {
+					if ("custom".equals(key)) {
 						sdf = new SimpleDateFormat(config.getDateFormat());
-					}else if(key.startsWith("default")) {
+					} else if (key.startsWith("default")) {
 						// 默认
 						sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-					}else if(key.startsWith("time")) {
-						if(key.endsWith("Hm")) {
+					} else if (key.startsWith("time")) {
+						if (key.endsWith("Hm")) {
 							sdf = new SimpleDateFormat("HH:mm");
-						}else if(key.endsWith("ms")) {
+						} else if (key.endsWith("ms")) {
 							sdf = new SimpleDateFormat("mm:ss");
-						}else {
+						} else {
 							sdf = new SimpleDateFormat("HH:mm:ss");
 						}
-					}else if(key.startsWith("dateTime")) {
-						if(key.endsWith("Hm")) {
+					} else if (key.startsWith("dateTime")) {
+						if (key.endsWith("Hm")) {
 							sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-						}else if(key.endsWith("H")) {
+						} else if (key.endsWith("H")) {
 							sdf = new SimpleDateFormat("yyyy-MM-dd HH");
-						}else {
+						} else {
 							sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 						}
-					}else {
-						if(key.endsWith("M")) {
+					} else {
+						if (key.endsWith("M")) {
 							sdf = new SimpleDateFormat("yyyy-MM");
-						}else if(key.endsWith("Md")) {
+						} else if (key.endsWith("Md")) {
 							sdf = new SimpleDateFormat("MM-dd");
-						}else {
+						} else {
 							sdf = new SimpleDateFormat("yyyy-MM-dd");
 						}
 					}
-					
+
 					Date date = (Date) value;
 
 					String str = sdf.format(date);

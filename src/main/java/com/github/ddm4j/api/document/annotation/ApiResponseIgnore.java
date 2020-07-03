@@ -7,11 +7,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 用于标识 param bean, 用于方法参数上
+ * 需要隐藏的参数
  */
+
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.PARAMETER)
-public @interface ApiMark {
-
+@Target(ElementType.METHOD)
+public @interface ApiResponseIgnore {
+	/**
+	 * 需要隐藏的字段
+	 * 
+	 * @return 隐藏字段
+	 */
+	String[] value() default {};
 }

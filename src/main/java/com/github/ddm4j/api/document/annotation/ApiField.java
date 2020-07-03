@@ -14,16 +14,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD) // 限制只能用于字段上
 public @interface ApiField {
 	/**
-	 * 字段名称
-	 * 
-	 * @return 名称
+	 * @return 字段名称
 	 */
 	public String value();
 
 	/**
-	 * 是否隐藏，默认 否
-	 * 
-	 * @return 隐藏是否
+	 * @return 是否隐藏，默认 否
 	 */
 	public boolean hide() default false;
 

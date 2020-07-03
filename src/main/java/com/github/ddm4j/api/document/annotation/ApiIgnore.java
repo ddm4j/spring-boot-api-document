@@ -7,17 +7,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 需要隐藏的参数
+ * 扫描忽略
  */
-
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface ApiResponseHides {
-	/**
-	 * 需要隐藏的字段
-	 * 
-	 * @return 隐藏字段
-	 */
-	String[] value() default {};
+@Target({ ElementType.FIELD, ElementType.TYPE, ElementType.METHOD, ElementType.PARAMETER })
+public @interface ApiIgnore {
+
 }

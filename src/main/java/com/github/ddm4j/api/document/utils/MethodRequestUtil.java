@@ -3,6 +3,7 @@ package com.github.ddm4j.api.document.utils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
@@ -10,6 +11,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,10 +22,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.github.ddm4j.api.document.annotation.ApiField;
-import com.github.ddm4j.api.document.annotation.ApiMark;
+import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.annotation.ApiMethod;
 import com.github.ddm4j.api.document.annotation.ApiParam;
-import com.github.ddm4j.api.document.annotation.ApiParamHides;
+import com.github.ddm4j.api.document.annotation.ApiParamIgnore;
 import com.github.ddm4j.api.document.annotation.ApiParams;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
@@ -41,37 +46,11 @@ public class MethodRequestUtil {
 	public InterfaceVo getRequestVo(Method method, String methodType) {
 		json = false;
 		// 1 获取路径注解
-		RequestMapping rm = method.getAnnotation(RequestMapping.class);
-		if (null == rm) {
-			// 没有，注解不扫描
+		InterfaceVo ivo = extractUriAndType(method, methodType);
+
+		if (null == ivo) {
 			return null;
 		}
-		InterfaceVo ivo = new InterfaceVo();
-		// 提取路径
-		ArrayList<String> uris = new ArrayList<String>();
-		if (null != rm.path() && rm.path().length > 0) {
-			for (String path : rm.path()) {
-				uris.add(path);
-			}
-		} else if (null != rm.value() && rm.value().length > 0) {
-			for (String path : rm.value()) {
-				uris.add(path);
-			}
-		}
-		if (uris.size() > 0) {
-			ivo.setUris(uris);
-		}
-
-		// 请求方式,转大写
-		if (null != rm.method() && rm.method().length > 0) {
-			StringBuffer sb = new StringBuffer();
-			for (RequestMethod me : rm.method()) {
-				sb.append(" , ");
-				sb.append(me.toString().toUpperCase());
-			}
-			methodType = sb.toString().substring(3);
-		}
-		ivo.setMethod(methodType);
 
 		// 描述注解
 		ApiMethod am = method.getAnnotation(ApiMethod.class);
@@ -91,14 +70,23 @@ public class MethodRequestUtil {
 		ApiParams apiParams = method.getAnnotation(ApiParams.class);
 
 		KVEntity<List<ParameterVo>, List<HeadVo>> kv = extrad(method);
+		if (null == kv) {
+			return ivo;
+		}
 		List<ParameterVo> list = kv.getKey();
 
 		if (null != list && list.size() > 0) {
 			// 删除隐藏的
-			ApiParamHides hides = method.getAnnotation(ApiParamHides.class);
+			ApiParamIgnore hides = method.getAnnotation(ApiParamIgnore.class);
 			if (null != hides && null != hides.value() && hides.value().length > 0) {
-				for (String field : hides.value()) {
-					FieldUtil.removeField(list, field);
+				// 判断是不是只保留，被 ApiParam 标识的
+				if (hides.value().length == 1 && FieldUtil.isEmpty(hides.value()[0])) {
+					list = removeNotApiParam(list, apiParams);
+				} else {
+					// 删除指定的
+					for (String field : hides.value()) {
+						FieldUtil.removeField(list, field);
+					}
 				}
 			}
 			// 注解替换
@@ -120,10 +108,10 @@ public class MethodRequestUtil {
 								headVo.setDescribe(param.describe());
 							}
 							headVo.setRequired(param.required());
-							
+
 							headVo.setMax(2147483647 == param.max() ? null : param.max());
 							headVo.setMin(-2147483648 == param.min() ? null : param.min());
-							
+
 							headVo.setRegexp(getRegexp(param.regexp()));
 						}
 					}
@@ -141,6 +129,164 @@ public class MethodRequestUtil {
 		return ivo;
 	}
 
+	/**
+	 * 删除全部清空，只剩下被 ApiParam 标识的
+	 * 
+	 * @param list
+	 *            字段
+	 * @param apiParams
+	 *            注解集合
+	 * @return 处理后的数据
+	 */
+	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, ApiParams apiParams) {
+		for (int i = 0; i < list.size(); i++) {
+			ParameterVo vo = list.get(i);
+			boolean isOk = false;
+			for (ApiParam param : apiParams.value()) {
+				String[] keys = param.field().split("\\.");
+				if (keys[0].equals(vo.getField())) {
+					if (keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+						list.get(i).setChildren(removeNotApiParam(vo.getChildren(), keys, 1));
+					}
+					isOk = true;
+					break;
+				}
+			}
+			if (!isOk) {
+				list.remove(i);
+				i--;
+			}
+
+		}
+		return list;
+	}
+	/**
+	 * 删除全部清空，只剩下被 ApiParam 标识的，子集合
+	 * @param list 子集合
+	 * @param keys 标识 field
+	 * @param index keys 索引
+	 * @return 处理后的集合
+	 */
+	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, String[] keys, int index) {
+		for (int i = 0; i < list.size(); i++) {
+			ParameterVo vo = list.get(i);
+			boolean isOk = false;
+			if (keys[index].equals(vo.getField())) {
+				if (index < keys.length - 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+					list.get(i).setChildren(removeNotApiParam(vo.getChildren(), keys, index++));
+				}
+				isOk = true;
+				break;
+			}
+			if (!isOk) {
+				list.remove(i);
+				i--;
+			}
+		}
+		return list;
+	}
+
+	// 提取url和请求方式
+	private InterfaceVo extractUriAndType(Method method, String methodType) {
+
+		InterfaceVo ivo = new InterfaceVo();
+
+		// 提取路径
+		ArrayList<String> types = new ArrayList<String>();
+		ArrayList<String> uris = new ArrayList<String>();
+		for (Annotation at : method.getAnnotations()) {
+			if (at instanceof RequestMapping) {
+				RequestMapping rm = (RequestMapping) at;
+				if (null != rm.path() && rm.path().length > 0) {
+					for (String path : rm.path()) {
+						uris.add(path);
+					}
+				} else if (null != rm.value() && rm.value().length > 0) {
+					for (String path : rm.value()) {
+						uris.add(path);
+					}
+				}
+				// 请求方式,转大写
+				if (null != rm.method() && rm.method().length > 0) {
+					for (RequestMethod me : rm.method()) {
+						types.add(me.toString().toUpperCase());
+					}
+				}
+
+			} else if (at instanceof DeleteMapping) {
+				DeleteMapping dm = (DeleteMapping) at;
+				if (null != dm.path() && dm.path().length > 0) {
+					for (String path : dm.path()) {
+						uris.add(path);
+					}
+				} else if (null != dm.value() && dm.value().length > 0) {
+					for (String path : dm.value()) {
+						uris.add(path);
+					}
+				}
+				types.add("DELETE");
+			} else if (at instanceof GetMapping) {
+				GetMapping dm = (GetMapping) at;
+				if (null != dm.path() && dm.path().length > 0) {
+					for (String path : dm.path()) {
+						uris.add(path);
+					}
+				} else if (null != dm.value() && dm.value().length > 0) {
+					for (String path : dm.value()) {
+						uris.add(path);
+					}
+				}
+				types.add("GET");
+			} else if (at instanceof PostMapping) {
+				PostMapping dm = (PostMapping) at;
+				if (null != dm.path() && dm.path().length > 0) {
+					for (String path : dm.path()) {
+						uris.add(path);
+					}
+				} else if (null != dm.value() && dm.value().length > 0) {
+					for (String path : dm.value()) {
+						uris.add(path);
+					}
+				}
+				types.add("POST");
+			} else if (at instanceof PutMapping) {
+				PutMapping dm = (PutMapping) at;
+				if (null != dm.path() && dm.path().length > 0) {
+					for (String path : dm.path()) {
+						uris.add(path);
+					}
+				} else if (null != dm.value() && dm.value().length > 0) {
+					for (String path : dm.value()) {
+						uris.add(path);
+					}
+				}
+				types.add("PUT");
+			}
+			// 其它忽略
+		}
+
+		if (uris.size() > 0) {
+			ivo.setUris(uris);
+		} else {
+			// 没有返回空
+			return null;
+		}
+
+		if (types.size() > 0) {
+			StringBuffer sb = new StringBuffer();
+			for (String name : types) {
+				sb.append(name + ",");
+			}
+			ivo.setMethod(sb.toString().substring(0, sb.toString().length() - 1));
+		} else {
+			// 接口上没有找到，用 Controller 的
+			ivo.setMethod(methodType);
+		}
+
+		return ivo;
+	}
+
+	// 提取详细参数
 	private KVEntity<List<ParameterVo>, List<HeadVo>> extrad(Method method) {
 
 		if (null != method.getParameterAnnotations() && method.getParameterAnnotations().length >= 1) {
@@ -164,71 +310,74 @@ public class MethodRequestUtil {
 			for (int i = 0; i < method.getParameterAnnotations().length; i++) {
 				Annotation[] ans = method.getParameterAnnotations()[i];
 				RequestHeader head = null;
-				boolean isOK = false;
+
+				boolean ignore = false;
 				for (int j = 0; j < ans.length; j++) {
 					if (ans[j] instanceof RequestBody) {
 						json = true;
 						index = i;
 					}
 
+					if (ans[j] instanceof ApiIgnore) {
+						ignore = true;
+						break;
+					}
+
 					if (ans[j] instanceof RequestHeader) {
 						head = (RequestHeader) ans[j];
 					}
-
-					if (ans[j] instanceof ApiMark) {
-						isOK = true;
-					}
+				}
+				// 忽略了，下一个
+				if (ignore) {
+					continue;
 				}
 
-				if (isOK) {
-					Type genType = types[i];
+				Type genType = types[i];
 
-					if (null != genType) {
-						FieldType type = FieldUtil.checkFieldType(genType);
-						genType = FieldUtil.extractGenType(genType, null, type);
-					}
-
-					List<ParameterVo> list = extractField(clas[i], names[i], genType);
-					if (null == list) {
-						continue;
-					}
-					if (null != head) {
-
-						for (ParameterVo vo : list) {
-							HeadVo headVo = new HeadVo();
-							headVo.setDescribe(vo.getDescribe());
-							headVo.setField(vo.getField());
-							headVo.setRequired(vo.isRequired());
-							headVo.setType(vo.getType());
-							headVo.setRegexp(vo.getRegexp());
-							headVo.setMax(vo.getMax());
-							headVo.setMin(vo.getMin());
-
-							if (head.required()) {
-								headVo.setRequired(true);
-							}
-							headVos.add(headVo);
-							// 指定了名称就只能有一个了
-							if (!FieldUtil.isEmpty(head.value()) || !FieldUtil.isEmpty(head.name())) {
-								if (!FieldUtil.isEmpty(head.value())) {
-									headVo.setField(head.value());
-								} else {
-									headVo.setField(head.name());
-								}
-								break;
-							}
-						}
-
-					} else {
-						for (ParameterVo vo : list) {
-							if (json && i != index) {
-								vo.setUrl(true);
-							}
-							vos.add(vo);
-						}
-					}
+				if (null != genType) {
+					FieldType type = FieldUtil.checkFieldType(genType);
+					genType = FieldUtil.extractGenType(genType, null, type);
 				}
 
+				List<ParameterVo> list = extractField(clas[i], names[i], genType);
+				if (null == list) {
+					continue;
+				}
+				if (null != head) {
+
+					for (ParameterVo vo : list) {
+						HeadVo headVo = new HeadVo();
+						headVo.setDescribe(vo.getDescribe());
+						headVo.setField(vo.getField());
+						headVo.setRequired(vo.isRequired());
+						headVo.setType(vo.getType());
+						headVo.setRegexp(vo.getRegexp());
+						headVo.setMax(vo.getMax());
+						headVo.setMin(vo.getMin());
+
+						if (head.required()) {
+							headVo.setRequired(true);
+						}
+						headVos.add(headVo);
+						// 指定了名称就只能有一个了
+						if (!FieldUtil.isEmpty(head.value()) || !FieldUtil.isEmpty(head.name())) {
+							if (!FieldUtil.isEmpty(head.value())) {
+								headVo.setField(head.value());
+							} else {
+								headVo.setField(head.name());
+							}
+							break;
+						}
+					}
+
+				} else {
+					for (ParameterVo vo : list) {
+						if (json && i != index) {
+							vo.setUrl(true);
+						}
+						vos.add(vo);
+					}
+				}
 			}
 			return kv;
 		}
@@ -236,19 +385,23 @@ public class MethodRequestUtil {
 	}
 
 	private List<ParameterVo> extractField(Class<?> cla, String name, Type genType) {
+		return extractField(cla, name, genType, true);
+	}
+
+	private List<ParameterVo> extractField(Class<?> cla, String name, Type genType, boolean isOne) {
 
 		List<ParameterVo> vos = new ArrayList<ParameterVo>();
 
 		ParameterVo vo = null;
-		
-		if(Date.class.isAssignableFrom(cla)) {
+
+		if (Date.class.isAssignableFrom(cla)) {
 			vo = new ParameterVo();
 			vo.setField(name);
 			vo.setDescribe(name);
 			vo.setType("date");
 			vos.add(vo);
 			return vos;
-		}else
+		} else
 		// 判断是不是接口类型
 		if (cla.isInterface()) {
 			// 是接口
@@ -260,7 +413,10 @@ public class MethodRequestUtil {
 				vos.add(vo);
 				return vos;
 			} else if (List.class.isAssignableFrom(cla) || Set.class.isAssignableFrom(cla)) {
-				List<ParameterVo> vos2 = extractField((Class<?>) genType, name, genType);
+				List<ParameterVo> vos2 = extractField((Class<?>) genType, name, genType, false);
+				if (isOne) {
+					return vos2;
+				}
 				if (null != vos2 && vos2.size() > 0) {
 					vo = new ParameterVo();
 					vo.setField(name);
@@ -327,6 +483,16 @@ public class MethodRequestUtil {
 
 		Field[] fis = cla.getDeclaredFields();
 		for (Field field : fis) {
+			// 判断是否忽略了，下一个
+			ApiIgnore ignore = field.getAnnotation(ApiIgnore.class);
+			if (null != ignore) {
+				continue;
+			}
+
+			// 属性是静态的或Final 修饰的，不处理
+			if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
+				return null;
+			}
 
 			FieldType type = FieldUtil.checkFieldType(field.getGenericType());
 			ParameterVo vo = null;

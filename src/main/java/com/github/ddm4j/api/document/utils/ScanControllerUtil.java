@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.ddm4j.api.document.annotation.ApiController;
 import com.github.ddm4j.api.document.annotation.ApiHeaderCancel;
+import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.bean.ControllerVo;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
@@ -54,6 +55,11 @@ public class ScanControllerUtil {
 		// 循环操作
 		for (Class<?> cla : classList) {
 
+			// 判断是否忽略了
+			if(null != cla.getAnnotation(ApiIgnore.class)) {
+				continue;
+			}
+			
 			// 没有 Controller 注解，下一个
 			if (null == cla.getAnnotation(RestController.class) && null == cla.getAnnotation(Controller.class)) {
 				continue;
@@ -65,10 +71,17 @@ public class ScanControllerUtil {
 
 			// 提取方法
 			List<InterfaceVo> interfaces = null;
+			
 			Method[] methods = cla.getMethods();
 			if (null != methods && methods.length > 0) {
 				interfaces = new ArrayList<InterfaceVo>();
 				for (Method method : methods) {
+					
+					// 判断是否忽略了
+					if(null != method.getAnnotation(ApiIgnore.class)) {
+						continue;
+					}
+					
 					InterfaceVo ivo = requestUtil.getRequestVo(method, cvo.getMethod());
 					if (null != ivo) {
 

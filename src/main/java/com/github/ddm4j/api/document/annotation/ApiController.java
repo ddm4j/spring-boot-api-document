@@ -15,30 +15,22 @@ import java.lang.annotation.Target;
 public @interface ApiController {
 
 	/**
-	 * 类名称
-	 * 
-	 * @return 名称
+	 * @return 类名称
 	 */
 	public String value();
 
 	/**
-	 * 描述说明
-	 * 
-	 * @return 描述
+	 * @return 描述说明
 	 */
 	public String describe() default "";
 
 	/**
-	 * 作者
-	 * 
 	 * @return 作者
 	 */
 	public String author() default "";
 
 	/**
-	 * 版本,默认 V1.0
-	 * 
-	 * @return 版本
+	 * @return 版本,默认 V1.0
 	 */
 	public String version() default "V1.0";
 
