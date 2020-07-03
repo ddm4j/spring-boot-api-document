@@ -215,7 +215,7 @@ public class ApiParamCheck {
 
 					}
 				}
-				if (!config.isAll()) {
+				if (null != infos && infos.size() > 0 && !config.isAll()) {
 					throw new ApiCheckException(infos);
 				}
 			}
