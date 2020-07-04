@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.annotation.ApiParam;
@@ -81,15 +82,24 @@ public class ApiParamCheck {
 		Map<String, Object> paramObjs = new HashMap<String, Object>();
 		for (int i = 0; i < parameterAnnotations.length; i++) {
 			boolean ignore = false;
+			String name = names[i];
 			for (Annotation annotation : parameterAnnotations[i]) {
 				if (annotation instanceof ApiIgnore) {
 					ignore = true;
 					break;
 				}
+				if (annotation instanceof RequestHeader) {
+					RequestHeader rh = (RequestHeader) annotation;
+					if (!isEmpty(rh.value())) {
+						name = rh.value();
+					} else if (!isEmpty(rh.name())) {
+						name = rh.name();
+					}
+				}
 			}
 			if (!ignore) {
 				Object obj = jp.getArgs()[i];
-				paramObjs.put(names[i], obj);
+				paramObjs.put(name, obj);
 			}
 		}
 		// 校验
