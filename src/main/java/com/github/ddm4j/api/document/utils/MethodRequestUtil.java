@@ -160,11 +160,16 @@ public class MethodRequestUtil {
 		}
 		return list;
 	}
+
 	/**
 	 * 删除全部清空，只剩下被 ApiParam 标识的，子集合
-	 * @param list 子集合
-	 * @param keys 标识 field
-	 * @param index keys 索引
+	 * 
+	 * @param list
+	 *            子集合
+	 * @param keys
+	 *            标识 field
+	 * @param index
+	 *            keys 索引
 	 * @return 处理后的集合
 	 */
 	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, String[] keys, int index) {
@@ -469,7 +474,7 @@ public class MethodRequestUtil {
 		}
 
 		// 其他不处理
-		return vos.size() > 0 ? vos : null;
+		return null == vos ? null : vos.size() > 0 ? vos : null;
 
 	}
 
@@ -482,7 +487,9 @@ public class MethodRequestUtil {
 		List<ParameterVo> list = new ArrayList<ParameterVo>();
 
 		Field[] fis = cla.getDeclaredFields();
+		
 		for (Field field : fis) {
+			
 			// 判断是否忽略了，下一个
 			ApiIgnore ignore = field.getAnnotation(ApiIgnore.class);
 			if (null != ignore) {
@@ -491,7 +498,7 @@ public class MethodRequestUtil {
 
 			// 属性是静态的或Final 修饰的，不处理
 			if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
-				return null;
+				continue;
 			}
 
 			FieldType type = FieldUtil.checkFieldType(field.getGenericType());
@@ -552,12 +559,13 @@ public class MethodRequestUtil {
 
 		}
 
-		if (Object.class != cla.getSuperclass()) {
+		if (Object.class != cla.getSuperclass() && !cla.getSuperclass().isInterface()) {
 			List<ParameterVo> list2 = getRequestFields(cla.getSuperclass(), genType);
-			if (null != list2)
+			if (null != list2) {
 				for (ParameterVo field : list2) {
 					list.add(field);
 				}
+			}
 		}
 
 		return list;

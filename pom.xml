@@ -2,13 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<!-- <parent> <groupId>org.sonatype.oss</groupId> <artifactId>oss-parent</artifactId> 
-		<version>9</version> </parent> -->
-
 	<groupId>com.github.ddm4j</groupId>
 	<artifactId>spring-boot-api-document</artifactId>
 	<name>spring-boot-api-document</name>
-	<version>2.2.1</version>
+	<version>2.2.2</version>
 	<packaging>jar</packaging>
 	<url>https://github.com/ddm4j/spring-boot-api-document</url>
 	<description>spring boot api document</description>

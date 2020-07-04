@@ -105,7 +105,7 @@ public class MethodResponseUtil {
 
 			// 属性是静态的或Final 修饰的，不处理
 			if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
-				return null;
+				continue;
 			}
 
 			FieldType type = FieldUtil.checkFieldType(field.getGenericType());
@@ -165,7 +165,7 @@ public class MethodResponseUtil {
 
 		}
 
-		if (Object.class != cla.getSuperclass()) {
+		if (Object.class != cla.getSuperclass() && !cla.getSuperclass().isInterface()) {
 			List<ResponseVo> list2 = getResponseFields(cla.getSuperclass(), genType);
 			if (null != list2)
 				for (ResponseVo field : list2) {
