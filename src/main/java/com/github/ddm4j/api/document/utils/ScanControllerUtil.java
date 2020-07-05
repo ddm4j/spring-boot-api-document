@@ -274,14 +274,7 @@ public class ScanControllerUtil {
 			}
 
 			List<String> uris = new ArrayList<String>();
-			if (null != rquestMapping.path() && rquestMapping.path().length > 0) {
-				for (String path : rquestMapping.path()) {
-					if (!path.startsWith("/")) {
-						path = "/" + path;
-					}
-					uris.add(base_path + path);
-				}
-			} else if (null != rquestMapping.value() && rquestMapping.value().length > 0) {
+			if (null != rquestMapping.value() && rquestMapping.value().length > 0) {
 				for (String path : rquestMapping.value()) {
 					if (!path.startsWith("/")) {
 						path = "/" + path;

@@ -202,11 +202,7 @@ public class MethodRequestUtil {
 		for (Annotation at : method.getAnnotations()) {
 			if (at instanceof RequestMapping) {
 				RequestMapping rm = (RequestMapping) at;
-				if (null != rm.path() && rm.path().length > 0) {
-					for (String path : rm.path()) {
-						uris.add(path);
-					}
-				} else if (null != rm.value() && rm.value().length > 0) {
+				if (null != rm.value() && rm.value().length > 0) {
 					for (String path : rm.value()) {
 						uris.add(path);
 					}
