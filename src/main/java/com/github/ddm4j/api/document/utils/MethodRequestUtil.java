@@ -1,14 +1,10 @@
 package com.github.ddm4j.api.document.utils;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.multipart.MultipartFile;
 
-import com.github.ddm4j.api.document.annotation.ApiField;
 import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.annotation.ApiMethod;
 import com.github.ddm4j.api.document.annotation.ApiParam;
@@ -30,7 +24,7 @@ import com.github.ddm4j.api.document.annotation.ApiParams;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
 import com.github.ddm4j.api.document.bean.ParameterVo;
-import com.github.ddm4j.api.document.common.model.FieldType;
+import com.github.ddm4j.api.document.common.model.FieldInfo;
 import com.github.ddm4j.api.document.common.model.KVEntity;
 import com.github.ddm4j.api.document.config.CheckConfig;
 
@@ -38,6 +32,7 @@ public class MethodRequestUtil {
 	private CheckConfig config;
 
 	private boolean json = false;
+	private String jsonMethod = "Object";
 
 	public MethodRequestUtil(CheckConfig config) {
 		this.config = config;
@@ -73,7 +68,10 @@ public class MethodRequestUtil {
 		if (null == kv) {
 			return ivo;
 		}
-		List<ParameterVo> list = kv.getKey();
+
+		ivo.setJsonMethod(jsonMethod);
+
+		List<ParameterVo> list = kv.getLeft();
 
 		if (null != list && list.size() > 0) {
 			// 删除隐藏的
@@ -98,7 +96,7 @@ public class MethodRequestUtil {
 		}
 		ivo.setParameters(list);
 		// 请头参数
-		List<HeadVo> headVos = kv.getValue();
+		List<HeadVo> headVos = kv.getRight();
 		if (null != headVos && headVos.size() > 0) {
 			if (null != apiParams && apiParams.value().length > 0) {
 				for (ApiParam param : apiParams.value()) {
@@ -202,7 +200,11 @@ public class MethodRequestUtil {
 		for (Annotation at : method.getAnnotations()) {
 			if (at instanceof RequestMapping) {
 				RequestMapping rm = (RequestMapping) at;
-				if (null != rm.value() && rm.value().length > 0) {
+				if (null != rm.path() && rm.path().length > 0) {
+					for (String path : rm.path()) {
+						uris.add(path);
+					}
+				} else if (null != rm.value() && rm.value().length > 0) {
 					for (String path : rm.value()) {
 						uris.add(path);
 					}
@@ -294,8 +296,7 @@ public class MethodRequestUtil {
 			LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
 			// 取出参数名
 			String[] names = u.getParameterNames(method);
-			// 取出参数
-			Class<?>[] clas = method.getParameterTypes();
+
 			Type[] types = method.getGenericParameterTypes();
 			// 参数
 			List<ParameterVo> vos = new ArrayList<ParameterVo>();
@@ -303,8 +304,8 @@ public class MethodRequestUtil {
 			List<HeadVo> headVos = new ArrayList<HeadVo>();
 
 			KVEntity<List<ParameterVo>, List<HeadVo>> kv = new KVEntity<List<ParameterVo>, List<HeadVo>>();
-			kv.setKey(vos);
-			kv.setValue(headVos);
+			kv.setLeft(vos);
+			kv.setRight(headVos);
 
 			// boolean json = false;
 			int index = -1;
@@ -333,14 +334,7 @@ public class MethodRequestUtil {
 					continue;
 				}
 
-				Type genType = types[i];
-
-				if (null != genType) {
-					FieldType type = FieldUtil.checkFieldType(genType);
-					genType = FieldUtil.extractGenType(genType, null, type);
-				}
-
-				List<ParameterVo> list = extractField(clas[i], names[i], genType);
+				List<ParameterVo> list = extractField(types[i], names[i]);
 				if (null == list) {
 					continue;
 				}
@@ -385,286 +379,45 @@ public class MethodRequestUtil {
 		return null;
 	}
 
-	private List<ParameterVo> extractField(Class<?> cla, String name, Type genType) {
-		return extractField(cla, name, genType, true);
-	}
+	private List<ParameterVo> extractField(Type type, String name) {
+		KVEntity<String, List<FieldInfo>> kv = FieldUtil.extract(type);
+		if (null == kv) {
+			return null;
+		}
+		
+		if(FieldUtil.isEmpty(kv.getLeft())) {
+			return null;
+		}
 
-	private List<ParameterVo> extractField(Class<?> cla, String name, Type genType, boolean isOne) {
+		if (null == kv.getRight() || kv.getRight().size() == 0) {
+			
+			List<ParameterVo> vos = new ArrayList<ParameterVo>();
 
-		List<ParameterVo> vos = new ArrayList<ParameterVo>();
-
-		ParameterVo vo = null;
-
-		if (Date.class.isAssignableFrom(cla)) {
-			vo = new ParameterVo();
+			ParameterVo vo = new ParameterVo();
 			vo.setField(name);
-			vo.setDescribe(name);
-			vo.setType("date");
+			vo.setType(kv.getLeft());
 			vos.add(vo);
-			return vos;
-		} else
-		// 判断是不是接口类型
-		if (cla.isInterface()) {
-			// 是接口
-			if (cla.isAssignableFrom(MultipartFile.class)) {
-				vo = new ParameterVo();
-				vo.setField(name);
-				vo.setDescribe(name);
-				vo.setType("File");
-				vos.add(vo);
-				return vos;
-			} else if (List.class.isAssignableFrom(cla) || Set.class.isAssignableFrom(cla)) {
-				List<ParameterVo> vos2 = extractField((Class<?>) genType, name, genType, false);
-				if (isOne) {
-					return vos2;
-				}
-				if (null != vos2 && vos2.size() > 0) {
-					vo = new ParameterVo();
-					vo.setField(name);
-					vo.setDescribe(name);
-					vo.setType("Array<Object>");
-					vo.setChildren(vos2);
 
-					vos.add(vo);
-				}
-
-				return vos;
-			}
-
-		} else if (cla.isArray()) {
-			cla = cla.getComponentType();
-			if (Number.class.isAssignableFrom(cla)) {
-				vo = new ParameterVo();
-				vo.setField(name);
-				vo.setDescribe(name);
-				vo.setType("Array<Number>");
-				vos.add(vo);
-				return vos;
-			} else if (cla == String.class) {
-				vo = new ParameterVo();
-				vo.setField(name);
-				vo.setDescribe(name);
-				vo.setType("Array<String>");
-				vos.add(vo);
-				return vos;
-			} else {
-				// 不处理
-			}
-		} else if (Number.class.isAssignableFrom(cla)) {
-			vo = new ParameterVo();
-			vo.setField(name);
-			vo.setDescribe(name);
-			vo.setType("Number");
-			vos.add(vo);
-			return vos;
-		} else if (cla == String.class) {
-			vo = new ParameterVo();
-			vo.setField(name);
-			vo.setDescribe(name);
-			vo.setType("String");
-			vos.add(vo);
 			return vos;
 		} else {
-			// 自定义类
-			vos = getRequestFields(cla, genType);
+			return extractField(kv.getRight());
 		}
-
-		// 其他不处理
-		return null == vos ? null : vos.size() > 0 ? vos : null;
 
 	}
 
-	public List<ParameterVo> getRequestFields(Class<?> cla, Type genType) {
-
-		if (null == cla) {
-			return null;
+	public List<ParameterVo> extractField(List<FieldInfo> infos) {
+		List<ParameterVo> vos = new ArrayList<ParameterVo>();
+		for (FieldInfo info : infos) {
+			ParameterVo vo = new ParameterVo();
+			vo.setField(info.getName());
+			vo.setType(info.getType());
+			vo.setDescribe(info.getDescribe());
+			if (null != info.getChildren() && info.getChildren().size() > 0) {
+				vo.setChildren(extractField(info.getChildren()));
+			}
+			vos.add(vo);
 		}
-
-		List<ParameterVo> list = new ArrayList<ParameterVo>();
-
-		Field[] fis = cla.getDeclaredFields();
-		
-		for (Field field : fis) {
-			
-			// 判断是否忽略了，下一个
-			ApiIgnore ignore = field.getAnnotation(ApiIgnore.class);
-			if (null != ignore) {
-				continue;
-			}
-
-			// 属性是静态的或Final 修饰的，不处理
-			if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
-				continue;
-			}
-
-			FieldType type = FieldUtil.checkFieldType(field.getGenericType());
-			ParameterVo vo = null;
-			Class<?> cla2 = null;
-			switch (type) {
-			case Clazz:// OK
-				vo = getRequestFieldInfo(field, field.getType(), false, null, type);
-				break;
-			case ArrayClass: // OK
-				cla2 = FieldUtil.extractClassByType(field.getGenericType(), null, type);
-				// 获取
-				vo = getRequestFieldInfo(field, cla2, true, null, type);
-				break;
-			case ClassT: // OK
-				// list和set 需要特殊处理
-				if (List.class.isAssignableFrom(field.getType()) || Set.class.isAssignableFrom(cla)) {
-					Type gen = FieldUtil.extractClassByType(field.getGenericType(), genType, type);
-
-					if (null == gen) {
-						type = FieldUtil.checkFieldType(genType);
-						gen = FieldUtil.extractClassByType(genType, genType, type);
-					}
-
-					if (null != gen) {
-						cla2 = (Class<?>) gen;
-						vo = getRequestFieldInfo(field, cla2, true, null, type);
-						// type = FieldType.ArrayT;
-					}
-				} else {
-					cla2 = field.getType();
-					vo = getRequestFieldInfo(field, cla2, false, genType, type);
-				}
-
-				break;
-			case ArrayClassT: //
-				vo = getRequestFieldInfo(field, field.getType(), false, genType, type);
-				break;
-			case T: // OK
-				if (null != genType) {
-					cla2 = FieldUtil.extractClassByType(field.getGenericType(), genType, type);
-					vo = getRequestFieldInfo(field, cla2, false, genType, type);
-				}
-				break;
-			case ArrayT:
-				if (null != genType) {
-					cla2 = FieldUtil.extractClassByType(field.getGenericType(), genType, type);
-					type = FieldType.T;
-					vo = getRequestFieldInfo(field, cla2, true, genType, type);
-				}
-
-				break;
-			}
-
-			if (null != vo) {
-				list.add(vo);
-			}
-
-		}
-
-		if (Object.class != cla.getSuperclass() && !cla.getSuperclass().isInterface()) {
-			List<ParameterVo> list2 = getRequestFields(cla.getSuperclass(), genType);
-			if (null != list2) {
-				for (ParameterVo field : list2) {
-					list.add(field);
-				}
-			}
-		}
-
-		return list;
-	}
-
-	private ParameterVo getRequestFieldInfo(Field field, Class<?> cla2, boolean array, Type genType, FieldType type) {// 获取上面的注解
-		ApiField apiField = field.getAnnotation(ApiField.class);
-		// 判断是不是隐藏了
-		if (null != apiField && apiField.hide()) {
-			return null;
-		}
-
-		ParameterVo vo = new ParameterVo();
-		if (null != apiField) {
-			vo.setDescribe(apiField.value());
-		}
-		vo.setField(field.getName());
-
-		switch (FieldUtil.checkBaseClass(cla2)) {
-		case -2:
-			return null;
-		case 1:// Number
-			if (array) {
-				vo.setType("Array<Number>");
-			} else {
-				vo.setType("Number");
-			}
-			break;
-		case 2:// String
-			if (array) {
-				vo.setType("Array<String>");
-			} else {
-				vo.setType("String");
-			}
-			break;
-		case 3:// Enum
-			if (array) {
-				vo.setType("Array<Enum/Number>");
-			} else {
-				vo.setType("Enum/Number");
-			}
-			break;
-		case 0:// 接口，未知
-			if (array) {
-				vo.setType("Array<Other>");
-			} else {
-				vo.setType("Other");
-			}
-		case 7:// 日期类型
-			if (array) {
-				vo.setType("Array<Date>");
-			} else {
-				vo.setType("Date");
-			}
-			break;
-		default:// bean
-			if (array) {
-				vo.setType("Array<Object>");
-			} else {
-				vo.setType("Object");
-			}
-			switch (type) {
-			case T:
-			case ArrayT:
-			case ClassT:
-			case ArrayClassT:
-				// 取值
-				genType = FieldUtil.extractGenType(field.getGenericType(), genType, type);
-				break;
-			case Clazz:
-			case ArrayClass:
-				genType = null;
-				break;
-
-			}
-
-			List<ParameterVo> children = null;
-			switch (type) {
-			case Clazz:// OK
-				children = getRequestFields(cla2, genType);
-				break;
-			case ArrayClass:
-				cla2 = FieldUtil.extractClassByType(field.getGenericType(), genType, type);
-				if (null != cla2) {
-					children = getRequestFields(cla2, genType);
-				}
-				break;
-			case T:// OK
-			case ArrayT:// OK
-				if (null != cla2) {
-					children = getRequestFields(cla2, genType);
-				}
-				break;
-			default: // OK
-				children = getRequestFields(cla2, genType);
-				break;
-
-			}
-			if (null != children) {
-				vo.setChildren(children);
-			}
-		}
-		return vo;
+		return vos;
 	}
 
 	/**

@@ -21,6 +21,8 @@ import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.bean.ControllerVo;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
+import com.github.ddm4j.api.document.bean.ResponseVo;
+import com.github.ddm4j.api.document.common.model.KVEntity;
 import com.github.ddm4j.api.document.config.CheckConfig;
 import com.github.ddm4j.api.document.config.DocumentConfig;
 import com.github.ddm4j.api.document.config.bean.RequestHeaderBean;
@@ -30,7 +32,7 @@ public class ScanControllerUtil {
 	DocumentConfig documentConfig;
 
 	Logger logger = LoggerFactory.getLogger(ScanControllerUtil.class);
-	
+
 	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig) {
 		this.config = config;
 		this.documentConfig = documentConfig;
@@ -56,10 +58,10 @@ public class ScanControllerUtil {
 		for (Class<?> cla : classList) {
 
 			// 判断是否忽略了
-			if(null != cla.getAnnotation(ApiIgnore.class)) {
+			if (null != cla.getAnnotation(ApiIgnore.class)) {
 				continue;
 			}
-			
+
 			// 没有 Controller 注解，下一个
 			if (null == cla.getAnnotation(RestController.class) && null == cla.getAnnotation(Controller.class)) {
 				continue;
@@ -71,17 +73,17 @@ public class ScanControllerUtil {
 
 			// 提取方法
 			List<InterfaceVo> interfaces = null;
-			
+
 			Method[] methods = cla.getMethods();
 			if (null != methods && methods.length > 0) {
 				interfaces = new ArrayList<InterfaceVo>();
 				for (Method method : methods) {
-					
+
 					// 判断是否忽略了
-					if(null != method.getAnnotation(ApiIgnore.class)) {
+					if (null != method.getAnnotation(ApiIgnore.class)) {
 						continue;
 					}
-					
+
 					InterfaceVo ivo = requestUtil.getRequestVo(method, cvo.getMethod());
 					if (null != ivo) {
 
@@ -94,7 +96,12 @@ public class ScanControllerUtil {
 						}
 
 						// 提取方法上的返回值
-						ivo.setResponses(responseUtil.getResponseVo(method));
+						KVEntity<String, List<ResponseVo>> kv = responseUtil.getResponseVo(method);
+						if (null != kv) {
+							ivo.setResponseMethod(kv.getLeft());
+							ivo.setResponses(kv.getRight());
+						}
+
 						// 保存到接口列表中
 
 						if (null != cvo.getUris() && cvo.getUris().size() > 0) {
@@ -149,7 +156,7 @@ public class ScanControllerUtil {
 
 		return controllers;
 	}
-	
+
 	// 处理方法上的请求头
 	private void handleMethodHander(InterfaceVo ivo, List<HeadVo> methodVos) {
 		if (null != methodVos && methodVos.size() > 0) {
@@ -161,6 +168,9 @@ public class ScanControllerUtil {
 				boolean isOk = true;
 				for (HeadVo vo : ivo.getHeads()) {
 					if (vo.getField().equals(head.getField())) {
+						if(FieldUtil.isEmpty(vo.getDescribe())) {
+							vo.setDescribe(head.getDescribe());
+						}
 						isOk = false;
 						break;
 					}

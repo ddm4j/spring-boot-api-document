@@ -13,6 +13,7 @@ public class InterfaceVo implements Serializable {
 	private String version;
 	private String method;
 	private boolean json = false;
+	private String jsonMethod;
 	// 请求参数是否是 Array
 	private boolean paramArray = false;
 	// 返回值是否是 Array
@@ -84,6 +85,14 @@ public class InterfaceVo implements Serializable {
 
 	public void setJson(boolean json) {
 		this.json = json;
+	}
+
+	public String getJsonMethod() {
+		return jsonMethod;
+	}
+
+	public void setJsonMethod(String jsonMethod) {
+		this.jsonMethod = jsonMethod;
 	}
 
 	public List<HeadVo> getHeads() {
