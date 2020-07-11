@@ -286,7 +286,7 @@ body {
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">
 										<span v-if="item.url" class="tag">URI</span> {{item.field}} <span
 										class="table-show"
-										v-if="item.children && add_show_request('1',index)"
+										v-if="item.children && item.children.length > 0 && add_show_request('1',index)"
 										@Click="show_request('1',index)">
 											{{show.request.one[index].show?"-":"+"}}</span></td>
 
@@ -306,7 +306,7 @@ body {
 										@Click="copyStr(item2.field)" class="copy_btn" value="复制">
 										<span class="param_love">-></span>&nbsp;{{item2.field}} <span
 										class="table-show"
-										v-if="item2.children && add_show_request('2',index2)"
+										v-if="item2.children  && item2.children.length > 0 && add_show_request('2',index2)"
 										@Click="show_request('2',index2)">
 											{{show.request.two[index2].show?"-":"+"}}</span></td>
 
@@ -327,7 +327,7 @@ body {
 										class="param_love">->&nbsp;</span><span class="param_love"
 										style="color: #9c27b0;">->&nbsp;</span>{{item3.field}} <span
 										class="table-show"
-										v-if="item3.children && add_show_request('3',index3)"
+										v-if="item3.children && item3.children.length > 0  && add_show_request('3',index3)"
 										@Click="show_request('3',index3)">
 											{{show.request.three[index3].show?"-":"+"}}</span></td>
 									<td class="type">{{item3.type}}</td>
@@ -386,7 +386,7 @@ body {
 									<td class="left field"><input type="button"
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">{{item.field}}
 										<span class="table-show"
-										v-if="item.children && add_show_response('1',index)"
+										v-if="item.children && item.children.length > 0  && add_show_response('1',index)"
 										@Click="show_response('1',index)">
 											{{show.response.one[index].show?"-":"+"}}</span></td>
 
@@ -403,7 +403,7 @@ body {
 										@Click="copyStr(item2.field)" class="copy_btn" value="复制">
 										<span class="param_love">->&nbsp;</span> {{item2.field}} <span
 										class="table-show"
-										v-if="item2.children && add_show_response('2',index2)"
+										v-if="item2.children && item2.children.length > 0  && add_show_response('2',index2)"
 										@Click="show_response('2',index2)">
 											{{show.response.two[index2].show?"-":"+"}}</span></td>
 
@@ -417,11 +417,10 @@ body {
 									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
 								<tr>
 									<td class="left field"><input type="button"
-										@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
-										class="param_love">->&nbsp; <span
-											style="color: #9c27b0;">-></span> &nbsp;
+										@Click="copyStr(item3.field)" class="copy_btn" value="复制">
+										<span class="param_love">->&nbsp;<span style="color: #9c27b0;">-></span>&nbsp;
 									</span>{{item3.field}} <span class="table-show"
-										v-if="item3.children && add_show_response('3',index3)"
+										v-if="item3.children && item3.children.length > 0  && add_show_response('3',index3)"
 										@Click="show_response('3',index3)">
 											{{show.response.three[index3].show?"-":"+"}}</span></td>
 
@@ -435,10 +434,8 @@ body {
 								<tr v-if="show.response.three[index3].show"
 									v-for="item4 in item3.children">
 									<td class="left field"><input type="button"
-										@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
-										class="param_love">->&nbsp; <span
-											style="color: #9c27b0;">-></span> &nbsp;<span
-											style="color: red;">-></span> &nbsp;
+										@Click="copyStr(item4.field)" class="copy_btn" value="复制">
+										<span class="param_love">->&nbsp;<span style="color: #9c27b0;">-></span>&nbsp;<span style="color: red;">-></span>&nbsp;
 									</span>{{item4.field}}</td>
 
 									<td class="type">{{item4.type}}</td>

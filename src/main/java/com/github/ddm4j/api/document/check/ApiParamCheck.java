@@ -67,7 +67,7 @@ public class ApiParamCheck {
 		}
 
 		if (null == jp.getArgs() || jp.getArgs().length == 0) {
-			logger.error("未没参数，不进行校验");
+			logger.error("未查询到参数，不进行校验");
 			// 没有参数
 			return;
 		}

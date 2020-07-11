@@ -21,6 +21,8 @@ import com.github.ddm4j.api.document.common.model.KVEntity;
 
 public class FieldUtil {
 
+	private static final int LOVEL = 4;
+
 	/**
 	 * 提取具体Field
 	 * 
@@ -28,7 +30,12 @@ public class FieldUtil {
 	 *            要提取的对象
 	 * @return 提取结果
 	 */
+
 	public static KVEntity<String, List<FieldInfo>> extract(Type type) {
+		return extract(type, 0);
+	}
+
+	private static KVEntity<String, List<FieldInfo>> extract(Type type, int lovel) {
 		// System.out.println("开始："+type);
 		if (null == type) {
 			return null;
@@ -100,10 +107,10 @@ public class FieldUtil {
 				KVEntity<String, List<FieldInfo>> kv2 = null;
 				// System.out.println(" isT:" + isT);
 				if (isT) {
-					kv2 = extract(type);
+					kv2 = extract(type, lovel);
 				} else {
 					KVEntity<Class<?>, Type> ct = extractGenType(type);
-					kv2 = extract(ct.getRight());
+					kv2 = extract(ct.getRight(), lovel);
 				}
 
 				if (null == kv2) {
@@ -116,7 +123,7 @@ public class FieldUtil {
 
 			if (cla.getTypeName().equals(cla.getName())) {
 				typeStr = "Object";
-				kv.setRight(extractField(cla, type));
+				kv.setRight(extractField(cla, type, lovel));
 			} else {
 				typeStr = "Object<?>";
 			}
@@ -138,8 +145,12 @@ public class FieldUtil {
 	 *            指定的泛型
 	 * @return 提取结果
 	 */
-	public static List<FieldInfo> extractField(Class<?> cla, Type genType) {
+	public static List<FieldInfo> extractField(Class<?> cla, Type genType, int lovel) {
 		List<FieldInfo> infos = new ArrayList<FieldInfo>();
+		if (lovel >= LOVEL) {
+			return null;
+		}
+		lovel++;
 
 		Field[] fis = cla.getDeclaredFields();
 		if (null != fis && fis.length > 0) {
@@ -227,97 +238,106 @@ public class FieldUtil {
 						typeStr = "File";
 					} else if (Map.class.isAssignableFrom(fie)) {
 						typeStr = "Map";
-					} else if (List.class.isAssignableFrom(fie) || Set.class.isAssignableFrom(fie)) {
-						// System.out.println("list --- " + field.getName());
-						if (null != field.getGenericType()) {
-
-							if (field.getGenericType() instanceof Class<?>) {
-								// System.out.println(" class");
-								KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
-								if (null == ct) {
-									// 未指定泛型
-									continue;
-								}
-								KVEntity<String, List<FieldInfo>> kv2 = extract(ct.getRight());
-								if (null == kv2) {
-									continue;
-								}
-								typeStr = "Array<" + kv2.getLeft() + ">";
-								info.setChildren(kv2.getRight());
-							} else if (field.getGenericType() instanceof ParameterizedType
-									|| field.getGenericType() instanceof GenericArrayType) {
-								// System.out.println(" pt type:" + genType);
-
-								KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
-								if (null == ct) {
-									// 未指定泛型
-									continue;
-								}
-
-								KVEntity<String, List<FieldInfo>> kv2 = null;
-								if (null == ct.getRight()) {
-									kv2 = extract(genType);
-								} else {
-									kv2 = extract(ct.getRight());
-								}
-								if (null == kv2) {
-									continue;
-								}
-								typeStr = "Array<" + kv2.getLeft() + ">";
-								if (field.getGenericType() instanceof GenericArrayType) {
-									typeStr = "Array<" + typeStr + ">";
-								}
-								info.setChildren(kv2.getRight());
-							} else {
-								// System.out.println("未知 1:" + field.getName());
-							}
-						}
-					} else if (field.getGenericType() instanceof Class<?>) {
-						// System.out.println("不是泛型 ---" + field.getName());
-						if (Object.class == fie) {
-							typeStr = "Object<?>";
-						} else {
-							typeStr = "Object";
-							info.setChildren(extractField(fie, genType));
-						}
-					} else if (field.getGenericType() instanceof ParameterizedType
-							|| field.getGenericType() instanceof GenericArrayType) {
-						// System.out.println("是泛型 ---" + field.getName());
-						KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
-						if (null == ct) {
-							// 未指定泛型
-							continue;
-						}
-						KVEntity<String, List<FieldInfo>> kv2 = null;
-						if (null == ct.getRight()) {
-
-							kv2 = extract(genType);
-						} else {
-							kv2 = extract(ct.getRight());
-						}
-						if (null == kv2) {
-							continue;
-						}
-						typeStr = kv2.getLeft();
-						// if(field.getGenericType() instanceof GenericArrayType) {
-						// typeStr = "Array<" + typeStr + ">";
-						// }
-
-						info.setChildren(kv2.getRight());
-					} else if (!field.getGenericType().getTypeName().equals(field.getType().getTypeName())) {
-						// System.out.println("纯泛型：" + field.getName()+"--- "+field.getGenericType()+"
-						// genType:"+genType);
-						KVEntity<String, List<FieldInfo>> kv2 = extract(genType);
-						if (null == kv2) {
-							continue;
-						}
-						typeStr = kv2.getLeft();
-						info.setChildren(kv2.getRight());
 					} else {
-						// System.out.println("未知 2:" + field.getName());
-						typeStr = "Object<?>";
-					}
 
+						if (lovel >= LOVEL) {
+							typeStr = "Loop - Limit";
+						} else if (List.class.isAssignableFrom(fie) || Set.class.isAssignableFrom(fie)) {
+							// System.out.println("list --- " + field.getName());
+							if (null != field.getGenericType()) {
+
+								if (field.getGenericType() instanceof Class<?>) {
+
+									// System.out.println(" class");
+									KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
+									if (null == ct) {
+										// 未指定泛型
+										continue;
+									}
+									KVEntity<String, List<FieldInfo>> kv2 = extract(ct.getRight(), lovel);
+									if (null == kv2) {
+										continue;
+									}
+									typeStr = "Array<" + kv2.getLeft() + ">";
+									info.setChildren(kv2.getRight());
+
+								} else if (field.getGenericType() instanceof ParameterizedType
+										|| field.getGenericType() instanceof GenericArrayType) {
+									// System.out.println(" pt type:" + genType);
+
+									KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
+									if (null == ct) {
+										// 未指定泛型
+										continue;
+									}
+
+									KVEntity<String, List<FieldInfo>> kv2 = null;
+									if (null == ct.getRight()) {
+										kv2 = extract(genType, lovel);
+									} else {
+										kv2 = extract(ct.getRight(), lovel);
+									}
+									if (null == kv2) {
+										continue;
+									}
+									typeStr = "Array<" + kv2.getLeft() + ">";
+									if (field.getGenericType() instanceof GenericArrayType) {
+										typeStr = "Array<" + typeStr + ">";
+									}
+									info.setChildren(kv2.getRight());
+
+								} else {
+									// System.out.println("未知 1:" + field.getName());
+								}
+							}
+						} else if (field.getGenericType() instanceof Class<?>) {
+							// System.out.println("不是泛型 ---" + field.getName());
+							if (Object.class == fie) {
+								typeStr = "Object<?>";
+							} else {
+
+								typeStr = "Object";
+								info.setChildren(extractField(fie, genType, lovel));
+
+							}
+						} else if (field.getGenericType() instanceof ParameterizedType
+								|| field.getGenericType() instanceof GenericArrayType) {
+							// System.out.println("是泛型 ---" + field.getName());
+							KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
+							if (null == ct) {
+								// 未指定泛型
+								continue;
+							}
+							KVEntity<String, List<FieldInfo>> kv2 = null;
+							if (null == ct.getRight()) {
+
+								kv2 = extract(genType, lovel);
+							} else {
+								kv2 = extract(ct.getRight(), lovel);
+							}
+							if (null == kv2) {
+								continue;
+							}
+							typeStr = kv2.getLeft();
+							// if(field.getGenericType() instanceof GenericArrayType) {
+							// typeStr = "Array<" + typeStr + ">";
+							// }
+
+							info.setChildren(kv2.getRight());
+						} else if (!field.getGenericType().getTypeName().equals(field.getType().getTypeName())) {
+							// System.out.println("纯泛型：" + field.getName()+"--- "+field.getGenericType()+"
+							// genType:"+genType);
+							KVEntity<String, List<FieldInfo>> kv2 = extract(genType, lovel);
+							if (null == kv2) {
+								continue;
+							}
+							typeStr = kv2.getLeft();
+							info.setChildren(kv2.getRight());
+						} else {
+							// System.out.println("未知 2:" + field.getName());
+							typeStr = "Object<?>";
+						}
+					}
 				}
 				if (isArray) {
 					typeStr = "Array<" + typeStr + ">";
@@ -334,7 +354,7 @@ public class FieldUtil {
 		}
 
 		if (Object.class != cla.getSuperclass() && !cla.getSuperclass().isInterface()) {
-			List<FieldInfo> list2 = extractField(cla.getSuperclass(), genType);
+			List<FieldInfo> list2 = extractField(cla.getSuperclass(), genType, lovel - 1);
 			if (null != list2) {
 				for (FieldInfo field : list2) {
 					infos.add(field);
