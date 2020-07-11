@@ -113,10 +113,10 @@ public class ApiParamCheck {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
-			System.out.println(apiParam.field());
+			// System.out.println(apiParam.field());
 			boolean empty = true;
 			for (Entry<String, Object> param : params.entrySet()) {
-				System.out.println("--- :" + param.getKey());
+				// System.out.println("--- :" + param.getKey());
 				// 判断是否为空
 				if (null == param.getValue()) {
 					if (apiParam.field().equals(param.getKey())) {
@@ -133,7 +133,7 @@ public class ApiParamCheck {
 				else if (param.getValue().getClass().isArray()
 						|| List.class.isAssignableFrom(param.getValue().getClass())
 						|| Set.class.isAssignableFrom(param.getValue().getClass())) {
-					System.out.println("array");
+					// System.out.println("array");
 					String[] keys = apiParam.field().split("\\.");
 					// 数组或集合
 					MessageBean message = getMessage(apiParam);
@@ -148,8 +148,9 @@ public class ApiParamCheck {
 				// 判断是否是接口类型或是否是基本类型
 				else if (param.getValue().getClass().isInterface()
 						|| Number.class.isAssignableFrom(param.getValue().getClass())
-						|| param.getValue().getClass() == String.class) {
-					System.out.println("class");
+						|| param.getValue().getClass() == String.class
+						|| Boolean.class.isAssignableFrom(param.getValue().getClass())) {
+					// System.out.println("class");
 					if (apiParam.field().equals(param.getKey())) {
 						empty = false;
 						// 查询消息
@@ -165,7 +166,7 @@ public class ApiParamCheck {
 				}
 				// 其他类型
 				else {
-					System.out.println("other");
+					// System.out.println("other");
 					String[] keys = apiParam.field().split("\\.");
 					MessageBean message = getMessage(apiParam);
 					KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(param.getValue(), keys, 0, apiParam, message,
@@ -253,19 +254,19 @@ public class ApiParamCheck {
 	private KVEntity<Boolean, ApiCheckInfo> checkFieldValue(Object value, String[] keys, int index, ApiParam apiParam,
 			MessageBean message, Object obj) throws IllegalAccessException, Exception {
 
-		//System.out.println("array 1---------- " + value);
+		// System.out.println("array 1---------- " + value);
 
 		KVEntity<Boolean, ApiCheckInfo> info = new KVEntity<Boolean, ApiCheckInfo>();
 		info.setLeft(true);
 		Object value2 = value;
 		Field field = null;
 		for (int i = index; i < keys.length; i++) {
-			//System.out.println("array 2---------- " + keys[i] + " ---- " + value2);
+			// System.out.println("array 2---------- " + keys[i] + " ---- " + value2);
 			field = getField(value2.getClass(), keys[i]);
 			if (null != field) {
 				info.setLeft(true);
 				if (i < keys.length - 1) {
-					//System.out.println("array 3---------- " + keys[i] + " ---- " + value2);
+					// System.out.println("array 3---------- " + keys[i] + " ---- " + value2);
 					field.setAccessible(true);
 					value2 = field.get(value2);
 					if (value2.getClass().isArray() || List.class.isAssignableFrom(value2.getClass())
@@ -314,15 +315,32 @@ public class ApiParamCheck {
 				return getCheckInfo(apiParam, ApiCheckError.EMPTY, bean.getRequired());
 			}
 		} else if (value.getClass().isPrimitive()) {
-			Double dou = Double.parseDouble(value.toString());
 
-			if (dou < apiParam.min()) {
-				return getCheckInfo(apiParam, ApiCheckError.MIN, bean.getMin());
-			}
+			if ("boolean".equals(value.getClass().getTypeName())) {
+				// 只支持，是否为空
+				return null;
+			} else if ("char".equals(value.getClass().getTypeName())) {
+				String regexp = getRegexp(apiParam.regexp());
+				if (!isEmpty(regexp) && !value.toString().matches(regexp)) {
+					return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
+				}
+			} else {
+				Double dou = Double.parseDouble(value.toString());
 
-			if (dou > apiParam.max()) {
-				return getCheckInfo(apiParam, ApiCheckError.MAX, bean.getMax());
+				if (dou < apiParam.min()) {
+					return getCheckInfo(apiParam, ApiCheckError.MIN, bean.getMin());
+				}
+
+				if (dou > apiParam.max()) {
+					return getCheckInfo(apiParam, ApiCheckError.MAX, bean.getMax());
+				}
+				String regexp = getRegexp(apiParam.regexp());
+				if (!isEmpty(regexp) && !value.toString().matches(regexp)) {
+					return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
+				}
 			}
+		} else if (Character.class.isAssignableFrom(value.getClass())) {
+			// char 
 			String regexp = getRegexp(apiParam.regexp());
 			if (!isEmpty(regexp) && !value.toString().matches(regexp)) {
 				return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
@@ -342,7 +360,9 @@ public class ApiParamCheck {
 			if (!isEmpty(regexp) && !value.toString().matches(regexp)) {
 				return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
 			}
-
+		} else if (Boolean.class.isAssignableFrom(value.getClass())) {
+			// 布尔只支持，是否为空
+			return null;
 		} else if (value.getClass() == String.class) {
 			String str = value.toString().trim();
 

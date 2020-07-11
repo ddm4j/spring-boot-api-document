@@ -160,6 +160,7 @@
 .content-table {
     margin-left: 20px;
     margin-top: 10px;
+    padding-right: 10px;
 }
 
 .content-table .title {
@@ -199,10 +200,10 @@ table .reg{
 /* 页脚 */
 .content-footer{
     position: fixed;
-    bottom: 5px;
+    bottom: 0px;
     margin-top: 30px;
     height: 60px;
-    width: 98%;
+    width: 100%;
     background-color: rgba(43, 43, 43, 0.25);
     text-align: center;
     line-height: 60px;

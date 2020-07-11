@@ -29,7 +29,7 @@ public class FieldUtil {
 	 * @return 提取结果
 	 */
 	public static KVEntity<String, List<FieldInfo>> extract(Type type) {
-		System.out.println("开始："+type);
+		// System.out.println("开始："+type);
 		if (null == type) {
 			return null;
 		}
@@ -38,12 +38,13 @@ public class FieldUtil {
 		Class<?> cla = null;
 		if (type instanceof Class) {
 			cla = (Class<?>) type;
-
+			// System.out.println(" --- "+cla);
 			if (cla.isArray()) {
 				isArray = true;
 				cla = cla.getComponentType();
 				KVEntity<Class<?>, Type> ct = extractGenType(type);
 				type = ct.getRight();
+				// System.out.println(" ----- 222 "+ct.getRight());
 			} else {
 				type = null;
 			}
@@ -62,11 +63,14 @@ public class FieldUtil {
 		}
 
 		KVEntity<String, List<FieldInfo>> kv = new KVEntity<String, List<FieldInfo>>();
-
+		// System.out.println(cla + " ---- " + type);
 		String typeStr = "";
 
 		if (Number.class.isAssignableFrom(cla)) {
-			typeStr = "Number";
+
+			// System.out.println(cla.getName());
+			typeStr = cla.getSimpleName();
+			// typeStr = "Number";
 		} else if (String.class.isAssignableFrom(cla)) {
 			typeStr = "String";
 		} else if (Character.class.isAssignableFrom(cla)) {
@@ -75,26 +79,29 @@ public class FieldUtil {
 			typeStr = "Date";
 		} else if (Enum.class.isAssignableFrom(cla)) {
 			typeStr = "Enum/Number";
-		} else if (cla == Object.class) {
-			typeStr = "Object<?>";
+		} else if (Boolean.class.isAssignableFrom(cla)) {
+			typeStr = "Boolean";
 		} else if (cla.isPrimitive()) {
-			if ("char".equals(cla.getTypeName())) {
-				typeStr = "char";
-			} else {
-				typeStr = "Number";
-			}
+			typeStr = cla.getTypeName();
+			// if ("char".equals(cla.getTypeName())) {
+			// typeStr = "char";
+			// } else if ("boolean".equals(cla.getTypeName())) {
+			// typeStr = "boolean";
+			// } else {
+			// typeStr = "Number";
+			// }
 		} else if (cla.isInterface()) {
 			if (cla.isAssignableFrom(MultipartFile.class)) {
 				typeStr = "File";
 			} else if (Map.class.isAssignableFrom(cla)) {
 				typeStr = "Map";
 			} else if (List.class.isAssignableFrom(cla) || Set.class.isAssignableFrom(cla)) {
-				System.out.println(cla+" ---- "+type);
+				// System.out.println(cla + " ---- " + type);
 				KVEntity<String, List<FieldInfo>> kv2 = null;
-				System.out.println(" isT:"+isT);
-				if(isT) {
+				// System.out.println(" isT:" + isT);
+				if (isT) {
 					kv2 = extract(type);
-				}else {
+				} else {
 					KVEntity<Class<?>, Type> ct = extractGenType(type);
 					kv2 = extract(ct.getRight());
 				}
@@ -106,8 +113,14 @@ public class FieldUtil {
 				kv.setRight(kv2.getRight());
 			}
 		} else {
-			typeStr = "Object";
-			kv.setRight(extractField(cla, type));
+
+			if (cla.getTypeName().equals(cla.getName())) {
+				typeStr = "Object";
+				kv.setRight(extractField(cla, type));
+			} else {
+				typeStr = "Object<?>";
+			}
+
 		}
 		if (isArray) {
 			typeStr = "Array<" + typeStr + ">";
@@ -153,68 +166,73 @@ public class FieldUtil {
 				} else {
 					info = new FieldInfo();
 				}
-				
+
 				info.setName(field.getName());
 
 				Class<?> fie = field.getType();
 				String typeStr = null;
 				boolean isArray = false;
+				// System.out.println("field:" + field.getName() + " --- " + fie);
 				if (fie.isArray()) {
 					isArray = true;
 					fie = fie.getComponentType();
-					//System.out.println(" field array:" + field.getName() + " --- " + fie);
+					// System.out.println(" field array:" + field.getName() + " --- " + fie);
 				}
 
 				if (Number.class.isAssignableFrom(fie)) {
-					typeStr = "Number";
+					typeStr = fie.getSimpleName();
 				} else if (String.class.isAssignableFrom(fie)) {
 					typeStr = "String";
 				} else if (Character.class.isAssignableFrom(fie)) {
 					typeStr = "Char";
-				} else if (cla.isPrimitive()) {
-					if ("char".equals(cla.getTypeName())) {
-						typeStr = "char";
-					} else {
-						typeStr = "number";
-					}
-				} else if (fie == Object.class) {
-					typeStr = "Object<?>";
+				} else if (fie.isPrimitive()) {
+					/*
+					 * if ("char".equals(fie.getTypeName())) { typeStr = "char"; } else if
+					 * ("boolean".equals(fie.getTypeName())) { typeStr = "boolean"; } else { typeStr
+					 * = "number"; }
+					 */
+					typeStr = fie.getTypeName();
+				} else if (Boolean.class.isAssignableFrom(fie)) {
+					typeStr = "Boolean";
 				} else if (Date.class.isAssignableFrom(fie)) {
 					typeStr = "Date";
 				} else if (Enum.class.isAssignableFrom(fie)) {
 					typeStr = "Enum/Number";
-				} else if (cla.isInterface()) {
-					if (fie.isAssignableFrom(MultipartFile.class)) {
+					// } else if (cla.isInterface()) {
+					// if (MultipartFile.class.isAssignableFrom(fie)) {
+					// typeStr = "File";
+					// } else if (Map.class.isAssignableFrom(fie)) {
+					// typeStr = "Map";
+					// } else if (List.class.isAssignableFrom(fie) ||
+					// Set.class.isAssignableFrom(fie)) {
+					//
+					// // System.out.println("list:" + fie.getComponentType());
+					//
+					// KVEntity<Class<?>, Type> ct = extractGenType(genType);
+					// if (null == ct) {
+					// // 未指定泛型
+					// continue;
+					// }
+					// KVEntity<String, List<FieldInfo>> kv2 = extract(ct.getRight());
+					// if (null == kv2) {
+					// continue;
+					// }
+					// typeStr = "Array<" + kv2.getLeft() + ">";
+					// info.setChildren(kv2.getRight());
+					// } else {
+					// continue;
+					// }
+				} else {
+					if (MultipartFile.class.isAssignableFrom(fie)) {
 						typeStr = "File";
 					} else if (Map.class.isAssignableFrom(fie)) {
 						typeStr = "Map";
 					} else if (List.class.isAssignableFrom(fie) || Set.class.isAssignableFrom(fie)) {
-
-						//System.out.println("list:" + fie.getComponentType());
-
-						KVEntity<Class<?>, Type> ct = extractGenType(genType);
-						if (null == ct) {
-							// 未指定泛型
-							continue;
-						}
-						KVEntity<String, List<FieldInfo>> kv2 = extract(ct.getRight());
-						if (null == kv2) {
-							continue;
-						}
-						typeStr = "Array<" + kv2.getLeft() + ">";
-						info.setChildren(kv2.getRight());
-					} else {
-						continue;
-					}
-				} else {
-					if (Map.class.isAssignableFrom(fie)) {
-						typeStr = "Map";
-					} else if (List.class.isAssignableFrom(fie) || Set.class.isAssignableFrom(fie)) {
-						//System.out.println("list --- " + field.getName());
+						// System.out.println("list --- " + field.getName());
 						if (null != field.getGenericType()) {
 
 							if (field.getGenericType() instanceof Class<?>) {
-								//System.out.println(" class");
+								// System.out.println(" class");
 								KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
 								if (null == ct) {
 									// 未指定泛型
@@ -228,7 +246,7 @@ public class FieldUtil {
 								info.setChildren(kv2.getRight());
 							} else if (field.getGenericType() instanceof ParameterizedType
 									|| field.getGenericType() instanceof GenericArrayType) {
-								//System.out.println(" pt type:" + genType);
+								// System.out.println(" pt type:" + genType);
 
 								KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
 								if (null == ct) {
@@ -246,62 +264,58 @@ public class FieldUtil {
 									continue;
 								}
 								typeStr = "Array<" + kv2.getLeft() + ">";
+								if (field.getGenericType() instanceof GenericArrayType) {
+									typeStr = "Array<" + typeStr + ">";
+								}
 								info.setChildren(kv2.getRight());
 							} else {
-								//System.out.println("未知 1:" + field.getName());
+								// System.out.println("未知 1:" + field.getName());
 							}
 						}
-					} else {
-
-						if (field.getGenericType() instanceof Class<?>) {
-							//System.out.println("不是泛型 ---" + field.getName());
-							if (Object.class == fie) {
-								continue;
-							}
+					} else if (field.getGenericType() instanceof Class<?>) {
+						// System.out.println("不是泛型 ---" + field.getName());
+						if (Object.class == fie) {
+							typeStr = "Object<?>";
+						} else {
 							typeStr = "Object";
 							info.setChildren(extractField(fie, genType));
-						} else if (field.getGenericType() instanceof ParameterizedType
-								|| field.getGenericType() instanceof GenericArrayType) {
-							//System.out.println("是泛型- 不是数组 ---" + field.getName());
-							KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
-							if (null == ct) {
-								// 未指定泛型
-								continue;
-							}
-							KVEntity<String, List<FieldInfo>> kv2 = null;
-							if (null == ct.getRight()) {
-								kv2 = extract(genType);
-							} else {
-								kv2 = extract(ct.getRight());
-							}
-							if (null == kv2) {
-								continue;
-							}
-							typeStr = kv2.getLeft();
-							info.setChildren(kv2.getRight());
-						} else if (!field.getGenericType().getTypeName().equals(field.getType().getTypeName())) {
-							//System.out.println("纯泛型" + field.getName());
-
-							KVEntity<Class<?>, Type> ct = extractGenType(genType);
-							if (null == ct) {
-								// 未指定泛型
-								continue;
-							}
-							KVEntity<String, List<FieldInfo>> kv2 = null;
-
-							if (null == ct.getRight()) {
-								kv2 = extract(genType);
-							} else {
-								kv2 = extract(ct.getRight());
-							}
-							if (null == kv2) {
-								continue;
-							}
-							typeStr = kv2.getLeft();
-							info.setChildren(kv2.getRight());
-						} else {
-							//System.out.println("未知 2:" + field.getName());
 						}
+					} else if (field.getGenericType() instanceof ParameterizedType
+							|| field.getGenericType() instanceof GenericArrayType) {
+						// System.out.println("是泛型 ---" + field.getName());
+						KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
+						if (null == ct) {
+							// 未指定泛型
+							continue;
+						}
+						KVEntity<String, List<FieldInfo>> kv2 = null;
+						if (null == ct.getRight()) {
+
+							kv2 = extract(genType);
+						} else {
+							kv2 = extract(ct.getRight());
+						}
+						if (null == kv2) {
+							continue;
+						}
+						typeStr = kv2.getLeft();
+						// if(field.getGenericType() instanceof GenericArrayType) {
+						// typeStr = "Array<" + typeStr + ">";
+						// }
+
+						info.setChildren(kv2.getRight());
+					} else if (!field.getGenericType().getTypeName().equals(field.getType().getTypeName())) {
+						// System.out.println("纯泛型：" + field.getName()+"--- "+field.getGenericType()+"
+						// genType:"+genType);
+						KVEntity<String, List<FieldInfo>> kv2 = extract(genType);
+						if (null == kv2) {
+							continue;
+						}
+						typeStr = kv2.getLeft();
+						info.setChildren(kv2.getRight());
+					} else {
+						// System.out.println("未知 2:" + field.getName());
+						typeStr = "Object<?>";
 					}
 
 				}
@@ -310,7 +324,7 @@ public class FieldUtil {
 				}
 				info.setType(typeStr);
 				infos.add(info);
-				//System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
+				// System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
 			}
 		}
 
@@ -355,45 +369,45 @@ public class FieldUtil {
 
 			Type[] types = pt.getActualTypeArguments();
 			if (types.length > 1) {
-				//System.out.println("不支持多泛型");
+				// System.out.println("不支持多泛型");
 			} else {
 				kv.setRight(types[0]);
 			}
 
 		} else if (type instanceof GenericArrayType) {
-			//System.out.println("泛型数组");
+			// System.out.println("泛型数组");
 			GenericArrayType gat = (GenericArrayType) type;
 
-			//System.out.println(gat.getGenericComponentType());
+			// System.out.println(gat.getGenericComponentType());
 
 			if (gat.getGenericComponentType() instanceof ParameterizedType) {
 				// MyClass<T>[] 泛型数组
-				//System.out.println("泛型数组 1");
+				// System.out.println("泛型数组 1");
 				ParameterizedType pt = (ParameterizedType) gat.getGenericComponentType();
 				// System.out.println("-- " + pt.getOwnerType() + " --- " + pt.getRawType());
 
 				kv.setLeft((Class<?>) pt.getRawType());
 				Type[] types = pt.getActualTypeArguments();
 				if (types.length > 1) {
-					//System.out.println("不支持多泛型");
+					// System.out.println("不支持多泛型");
 				} else {
 					kv.setRight(types[0]);
 				}
 			} else {
-				//System.out.println("泛型数组 2");
+				// System.out.println("泛型数组 2");
 				// T[] 纯泛型数组
 			}
 		} else if (type instanceof Class) {
-			//System.out.println("class");
+			// System.out.println("class");
 			kv.setLeft((Class<?>) type);
 			if (kv.getLeft().isArray()) {
-				//System.out.println(kv.getLeft().getComponentType());
+				// System.out.println(kv.getLeft().getComponentType());
 				kv.setLeft(kv.getLeft().getComponentType());
 			}
 
 		} else {
 			// T 纯泛型
-			//System.out.println("T");
+			// System.out.println("T");
 			return null;
 		}
 
@@ -402,12 +416,12 @@ public class FieldUtil {
 					|| kv.getRight() instanceof Class<?>) {
 
 			} else {
-				//System.out.println("取指定类型,不符合 genType:" + kv.getRight());
+				// System.out.println("取指定类型,不符合 genType:" + kv.getRight());
 				kv.setRight(null);
 			}
 		}
 
-		//System.out.println("取指定类型：" + kv.getLeft() + " ---- " + kv.getRight());
+		// System.out.println("取指定类型：" + kv.getLeft() + " ---- " + kv.getRight());
 		return kv;
 	}
 
@@ -424,16 +438,16 @@ public class FieldUtil {
 	@SuppressWarnings("unchecked")
 	public static <T extends ParamChildrenVo<?>> void removeField(List<T> vos, String field) {
 
-		if(null == vos) {
+		if (null == vos) {
 			return;
 		}
-		
+
 		String[] keys = field.split("\\.");
 		List<T> tempChildren = vos;
 
 		for (int i = 0; i < keys.length; i++) {
 			String key = keys[i];
-			if(null == tempChildren) {
+			if (null == tempChildren) {
 				break;
 			}
 			for (int j = 0; j < tempChildren.size(); j++) {

@@ -1,6 +1,7 @@
 ﻿<!DOCTYPE html>
 <html lang="cn">
 <head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -19,6 +20,11 @@
 	-webkit-box-sizing: border-box;
 }
 
+html {
+	width: 100%;
+	height: 100%;
+}
+
 body {
 	background: #f0f0f0;
 	padding: 0;
@@ -26,15 +32,18 @@ body {
 	width: 100%;
 	height: 100%;
 }
-#vue_app{
+
+#vue_app {
 	width: 100%;
-	padding-left: 1%;
-	padding-right: 1%;
+	/* padding-left: 1%;
+	padding-right: 1%; */
 }
+
 .content {
 	width: 100%;
 	height: 100%;
 	margin: 0 auto;
+	padding-top: 60px;
 }
 
 /* 输入框 */
@@ -63,18 +72,67 @@ body {
 	height: 60px;
 	background-color: #88be04;
 	position: relative;
+	position: fixed;
 }
 
 .content-menu {
 	width: 260px;
+	height: calc(100% - 120px);
+	position: fixed;
+}
+
+.jquery-accordion-menu {
 	height: 100%;
+}
+
+.jquery-accordion-menu ul {
+	width: 260px;
+	height: calc(100% - 50px);
+	float: left;
+	overflow-y: auto;
+}
+
+/* 滚动条样式 */
+.content ::-webkit-scrollbar {
+	width: 6px; /*高宽分别对应横竖滚动条的尺寸*/
+	height: 1px;
+}
+
+.content ::-webkit-scrollbar-thumb {
+	/*滚动条里面小方块*/
+	border-radius: 10px;
+	box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+	background: #00cb9f;
+}
+
+.content ::-webkit-scrollbar-track {
+	/*滚动条里面轨道*/
+	box-shadow: inset 0 0 5px rgba(167, 163, 163, 0.2);
+	border-radius: 10px;
+	background: #ededed;
 }
 
 .content-right {
 	margin-left: 260px;
 	width: calc(100% - 260px);
-	height: 100%;
-	margin-bottom: 80px;
+	max-height: calc(100% - 120px);
+	/* padding-bottom: 80px; */
+	/*float: left;*/
+	position: fixed;
+	overflow-y: auto;
+}
+
+.table-show {
+	float: right;
+	width: 10px;
+	text-align: center;
+	cursor: pointer;
+	line-height: 30px;
+	color: red;
+}
+
+.content_over {
+	
 }
 </style>
 <!-- JS 导入 -->
@@ -85,8 +143,8 @@ body {
 </head>
 <body>
 	<div id="vue_app">
-		
-		
+
+
 		<div class="content-head">
 			<div class="title">DDM4J API Document</div>
 			<div class="head-system">{{system}}</div>
@@ -96,17 +154,18 @@ body {
 			</div>
 		</div>
 		<!-- 登录 -->
-		<div v-if="!login"  class="container" id="login">
-          	<div class="login">
-	        	<h1>Login</h1>
-              	<div class="form-group">
-                	<input type="email" v-model="account" placeholder="account">
-              	</div>
-              	<div class="form-group">
-                	<input type="password" v-model="password" placeholder="password">
-              	</div>
-              	<input type="button" @Click="loadData" value="Sign in" class="btn btn-lg btn-block btn-success">
-    		</div>
+		<div v-if="!login" class="container" id="login">
+			<div class="login">
+				<h1>Login</h1>
+				<div class="form-group">
+					<input type="email" v-model="account" placeholder="account">
+				</div>
+				<div class="form-group">
+					<input type="password" v-model="password" placeholder="password">
+				</div>
+				<input type="button" @Click="loadData" value="Sign in"
+					class="btn btn-lg btn-block btn-success">
+			</div>
 		</div>
 		<!-- 正文 -->
 		<div class="content" v-if="login">
@@ -132,255 +191,287 @@ body {
 			</div>
 			<!-- 正文内容 -->
 			<div class="content-right">
-				<!-- controller 说明 -->
-				<div class="content-controller">
-					<div class="controller-title">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;{{selectionController.controller}}</div>
-					<div class="controller-version">
-						<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}};&nbsp;&nbsp;</span>
-						版本：{{selectionController.version}}
-					</div>
-					<!-- <div class="controller-uri" v-if="selectionController.uri">请求路径:
+				<div class="content_over">
+
+					<!-- controller 说明 -->
+					<div class="content-controller">
+						<div class="controller-title">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;{{selectionController.controller}}</div>
+						<div class="controller-version">
+							<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}};&nbsp;&nbsp;</span>
+							版本：{{selectionController.version}}
+						</div>
+						<!-- <div class="controller-uri" v-if="selectionController.uri">请求路径:
 						&nbsp;&nbsp;{{selectionController.uri}}</div> -->
-					<div class="controller-desc" v-if="selectionController.describe">描述说明：&nbsp;&nbsp;{{selectionController.describe}}</div>
-				</div>
-				<hr>
-				<!-- 接口说明 -->
-				<div class="content-interface">
-					<div class="interface-title">{{selectionInterface.name}}&nbsp;:&nbsp;&nbsp;{{selectionInterface.version}}</div>
-					<div class="interface-uri">
-						请求路径: <span class="interface-method tag"
-							v-show="selectionInterface.method">{{selectionInterface.method}}</span>
-						&nbsp;&nbsp;{{selectionInterface.uri}} <input type="button"
-							@Click="copyStr(selectionInterface.uri)" class="copy_btn"
-							style="margin-left: 20px;" value="复制">
+						<div class="controller-desc" v-if="selectionController.describe">描述说明：&nbsp;&nbsp;{{selectionController.describe}}</div>
 					</div>
-					<div class="controller-desc" v-if="selectionInterface.describe">描述说明：&nbsp;&nbsp;{{selectionInterface.describe}}</div>
-					<div class="other" v-if="selectionInterface.author">
-						<span class="interface-author">作者：&nbsp;&nbsp;{{selectionInterface.author}}</span>
+					<hr>
+
+					<!-- 接口说明 -->
+					<div class="content-interface">
+						<div class="interface-title">{{selectionInterface.name}}&nbsp;:&nbsp;&nbsp;{{selectionInterface.version}}</div>
+						<div class="interface-uri">
+							请求路径: <span class="interface-method tag"
+								v-show="selectionInterface.method">{{selectionInterface.method}}</span>
+							&nbsp;&nbsp;{{selectionInterface.uri}} <input type="button"
+								@Click="copyStr(selectionInterface.uri)" class="copy_btn"
+								style="margin-left: 20px;" value="复制">
+						</div>
+						<div class="controller-desc" v-if="selectionInterface.describe">描述说明：&nbsp;&nbsp;{{selectionInterface.describe}}</div>
+						<div class="other" v-if="selectionInterface.author">
+							<span class="interface-author">作者：&nbsp;&nbsp;{{selectionInterface.author}}</span>
+						</div>
 					</div>
-				</div>
-				<!-- 请求头 -->
-				<div class="content-table"
-					v-if="selectionInterface.heads && selectionInterface.heads.length > 0">
-					<div class="title">Headers：请求头</div>
-					<table class="bordered">
-						<thead>
-							<tr>
-								<th class="left field">字段</th>
+					<!-- 请求头 -->
+					<div class="content-table"
+						v-if="selectionInterface.heads && selectionInterface.heads.length > 0">
+						<div class="title">Headers：请求头</div>
+						<table class="bordered">
+							<thead>
+								<tr>
+									<th class="left field">字段</th>
 
-								<th class="type">类型</th>
-								<th class="required">必填</th>
-								<th class="left">示例说明</th>
-								<th class="reg">正则校验</th>
-								<th class="length">最小</th>
-								<th class="length">最大</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="item in selectionInterface.heads">
-								<td class="left field"><input type="button"
-									@Click="copyStr(item.field)" class="copy_btn" value="复制">
-									{{item.field}}</td>
-								</td>
+									<th class="type">类型</th>
+									<th class="required">必填</th>
+									<th class="left">示例说明</th>
+									<th class="reg">正则校验</th>
+									<th class="length">最小</th>
+									<th class="length">最大</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="item in selectionInterface.heads">
+									<td class="left field"><input type="button"
+										@Click="copyStr(item.field)" class="copy_btn" value="复制">
+										{{item.field}}</td>
+									</td>
 
-								<td class="type">{{item.type}}</td>
-								<td class="required"><span v-if="item.required"
-									class="required_true">是</span> <span v-if="!item.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item.describe}}</td>
-								<td class="reg">{{item.regexp}}</td>
-								<td class="length">{{item.min}}</td>
-								<td class="length">{{item.max}}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-				<!-- 请求参数 -->
-				<div class="content-table"
-					v-if="selectionInterface.parameters && selectionInterface.parameters.length > 0">
-					<div class="title">
-						Request：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
-							v-show="selectionInterface.json">JSON</span> <span class="tag"
-							v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; <span
-							class="tag" v-show="selectionInterface.paramArray">Array</span>
+									<td class="type">{{item.type}}</td>
+									<td class="required"><span v-if="item.required"
+										class="required_true">是</span> <span v-if="!item.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item.describe}}</td>
+									<td class="reg">{{item.regexp}}</td>
+									<td class="length">{{item.min}}</td>
+									<td class="length">{{item.max}}</td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
-					<table class="bordered">
-						<thead>
-							<tr>
-								<th class="left field">字段</th>
-								<th class="type">类型</th>
-								<th class="required">必填</th>
-								<th class="left">示例说明</th>
-								<th class="reg">正则校验</th>
-								<th class="length">最小</th>
-								<th class="length">最大</th>
-							</tr>
-						</thead>
-						<tbody>
-							<template v-for="item in selectionInterface.parameters">
-							<!-- 第一层 -->
-							<tr>
-								<td class="left field"><input type="button"
-									@Click="copyStr(item.field)" class="copy_btn" value="复制">
-									<span v-if="item.url" class="tag">URI</span>
-									{{item.field}}
-								</td>
+					<!-- 请求参数 -->
+					<div class="content-table"
+						v-if="selectionInterface.parameters && selectionInterface.parameters.length > 0">
+						<div class="title">
+							Request：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
+								v-show="selectionInterface.json">JSON</span> <span class="tag"
+								v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; <span
+								class="tag">{{selectionInterface.jsonMethod}}</span>
+						</div>
+						<table class="bordered">
+							<thead>
+								<tr>
+									<th class="left field">字段</th>
+									<th class="type">类型</th>
+									<th class="required">必填</th>
+									<th class="left">示例说明</th>
+									<th class="reg">正则校验</th>
+									<th class="length">最小</th>
+									<th class="length">最大</th>
+								</tr>
+							</thead>
+							<tbody>
+								<template v-for="(item,index) in selectionInterface.parameters">
+								<!-- 第一层 -->
+								<tr>
+									<td class="left field"><input type="button"
+										@Click="copyStr(item.field)" class="copy_btn" value="复制">
+										<span v-if="item.url" class="tag">URI</span> {{item.field}} <span
+										class="table-show"
+										v-if="item.children && add_show_request('1',index)"
+										@Click="show_request('1',index)">
+											{{show.request.one[index].show?"-":"+"}}</span></td>
 
-								<td class="type">{{item.type}}</td>
-								<td class="required"><span v-if="item.required"
-									class="required_true">是</span> <span v-if="!item.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item.describe}}</td>
-								<td class="reg">{{item.regexp}}</td>
-								<td class="length">{{item.min}}</td>
-								<td class="length">{{item.max}}</td>
-							</tr>
-							<template v-if="item.children" v-for="item2 in item.children">
-							<!-- 第二层 -->
-							<tr>
-								<td class="left field"><input type="button"
-									@Click="copyStr(item2.field)" class="copy_btn" value="复制">
-									<span class="param_love">-></span>&nbsp;{{item2.field}}</td>
+									<td class="type">{{item.type}}</td>
+									<td class="required"><span v-if="item.required"
+										class="required_true">是</span> <span v-if="!item.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item.describe}}</td>
+									<td class="reg">{{item.regexp}}</td>
+									<td class="length">{{item.min}}</td>
+									<td class="length">{{item.max}}</td>
+								</tr>
+								<template v-if="show.request.one[index].show"
+									v-for="(item2,index2) in item.children"> <!-- 第二层 -->
+								<tr>
+									<td class="left field"><input type="button"
+										@Click="copyStr(item2.field)" class="copy_btn" value="复制">
+										<span class="param_love">-></span>&nbsp;{{item2.field}} <span
+										class="table-show"
+										v-if="item2.children && add_show_request('2',index2)"
+										@Click="show_request('2',index2)">
+											{{show.request.two[index2].show?"-":"+"}}</span></td>
 
-								<td class="type">{{item2.type}}</td>
-								<td class="required"><span v-if="item2.required"
-									class="required_true">是</span> <span v-if="!item2.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item2.describe}}</td>
-								<td class="reg">{{item2.regexp}}</td>
-								<td class="length">{{item2.min}}</td>
-								<td class="length">{{item2.max}}</td>
-							</tr>
-							<template v-if="item2.children" v-for="item3 in item2.children">
-							<!-- 第三层 -->
-							<tr>
-								<td class="left field"><input type="button"
-									@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
-									class="param_love">->&nbsp;</span><span class="param_love" style="color: #9c27b0;">->&nbsp;</span>{{item3.field}}</td>
-								<td class="type">{{item3.type}}</td>
-								<td class="required"><span v-if="item3.required"
-									class="required_true">是</span> <span v-if="!item3.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item3.describe}}</td>
-								<td class="reg">{{item3.regexp}}</td>
-								<td class="length">{{item3.min}}</td>
-								<td class="length">{{item3.max}}</td>
-							</tr>
-							<!-- 第四层 -->
-							<tr v-if="item3.children" v-for="item4 in item3.children">
-								<td class="left field"><input type="button"
-									@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
-									class="param_love">->&nbsp;<span class="param_love" style="color: #9c27b0;">->&nbsp;</span>
-										<span class="param_love" style="color: red;">->&nbsp;</span>
-								</span>{{item4.field}}</td>
+									<td class="type">{{item2.type}}</td>
+									<td class="required"><span v-if="item2.required"
+										class="required_true">是</span> <span v-if="!item2.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item2.describe}}</td>
+									<td class="reg">{{item2.regexp}}</td>
+									<td class="length">{{item2.min}}</td>
+									<td class="length">{{item2.max}}</td>
+								</tr>
+								<template v-if="show.request.two[index2].show"
+									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
+								<tr>
+									<td class="left field"><input type="button"
+										@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
+										class="param_love">->&nbsp;</span><span class="param_love"
+										style="color: #9c27b0;">->&nbsp;</span>{{item3.field}} <span
+										class="table-show"
+										v-if="item3.children && add_show_request('3',index3)"
+										@Click="show_request('3',index3)">
+											{{show.request.three[index3].show?"-":"+"}}</span></td>
+									<td class="type">{{item3.type}}</td>
+									<td class="required"><span v-if="item3.required"
+										class="required_true">是</span> <span v-if="!item3.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item3.describe}}</td>
+									<td class="reg">{{item3.regexp}}</td>
+									<td class="length">{{item3.min}}</td>
+									<td class="length">{{item3.max}}</td>
+								</tr>
+								<!-- 第四层 -->
+								<tr v-if="show.request.three[index3].show"
+									v-for="item4 in item3.children">
+									<td class="left field"><input type="button"
+										@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
+										class="param_love">->&nbsp;<span class="param_love"
+											style="color: #9c27b0;">->&nbsp;</span> <span
+											class="param_love" style="color: red;">->&nbsp;</span>
+									</span>{{item4.field}}</td>
 
 
-								<td class="type">{{item4.type}}</td>
-								<td class="required"><span v-if="item4.required"
-									class="required_true">是</span> <span v-if="!item4.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item4.describe}}</td>
-								<td class="reg">{{item4.regexp}}</td>
-								<td class="length">{{item4.min}}</td>
-								<td class="length">{{item4.max}}</td>
-							</tr>
-							</template> </template> </template>
-						</tbody>
-					</table>
-				</div>
-				<!-- 返回数据 -->
-				<div class="content-table">
-					<div class="title">
-						Response：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
-							v-show="selectionInterface.responseMethod">{{selectionInterface.responseMethod}}</span>
+									<td class="type">{{item4.type}}</td>
+									<td class="required"><span v-if="item4.required"
+										class="required_true">是</span> <span v-if="!item4.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item4.describe}}</td>
+									<td class="reg">{{item4.regexp}}</td>
+									<td class="length">{{item4.min}}</td>
+									<td class="length">{{item4.max}}</td>
+								</tr>
+								</template> </template> </template>
+							</tbody>
+						</table>
 					</div>
-					<table class="bordered">
-						<thead>
-							<tr>
-								<th class="left field">字段</th>
-								<th class="type">类型</th>
-								<th class="required">必需</th>
-								<th class="left">示例说明</th>
-							</tr>
-						</thead>
-						<tbody>
-							<template v-for="item in selectionInterface.responses">
-							<!-- 第一层 -->
-							<tr>
-								<td class="left field"><input type="button"
-									@Click="copyStr(item.field)" class="copy_btn" value="复制">{{item.field}}</td>
+					<!-- 返回数据 -->
+					<div class="content-table">
+						<div class="title">
+							Response：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
+								v-show="selectionInterface.responseMethod">{{selectionInterface.responseMethod}}</span>
+						</div>
+						<table class="bordered">
+							<thead>
+								<tr>
+									<th class="left field">字段</th>
 
-								<td class="type">{{item.type}}</td>
-								<td class="required"><span v-if="item.required"
-									class="required_true">是</span> <span v-if="!item.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item.describe}}</td>
-							</tr>
-							<template v-if="item.children" v-for="item2 in item.children">
-							<!-- 第二层 -->
-							<tr>
-								<td class="left" field><input type="button"
-									@Click="copyStr(item2.field)" class="copy_btn" value="复制">
-									<span class="param_love">->&nbsp;</span> {{item2.field}}</td>
+									<th class="type">类型</th>
+									<th class="required">必填</th>
+									<th class="left">示例说明</th>
+								</tr>
+							</thead>
+							<tbody>
+								<template v-for="(item,index) in selectionInterface.responses">
+								<!-- 第一层 -->
+								<tr>
+									<td class="left field"><input type="button"
+										@Click="copyStr(item.field)" class="copy_btn" value="复制">{{item.field}}
+										<span class="table-show"
+										v-if="item.children && add_show_response('1',index)"
+										@Click="show_response('1',index)">
+											{{show.response.one[index].show?"-":"+"}}</span></td>
 
-								<td class="type">{{item2.type}}</td>
-								<td class="required"><span v-if="item2.required"
-									class="required_true">是</span> <span v-if="!item2.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item2.describe}}</td>
-							</tr>
-							<template v-if="item2.children" v-for="item3 in item2.children">
-							<!-- 第三层 -->
-							<tr>
-								<td class="left field"><input type="button"
-									@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
-									class="param_love">->&nbsp; <span
-										style="color: #9c27b0;">-></span> &nbsp;
-								</span>{{item3.field}}</td>
+									<td class="type">{{item.type}}</td>
+									<td class="required"><span v-if="item.required"
+										class="required_true">是</span> <span v-if="!item.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item.describe}}</td>
+								</tr>
+								<template v-if="show.response.one[index].show"
+									v-for="(item2,index2) in item.children"> <!-- 第二层 -->
+								<tr>
+									<td class="left" field><input type="button"
+										@Click="copyStr(item2.field)" class="copy_btn" value="复制">
+										<span class="param_love">->&nbsp;</span> {{item2.field}} <span
+										class="table-show"
+										v-if="item2.children && add_show_response('2',index2)"
+										@Click="show_response('2',index2)">
+											{{show.response.two[index2].show?"-":"+"}}</span></td>
 
-								<td class="type">{{item3.type}}</td>
-								<td class="required"><span v-if="item3.required"
-									class="required_true">是</span> <span v-if="!item3.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item3.describe}}</td>
-							</tr>
-							<!-- 第四层 -->
-							<tr v-if="item3.children" v-for="item4 in item3.children">
-								<td class="left field"><input type="button"
-									@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
-									class="param_love">->&nbsp; <span
-										style="color: #9c27b0;">-></span> &nbsp;<span
-										style="color: red;">-></span> &nbsp;
-								</span>{{item4.field}}</td>
+									<td class="type">{{item2.type}}</td>
+									<td class="required"><span v-if="item2.required"
+										class="required_true">是</span> <span v-if="!item2.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item2.describe}}</td>
+								</tr>
+								<template v-if="show.response.two[index2].show"
+									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
+								<tr>
+									<td class="left field"><input type="button"
+										@Click="copyStr(item3.field)" class="copy_btn" value="复制"><span
+										class="param_love">->&nbsp; <span
+											style="color: #9c27b0;">-></span> &nbsp;
+									</span>{{item3.field}} <span class="table-show"
+										v-if="item3.children && add_show_response('3',index3)"
+										@Click="show_response('3',index3)">
+											{{show.response.three[index3].show?"-":"+"}}</span></td>
 
-								<td class="type">{{item4.type}}</td>
-								<td class="required"><span v-if="item4.required"
-									class="required_true">是</span> <span v-if="!item4.required"
-									class="required_false">否</span></td>
-								<td class="left">{{item4.describe}}</td>
-							</tr>
-							</template> </template> </template>
-						</tbody>
-					</table>
+									<td class="type">{{item3.type}}</td>
+									<td class="required"><span v-if="item3.required"
+										class="required_true">是</span> <span v-if="!item3.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item3.describe}}</td>
+								</tr>
+								<!-- 第四层 -->
+								<tr v-if="show.response.three[index3].show"
+									v-for="item4 in item3.children">
+									<td class="left field"><input type="button"
+										@Click="copyStr(item4.field)" class="copy_btn" value="复制"><span
+										class="param_love">->&nbsp; <span
+											style="color: #9c27b0;">-></span> &nbsp;<span
+											style="color: red;">-></span> &nbsp;
+									</span>{{item4.field}}</td>
+
+									<td class="type">{{item4.type}}</td>
+									<td class="required"><span v-if="item4.required"
+										class="required_true">是</span> <span v-if="!item4.required"
+										class="required_false">否</span></td>
+									<td class="left">{{item4.describe}}</td>
+								</tr>
+								</template> </template> </template>
+							</tbody>
+						</table>
+					</div>
+
 				</div>
-
 			</div>
-			
+
 		</div>
 		<!-- 页尾 -->
 		<div class="content-footer">
-			<span class="title">GitHub:&nbsp;&nbsp;<a href="https://github.com/ddm4j/spring-boot-api-document" target="_blank"> DDM - Springboot API document - V2.2</a></span>
-<!--			<span class="version">V1.1</span>-->
+			<span class="title">GitHub:&nbsp;&nbsp;<a
+				href="https://github.com/ddm4j/spring-boot-api-document"
+				target="_blank"> DDM - Springboot API document - V2.2</a></span>
+			<!--			<span class="version">V1.1</span>-->
 		</div>
-		
+
 		<div class="my_tip">
 			<div class="copy_tip" v-show="copy_tip">已复制到剪切板：{{copy_str}}</div>
 		</div>
 		<div class="my_tip">
-			<div class="copy_tip tip_error"  v-show="login_tip">{{login_str}}</div>
+			<div class="copy_tip tip_error" v-show="login_tip">{{login_str}}</div>
 		</div>
-		
-		
+
+
 	</div>
 	<script>
 	
@@ -410,6 +501,19 @@ body {
                 {name: "a"},
                 {name: "b"}
             ],
+            // 折叠
+            show:{
+            	response:{
+            		one:[],
+            		two:[],
+            		three:[]
+            	},
+            	request:{
+            		one:[],
+	        		two:[],
+	        		three:[]
+            	}
+            },
             selectionController: {},// 选择的Controller
             selectionInterface: {},// 选择的接口
             scan_str: "",
@@ -420,6 +524,140 @@ body {
             that.loadData();
         },
         methods: {
+        	// 添加返回值索引
+        	add_show_request(lovel,index){
+        		if(1 == lovel){
+        			for(var i=this.show.request.one.length;i<=index;i++){
+    					this.show.request.one.push({show:false});
+    				}
+        		}else if(2 == lovel){
+        			for(var i=this.show.request.two.length;i<=index;i++){
+    					this.show.request.two.push({show:false});
+    				}
+        		}else{
+        			for(var i=this.show.request.three.length;i<=index;i++){
+    					this.show.request.three.push({show:false});
+    				}
+        		}
+        		return true;
+        	},
+        	// 是否显示 返回值
+        	show_request(lovel,index){
+        		if(1 == lovel){
+        			if(null == this.show.request.one[index]){
+        				for(var i=this.show.request.one.length;i<=index;i++){
+        					this.show.request.one.push({show:false});
+        				}
+        				return true;
+        			}else{
+        				if(this.show.request.one[index].show){
+        					this.show.request.one[index].show = false;
+        					return true;
+        				}else{
+        					this.show.request.one[index].show = true;
+        					return false;
+        				}
+        			}
+        		}else if(2 == lovel){
+        			if(null == this.show.request.two[index]){
+        				for(var i=this.show.request.two.length;i<=index;i++){
+        					this.show.request.two.push({show:false});
+        				}
+        				return true;
+        			}else{
+        				if(this.show.request.two[index].show){
+        					this.show.request.two[index].show = false;
+        					return true;
+        				}else{
+        					this.show.request.two[index].show = true;
+        					return false;
+        				}
+        			}
+        		}else{
+        			if(null == this.show.request.three[index]){
+        				for(var i=this.show.request.three.length;i<=index;i++){
+        					this.show.request.three.push({show:false});
+        				}
+        				return true;
+        			}else{
+        				if(this.show.request.three[index].show){
+        					this.show.request.three[index].show = false;
+        					return true;
+        				}else{
+        					this.show.request.three[index].show = true;
+        					return false;
+        				}
+        			}
+        		}
+        		return true;
+        	},
+        	// 添加返回值索引
+        	add_show_response(lovel,index){
+        		if(1 == lovel){
+        			for(var i=this.show.response.one.length;i<=index;i++){
+    					this.show.response.one.push({show:false});
+    				}
+        		}else if(2 == lovel){
+        			for(var i=this.show.response.two.length;i<=index;i++){
+    					this.show.response.two.push({show:false});
+    				}
+        		}else{
+        			for(var i=this.show.response.three.length;i<=index;i++){
+    					this.show.response.three.push({show:false});
+    				}
+        		}
+        		return true;
+        	},
+        	// 是否显示 返回值
+        	show_response(lovel,index){
+        		if(1 == lovel){
+        			if(null == this.show.response.one[index]){
+        				for(var i=this.show.response.one.length;i<=index;i++){
+        					this.show.response.one.push({show:false});
+        				}
+        				return true;
+        			}else{
+        				if(this.show.response.one[index].show){
+        					this.show.response.one[index].show = false;
+        					return true;
+        				}else{
+        					this.show.response.one[index].show = true;
+        					return false;
+        				}
+        			}
+        		}else if(2 == lovel){
+        			if(null == this.show.response.two[index]){
+        				for(var i=this.show.response.two.length;i<=index;i++){
+        					this.show.response.two.push({show:false});
+        				}
+        				return true;
+        			}else{
+        				if(this.show.response.two[index].show){
+        					this.show.response.two[index].show = false;
+        					return true;
+        				}else{
+        					this.show.response.two[index].show = true;
+        					return false;
+        				}
+        			}
+        		}else{
+        			if(null == this.show.response.three[index]){
+        				for(var i=this.show.response.three.length;i<=index;i++){
+        					this.show.response.three.push({show:false});
+        				}
+        				return true;
+        			}else{
+        				if(this.show.response.three[index].show){
+        					this.show.response.three[index].show = false;
+        					return true;
+        				}else{
+        					this.show.response.three[index].show = true;
+        					return false;
+        				}
+        			}
+        		}
+        		return true;
+        	},
         	copyStr(str){
         		var that = this;
         		this.copy_str = str;
@@ -564,8 +802,12 @@ body {
             },
             // 点击菜单事件
             myClickOne: function (item, interfaces) {
+            	this.show.response.one = [];
+                this.show.response.two = [];
+                this.show.response.three = [];
                 this.selectionController = item;
                 this.selectionInterface = interfaces;
+                
             }
 
         }

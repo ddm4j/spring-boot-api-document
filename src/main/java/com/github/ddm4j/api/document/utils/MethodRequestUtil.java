@@ -32,7 +32,7 @@ public class MethodRequestUtil {
 	private CheckConfig config;
 
 	private boolean json = false;
-	private String jsonMethod = "Object";
+	private String jsonMethod = null;
 
 	public MethodRequestUtil(CheckConfig config) {
 		this.config = config;
@@ -40,6 +40,7 @@ public class MethodRequestUtil {
 
 	public InterfaceVo getRequestVo(Method method, String methodType) {
 		json = false;
+		jsonMethod = null;
 		// 1 获取路径注解
 		InterfaceVo ivo = extractUriAndType(method, methodType);
 
@@ -121,7 +122,7 @@ public class MethodRequestUtil {
 		// 判断是不是 json 请求
 		if (json) {
 			ivo.setJson(true);
-			ivo.setMethod("post");
+			ivo.setMethod("POST");
 		}
 
 		return ivo;
@@ -389,6 +390,10 @@ public class MethodRequestUtil {
 			return null;
 		}
 
+		if(null == jsonMethod && json) {
+			jsonMethod = kv.getLeft();
+		}
+		
 		if (null == kv.getRight() || kv.getRight().size() == 0) {
 			
 			List<ParameterVo> vos = new ArrayList<ParameterVo>();
