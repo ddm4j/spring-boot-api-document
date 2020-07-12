@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.annotation.ApiParam;
@@ -113,10 +114,10 @@ public class ApiParamCheck {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
-			// System.out.println(apiParam.field());
+			//System.out.println(apiParam.field());
 			boolean empty = true;
 			for (Entry<String, Object> param : params.entrySet()) {
-				// System.out.println("--- :" + param.getKey());
+				//System.out.println("--- :" + param.getKey());
 				// 判断是否为空
 				if (null == param.getValue()) {
 					if (apiParam.field().equals(param.getKey())) {
@@ -127,6 +128,17 @@ public class ApiParamCheck {
 						if (null != info) {
 							infos.add(info);
 						}
+					}
+				}
+				// 判断是不是文件
+				else if (MultipartFile.class.isAssignableFrom(param.getValue().getClass())) {
+					
+					if (param.getKey().equals(apiParam.field())) {
+						empty = false;
+						MessageBean message = getMessage(apiParam);
+						ApiCheckInfo checkInfo = checkValue(param.getValue(), apiParam, message);
+						if (null != checkInfo)
+							infos.add(checkInfo);
 					}
 				}
 				// 判断是不是数组和集合
@@ -150,7 +162,7 @@ public class ApiParamCheck {
 						|| Number.class.isAssignableFrom(param.getValue().getClass())
 						|| param.getValue().getClass() == String.class
 						|| Boolean.class.isAssignableFrom(param.getValue().getClass())) {
-					// System.out.println("class");
+					//System.out.println("class");
 					if (apiParam.field().equals(param.getKey())) {
 						empty = false;
 						// 查询消息
@@ -166,7 +178,9 @@ public class ApiParamCheck {
 				}
 				// 其他类型
 				else {
-					// System.out.println("other");
+					// System.out.println("other:" + param.getValue().getClass().getTypeName() + "
+					// --- "
+					// + param.getValue().getClass().getName());
 					String[] keys = apiParam.field().split("\\.");
 					MessageBean message = getMessage(apiParam);
 					KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(param.getValue(), keys, 0, apiParam, message,
@@ -175,6 +189,14 @@ public class ApiParamCheck {
 						empty = info.getLeft();
 						if (null != info.getRight())
 							infos.add(info.getRight());
+					}
+					if (empty) {
+						if (param.getKey().equals(apiParam.field())) {
+							empty = false;
+							ApiCheckInfo checkInfo = checkValue(param.getValue(), apiParam, message);
+							if (null != checkInfo)
+								infos.add(checkInfo);
+						}
 					}
 				}
 			}
@@ -309,7 +331,15 @@ public class ApiParamCheck {
 			}
 			return null;
 		}
-		if (value.getClass().isInterface()) {
+
+		if (MultipartFile.class.isAssignableFrom(value.getClass())) {
+			MultipartFile file = (MultipartFile)value;
+			if(file.isEmpty()) {
+				if (apiParam.required()) {
+					return getCheckInfo(apiParam, ApiCheckError.EMPTY, bean.getRequired());
+				}
+			}
+		} else if (value.getClass().isInterface()) {
 			// 判断是不是接口类型，接口类型只判断是为空
 			if (apiParam.required()) {
 				return getCheckInfo(apiParam, ApiCheckError.EMPTY, bean.getRequired());
@@ -340,7 +370,7 @@ public class ApiParamCheck {
 				}
 			}
 		} else if (Character.class.isAssignableFrom(value.getClass())) {
-			// char 
+			// char
 			String regexp = getRegexp(apiParam.regexp());
 			if (!isEmpty(regexp) && !value.toString().matches(regexp)) {
 				return getCheckInfo(apiParam, ApiCheckError.REGEXP, bean.getRegexp());
