@@ -2,6 +2,7 @@ package com.github.ddm4j.api.document.utils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -70,14 +71,10 @@ public class FieldUtil {
 		}
 
 		KVEntity<String, List<FieldInfo>> kv = new KVEntity<String, List<FieldInfo>>();
-		// System.out.println(cla + " ---- " + type);
 		String typeStr = "";
 
 		if (Number.class.isAssignableFrom(cla)) {
-
-			// System.out.println(cla.getName());
 			typeStr = cla.getSimpleName();
-			// typeStr = "Number";
 		} else if (String.class.isAssignableFrom(cla)) {
 			typeStr = "String";
 		} else if (Character.class.isAssignableFrom(cla)) {
@@ -86,17 +83,11 @@ public class FieldUtil {
 			typeStr = "Date";
 		} else if (Enum.class.isAssignableFrom(cla)) {
 			typeStr = "Enum/Number";
+			kv.setRight(extractEnum(cla));
 		} else if (Boolean.class.isAssignableFrom(cla)) {
 			typeStr = "Boolean";
 		} else if (cla.isPrimitive()) {
 			typeStr = cla.getTypeName();
-			// if ("char".equals(cla.getTypeName())) {
-			// typeStr = "char";
-			// } else if ("boolean".equals(cla.getTypeName())) {
-			// typeStr = "boolean";
-			// } else {
-			// typeStr = "Number";
-			// }
 		} else if (cla.isInterface()) {
 			if (cla.isAssignableFrom(MultipartFile.class)) {
 				typeStr = "File";
@@ -145,7 +136,7 @@ public class FieldUtil {
 	 *            指定的泛型
 	 * @return 提取结果
 	 */
-	public static List<FieldInfo> extractField(Class<?> cla, Type genType, int lovel) {
+	private static List<FieldInfo> extractField(Class<?> cla, Type genType, int lovel) {
 		List<FieldInfo> infos = new ArrayList<FieldInfo>();
 		if (lovel >= LOVEL) {
 			return null;
@@ -183,7 +174,7 @@ public class FieldUtil {
 				Class<?> fie = field.getType();
 				String typeStr = null;
 				boolean isArray = false;
-				// System.out.println("field:" + field.getName() + " --- " + fie);
+				//System.out.println("field:" + field.getName() + " --- " + fie);
 				if (fie.isArray()) {
 					isArray = true;
 					fie = fie.getComponentType();
@@ -197,11 +188,6 @@ public class FieldUtil {
 				} else if (Character.class.isAssignableFrom(fie)) {
 					typeStr = "Char";
 				} else if (fie.isPrimitive()) {
-					/*
-					 * if ("char".equals(fie.getTypeName())) { typeStr = "char"; } else if
-					 * ("boolean".equals(fie.getTypeName())) { typeStr = "boolean"; } else { typeStr
-					 * = "number"; }
-					 */
 					typeStr = fie.getTypeName();
 				} else if (Boolean.class.isAssignableFrom(fie)) {
 					typeStr = "Boolean";
@@ -209,30 +195,7 @@ public class FieldUtil {
 					typeStr = "Date";
 				} else if (Enum.class.isAssignableFrom(fie)) {
 					typeStr = "Enum/Number";
-					// } else if (cla.isInterface()) {
-					// if (MultipartFile.class.isAssignableFrom(fie)) {
-					// typeStr = "File";
-					// } else if (Map.class.isAssignableFrom(fie)) {
-					// typeStr = "Map";
-					// } else if (List.class.isAssignableFrom(fie) ||
-					// Set.class.isAssignableFrom(fie)) {
-					//
-					// // System.out.println("list:" + fie.getComponentType());
-					//
-					// KVEntity<Class<?>, Type> ct = extractGenType(genType);
-					// if (null == ct) {
-					// // 未指定泛型
-					// continue;
-					// }
-					// KVEntity<String, List<FieldInfo>> kv2 = extract(ct.getRight());
-					// if (null == kv2) {
-					// continue;
-					// }
-					// typeStr = "Array<" + kv2.getLeft() + ">";
-					// info.setChildren(kv2.getRight());
-					// } else {
-					// continue;
-					// }
+					info.setChildren(extractEnum(fie));
 				} else {
 					if (MultipartFile.class.isAssignableFrom(fie)) {
 						typeStr = "File";
@@ -344,7 +307,7 @@ public class FieldUtil {
 				}
 				info.setType(typeStr);
 				infos.add(info);
-				// System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
+				//System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
 			}
 		}
 
@@ -363,6 +326,44 @@ public class FieldUtil {
 		}
 		return infos;
 
+	}
+
+	/**
+	 * 提取枚举类型
+	 * 
+	 * @param cla
+	 *            枚举类
+	 * @return 提取结果
+	 */
+	private static List<FieldInfo> extractEnum(Class<?> cla) {
+		List<FieldInfo> infos = new ArrayList<FieldInfo>();
+
+		Object[] objs = cla.getEnumConstants();
+		Field[] fies = cla.getFields();
+		Method[] mes = cla.getMethods();
+		StringBuffer sb = null;
+		for (int i = 0; i < fies.length; i++) {
+			FieldInfo info = new FieldInfo();
+			info.setName(fies[i].getName());
+			sb = new StringBuffer();
+			for (Method m : mes) {
+				if (m.getName().startsWith("get") && !"getDeclaringClass".equals(m.getName())
+						&& !"getClass".equals(m.getName())) {
+					try {
+						sb.append("," + m.invoke(objs[i]));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			if (sb.length() > 1) {
+				info.setDescribe(sb.toString().substring(1));
+			}
+			info.setType("enum");
+			
+			infos.add(info);
+		}
+		return infos;
 	}
 
 	/**
@@ -486,10 +487,8 @@ public class FieldUtil {
 
 	/**
 	 * 是否为空
-	 * 
-	 * @author DDM 2020年7月9日
-	 * @param str
-	 * @return
+	 * @param str 判断的字符串
+	 * @return 处理结果
 	 */
 	public static boolean isEmpty(String str) {
 		if (null == str || "".equals(str.trim())) {

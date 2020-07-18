@@ -269,7 +269,7 @@ public class ScanControllerUtil {
 		} else {
 			// System.out.println("没有注解");
 			cvo.setName(cvo.getController());
-			cvo.setVersion("V1.0");
+			//cvo.setVersion("V1.0");
 		}
 
 		// RequestMapper 注解

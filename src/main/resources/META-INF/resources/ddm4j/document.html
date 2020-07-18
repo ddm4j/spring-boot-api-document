@@ -112,28 +112,6 @@ body {
 	background: #ededed;
 }
 
-.content-right {
-	margin-left: 260px;
-	width: calc(100% - 260px);
-	max-height: calc(100% - 120px);
-	/* padding-bottom: 80px; */
-	/*float: left;*/
-	position: fixed;
-	overflow-y: auto;
-}
-
-.table-show {
-	float: right;
-	width: 10px;
-	text-align: center;
-	cursor: pointer;
-	line-height: 30px;
-	color: red;
-}
-
-.content_over {
-	
-}
 </style>
 <!-- JS 导入 -->
 <script src="js/jquery-1.11.2.min.js" type="text/javascript"></script>
@@ -198,7 +176,7 @@ body {
 						<div class="controller-title">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;{{selectionController.controller}}</div>
 						<div class="controller-version">
 							<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}};&nbsp;&nbsp;</span>
-							版本：{{selectionController.version}}
+							<span v-if="selectionController.version">版本：{{selectionController.version}}</span>
 						</div>
 						<!-- <div class="controller-uri" v-if="selectionController.uri">请求路径:
 						&nbsp;&nbsp;{{selectionController.uri}}</div> -->
@@ -208,7 +186,7 @@ body {
 
 					<!-- 接口说明 -->
 					<div class="content-interface">
-						<div class="interface-title">{{selectionInterface.name}}&nbsp;:&nbsp;&nbsp;{{selectionInterface.version}}</div>
+						<div class="interface-title">{{selectionInterface.name}}&nbsp;<span v-if="selectionInterface.version">:&nbsp;&nbsp;{{selectionInterface.version}}</span></div>
 						<div class="interface-uri">
 							请求路径: <span class="interface-method tag"
 								v-show="selectionInterface.method">{{selectionInterface.method}}</span>
@@ -288,7 +266,8 @@ body {
 										class="table-show"
 										v-if="item.children && item.children.length > 0 && add_show_request('1',index)"
 										@Click="show_request('1',index)">
-											{{show.request.one[index].show?"-":"+"}}</span></td>
+											{{show.request.one[index].show?"-":"+"}}</span>
+									</td>
 
 									<td class="type">{{item.type}}</td>
 									<td class="required"><span v-if="item.required"
@@ -734,7 +713,7 @@ body {
                                 if (1000 == data.code) {
                                 	
                                 	that.login = true;
-                                	
+                                	that.login_tip = false;
                                     // datas = data.content;
                                     //console.log("请求成功,开始加载数据", data.content);
                                     that.interfaceDatas = data.controllers;

@@ -81,6 +81,19 @@
 
 
 /* 正文 -------------------------------------------- */
+
+
+.content-right {
+	margin-left: 260px;
+	width: calc(100% - 260px);
+	max-height: calc(100% - 120px);
+	position: fixed;
+	overflow-y: auto;
+}
+
+
+
+
 .menu-header{
     height: 50px;
     line-height: 50px;
@@ -222,6 +235,7 @@ table .reg{
 	color: #88be04;
 	font-size: 20px;
 	font-weight: 700;
+	line-height: 100%
 }
 /* 是否必须颜色*/
 .required_true {
@@ -247,13 +261,13 @@ table .reg{
     cursor: pointer;
     vertical-align: middle;
 }
-
+/* 提示 */
 .my_tip{
 	position: fixed;
 	top:70px;
 	width: 99%;
 }
-
+/* 复制提示 */
 .copy_tip{
 	
 	/* left: 45%; */
@@ -268,10 +282,19 @@ table .reg{
 	text-align:center;
 	background-color: #62e49f;
 }
-
+/* 错误提示 */
 .tip_error{
 	background-color: #ff0000;
 }
-
+/* 展开与隐藏 下级 */
+.table-show {
+	float: right;
+	width: 21px;
+	text-align: center;
+	cursor: pointer;
+	line-height: 28px;
+	font-size: 28px;
+	color: red;
+}
 
 

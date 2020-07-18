@@ -30,7 +30,7 @@ public @interface ApiMethod {
 	public String author() default "";
 
 	/**
-	 * @return 版本，默认V1.0.0
+	 * @return 版本
 	 */
-	public String version() default "V1.0.0";
+	public String version() default "";
 }

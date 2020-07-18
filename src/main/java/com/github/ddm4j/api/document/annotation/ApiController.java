@@ -30,8 +30,8 @@ public @interface ApiController {
 	public String author() default "";
 
 	/**
-	 * @return 版本,默认 V1.0
+	 * @return 版本
 	 */
-	public String version() default "V1.0";
+	public String version() default "";
 
 }

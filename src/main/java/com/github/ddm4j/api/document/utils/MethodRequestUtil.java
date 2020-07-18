@@ -52,7 +52,7 @@ public class MethodRequestUtil {
 		ApiMethod am = method.getAnnotation(ApiMethod.class);
 		if (null == am) {
 			ivo.setName(method.getName());
-			ivo.setVersion("V1.0");
+			//ivo.setVersion("V1.0");
 		}
 
 		if (null != am) {
