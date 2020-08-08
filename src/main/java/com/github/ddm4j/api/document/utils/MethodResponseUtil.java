@@ -16,9 +16,13 @@ public class MethodResponseUtil {
 	public KVEntity<String, List<ResponseVo>> getResponseVo(Method method) {
 
 		// 提取返回值注解
-		ApiResponses response = method.getAnnotation(ApiResponses.class);
-
-		// System.out.println("开始：" + genType);
+		ApiResponse[] responses = method.getAnnotationsByType(ApiResponse.class);
+		if (null == responses) {
+			ApiResponses params = method.getAnnotation(ApiResponses.class);
+			if (null != params) {
+				responses = params.value();
+			}
+		}
 
 		KVEntity<String, List<FieldInfo>> kv = FieldUtil.extract(method.getGenericReturnType());
 		if (null == kv) {
@@ -41,8 +45,8 @@ public class MethodResponseUtil {
 			}
 		}
 		// 注解替换
-		if (null != response && response.value().length > 0) {
-			for (ApiResponse param : response.value()) {
+		if (null != responses && responses.length > 0) {
+			for (ApiResponse param : responses) {
 				replaceResponseField(param, list);
 			}
 		}

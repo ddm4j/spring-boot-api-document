@@ -10,6 +10,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -168,7 +169,7 @@ public class ScanControllerUtil {
 				boolean isOk = true;
 				for (HeadVo vo : ivo.getHeads()) {
 					if (vo.getField().equals(head.getField())) {
-						if(FieldUtil.isEmpty(vo.getDescribe())) {
+						if (FieldUtil.isEmpty(vo.getDescribe())) {
 							vo.setDescribe(head.getDescribe());
 						}
 						isOk = false;
@@ -247,7 +248,9 @@ public class ScanControllerUtil {
 	private ControllerVo extractControllerInfo(Class<?> cla, String base_path) {
 		ControllerVo cvo = new ControllerVo();
 		// 名称
-		cvo.setController(cla.getName().substring(cla.getName().lastIndexOf(".") + 1));
+		
+		//cvo.setController(cla.getName().substring(cla.getName().lastIndexOf(".") + 1));
+		cvo.setController(cla.getSimpleName());
 		// 判断是不是 JSON
 		Annotation json = cla.getAnnotation(ResponseBody.class);
 		if (null == json) {
@@ -259,21 +262,17 @@ public class ScanControllerUtil {
 
 		// 获取 类上面的注解
 		// ApiController 注解
-		ApiController apiController = cla.getAnnotation(ApiController.class);
+		ApiController apiController = AnnotationUtils.getAnnotation(cla, ApiController.class);
 		if (null != apiController) {
 
 			cvo.setName(apiController.value());
 			cvo.setDescribe(apiController.describe());
 			cvo.setVersion(apiController.version());
 			cvo.setAuthor(apiController.author());
-		} else {
-			// System.out.println("没有注解");
-			cvo.setName(cvo.getController());
-			//cvo.setVersion("V1.0");
 		}
 
 		// RequestMapper 注解
-		RequestMapping rquestMapping = cla.getAnnotation(RequestMapping.class);
+		RequestMapping rquestMapping = AnnotationUtils.getAnnotation(cla, RequestMapping.class);
 		if (null != rquestMapping) {
 
 			if (null != base_path && !"".equals(base_path.trim())) {

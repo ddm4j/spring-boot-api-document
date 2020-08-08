@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,10 +50,10 @@ public class MethodRequestUtil {
 		}
 
 		// 描述注解
-		ApiMethod am = method.getAnnotation(ApiMethod.class);
+		ApiMethod am = AnnotationUtils.getAnnotation(method,ApiMethod.class);
 		if (null == am) {
 			ivo.setName(method.getName());
-			//ivo.setVersion("V1.0");
+			// ivo.setVersion("V1.0");
 		}
 
 		if (null != am) {
@@ -63,7 +64,13 @@ public class MethodRequestUtil {
 			ivo.setVersion(am.version());
 		}
 
-		ApiParams apiParams = method.getAnnotation(ApiParams.class);
+		ApiParam[] apiParams = method.getAnnotationsByType(ApiParam.class);
+		if (null == apiParams) {
+			ApiParams params = method.getAnnotation(ApiParams.class);
+			if (null != params) {
+				apiParams = params.value();
+			}
+		}
 
 		KVEntity<List<ParameterVo>, List<HeadVo>> kv = extrad(method);
 		if (null == kv) {
@@ -89,8 +96,8 @@ public class MethodRequestUtil {
 				}
 			}
 			// 注解替换
-			if (null != apiParams && apiParams.value().length > 0) {
-				for (ApiParam param : apiParams.value()) {
+			if (null != apiParams && apiParams.length > 0) {
+				for (ApiParam param : apiParams) {
 					replaceReuestField(param, list);
 				}
 			}
@@ -99,8 +106,8 @@ public class MethodRequestUtil {
 		// 请头参数
 		List<HeadVo> headVos = kv.getRight();
 		if (null != headVos && headVos.size() > 0) {
-			if (null != apiParams && apiParams.value().length > 0) {
-				for (ApiParam param : apiParams.value()) {
+			if (null != apiParams && apiParams.length > 0) {
+				for (ApiParam param : apiParams) {
 					for (HeadVo headVo : headVos) {
 						if (headVo.getField().equals(param.field())) {
 							if (!FieldUtil.isEmpty(param.describe())) {
@@ -137,11 +144,11 @@ public class MethodRequestUtil {
 	 *            注解集合
 	 * @return 处理后的数据
 	 */
-	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, ApiParams apiParams) {
+	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, ApiParam[] apiParams) {
 		for (int i = 0; i < list.size(); i++) {
 			ParameterVo vo = list.get(i);
 			boolean isOk = false;
-			for (ApiParam param : apiParams.value()) {
+			for (ApiParam param : apiParams) {
 				String[] keys = param.field().split("\\.");
 				if (keys[0].equals(vo.getField())) {
 					if (keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
@@ -385,17 +392,17 @@ public class MethodRequestUtil {
 		if (null == kv) {
 			return null;
 		}
-		
-		if(FieldUtil.isEmpty(kv.getLeft())) {
+
+		if (FieldUtil.isEmpty(kv.getLeft())) {
 			return null;
 		}
 
-		if(null == jsonMethod && json) {
+		if (null == jsonMethod && json) {
 			jsonMethod = kv.getLeft();
 		}
-		
+
 		if (null == kv.getRight() || kv.getRight().size() == 0) {
-			
+
 			List<ParameterVo> vos = new ArrayList<ParameterVo>();
 
 			ParameterVo vo = new ParameterVo();

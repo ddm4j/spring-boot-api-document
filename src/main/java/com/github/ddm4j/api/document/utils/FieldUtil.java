@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.github.ddm4j.api.document.annotation.ApiField;
@@ -82,7 +83,7 @@ public class FieldUtil {
 		} else if (Date.class.isAssignableFrom(cla)) {
 			typeStr = "Date";
 		} else if (Enum.class.isAssignableFrom(cla)) {
-			typeStr = "Enum/Number";
+			typeStr = "Enum";
 			kv.setRight(extractEnum(cla));
 		} else if (Boolean.class.isAssignableFrom(cla)) {
 			typeStr = "Boolean";
@@ -158,7 +159,9 @@ public class FieldUtil {
 				}
 
 				FieldInfo info = null;
-				ApiField afi = field.getAnnotation(ApiField.class);
+				
+				//TODO ApiField afi = field.getAnnotation(ApiField.class);
+				ApiField afi = AnnotationUtils.getAnnotation(field,ApiField.class);
 				if (null != afi) {
 					if (afi.hide()) {
 						continue;
@@ -174,7 +177,7 @@ public class FieldUtil {
 				Class<?> fie = field.getType();
 				String typeStr = null;
 				boolean isArray = false;
-				//System.out.println("field:" + field.getName() + " --- " + fie);
+				// System.out.println("field:" + field.getName() + " --- " + fie);
 				if (fie.isArray()) {
 					isArray = true;
 					fie = fie.getComponentType();
@@ -194,7 +197,7 @@ public class FieldUtil {
 				} else if (Date.class.isAssignableFrom(fie)) {
 					typeStr = "Date";
 				} else if (Enum.class.isAssignableFrom(fie)) {
-					typeStr = "Enum/Number";
+					typeStr = "Enum";
 					info.setChildren(extractEnum(fie));
 				} else {
 					if (MultipartFile.class.isAssignableFrom(fie)) {
@@ -307,7 +310,7 @@ public class FieldUtil {
 				}
 				info.setType(typeStr);
 				infos.add(info);
-				//System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
+				// System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
 			}
 		}
 
@@ -350,17 +353,17 @@ public class FieldUtil {
 				if (m.getName().startsWith("get") && !"getDeclaringClass".equals(m.getName())
 						&& !"getClass".equals(m.getName())) {
 					try {
-						sb.append("," + m.invoke(objs[i]));
+						sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i])+" ;   ");
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
 			}
 			if (sb.length() > 1) {
-				info.setDescribe(sb.toString().substring(1));
+				info.setDescribe(sb.toString());
 			}
 			info.setType("enum");
-			
+
 			infos.add(info);
 		}
 		return infos;
@@ -487,7 +490,9 @@ public class FieldUtil {
 
 	/**
 	 * 是否为空
-	 * @param str 判断的字符串
+	 * 
+	 * @param str
+	 *            判断的字符串
 	 * @return 处理结果
 	 */
 	public static boolean isEmpty(String str) {

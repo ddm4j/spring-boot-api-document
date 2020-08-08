@@ -14,5 +14,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface ApiParamIgnore {
-	public String[] value() default "";
+	/**
+	 * @return 需要隐藏的字段列表,为空表示所有
+	 */
+	public String[] value() default {};
 }

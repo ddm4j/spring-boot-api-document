@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+
 /**
  * Controller 说明
  */
@@ -15,9 +17,16 @@ import java.lang.annotation.Target;
 public @interface ApiController {
 
 	/**
-	 * @return 类名称
+	 * @return Controller名称
 	 */
-	public String value();
+	@AliasFor("name")
+	public String value() default "";
+
+	/**
+	 * @return Controller名称
+	 */
+	@AliasFor("value")
+	public String name() default "";
 
 	/**
 	 * @return 描述说明

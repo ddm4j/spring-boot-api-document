@@ -8,7 +8,10 @@ import java.lang.annotation.Target;
 
 
 /**
- * 描述接口请求参数，及校验，建议所有参数使用 bean 包装，建议使用 JSON 交互(请求参数前加 @RequestBody),不支持 Map
+ * ApiParam 的注解组，不推荐使用，
+ * 请直接使用 ApiParam 多重注解方式。
+ * 即直接在在方法写多个 ApiParam 注解。
+ * 不支持 map 类型字段。
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

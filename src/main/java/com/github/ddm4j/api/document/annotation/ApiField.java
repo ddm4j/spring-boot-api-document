@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+
 /**
  * 字段说明
  */
@@ -16,8 +18,14 @@ public @interface ApiField {
 	/**
 	 * @return 字段名称
 	 */
-	public String value();
+	@AliasFor("name")
+	public String value() default "";
 
+	/**
+	 * @return 字段名称
+	 */
+	@AliasFor("value")
+	public String name() default "";
 	/**
 	 * @return 是否隐藏，默认 否
 	 */

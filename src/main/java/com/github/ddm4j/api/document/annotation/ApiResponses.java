@@ -7,7 +7,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 返回值描述
+ * ApiResponse 注解组，不推荐使用，
+ * 请直接使用 ApiResponse 多重注解方式，
+ * 即直接在在方法写多个 ApiResponse 注解。
+ * 不支持map类型字段。
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

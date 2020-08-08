@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+
 /**
  * 限制只能用于方法上，接口说明
  */
@@ -17,7 +19,14 @@ public @interface ApiMethod {
 	/**
 	 * @return 接口名称
 	 */
-	public String value();
+	@AliasFor("name")
+	public String value() default "";
+
+	/**
+	 * @return 接口名称
+	 */
+	@AliasFor("value")
+	public String name() default "";
 
 	/**
 	 * @return 描述说明

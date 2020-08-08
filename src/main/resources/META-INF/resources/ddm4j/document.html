@@ -121,8 +121,6 @@ body {
 </head>
 <body>
 	<div id="vue_app">
-
-
 		<div class="content-head">
 			<div class="title">DDM4J API Document</div>
 			<div class="head-system">{{system}}</div>
@@ -156,14 +154,15 @@ body {
 					</div>
 					<ul id="menu-list">
 						<li v-for="item,index in interfaceDatas" v-show="!item.hide"><a
-							href="#">{{item.name}} </a>
+							href="#">{{item.name?item.name:item.controller}} </a>
 							<ul class="submenu">
 								<li v-for="interface in item.interfaces"
 									v-show="!interface.hide" @click="myClickOne(item,interface)">
 									<a href="#">{{interface.name}}<br> {{interface.uri}}
 								</a>
 								</li>
-							</ul></li>
+							</ul>
+						</li>
 					</ul>
 				</div>
 			</div>
@@ -173,7 +172,7 @@ body {
 
 					<!-- controller 说明 -->
 					<div class="content-controller">
-						<div class="controller-title">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;{{selectionController.controller}}</div>
+						<div class="controller-title"><span v-if="selectionController.name">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;</span>{{selectionController.controller}}</div>
 						<div class="controller-version">
 							<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}};&nbsp;&nbsp;</span>
 							<span v-if="selectionController.version">版本：{{selectionController.version}}</span>
@@ -242,7 +241,7 @@ body {
 							Request：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
 								v-show="selectionInterface.json">JSON</span> <span class="tag"
 								v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; <span
-								class="tag">{{selectionInterface.jsonMethod}}</span>
+								class="tag" v-if="selectionInterface.jsonMethod">{{selectionInterface.jsonMethod}}</span>
 						</div>
 						<table class="bordered">
 							<thead>
@@ -436,7 +435,7 @@ body {
 		<div class="content-footer">
 			<span class="title">GitHub:&nbsp;&nbsp;<a
 				href="https://github.com/ddm4j/spring-boot-api-document"
-				target="_blank"> DDM - Springboot API document - V2.2</a></span>
+				target="_blank">https://github.com/ddm4j/spring-boot-api-document</a></span>
 			<!--			<span class="version">V1.1</span>-->
 		</div>
 
