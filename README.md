@@ -1,5 +1,5 @@
 # spring-boot-api-document
-spring-boot-api-document 是一个基本Springboot 开发的一个接口文档工具，清晰的向前端开发员展示数据结构和数据标准，并具有后端数据校验功能。
+spring-boot-api-document 是一个基本Springboot 开发的一个接口文档管理工具，清晰的向前端开发人员展示数据结构和数据标准，并具有后端数据校验功能。
 
 # 技术要求
 ## 应用场景
@@ -11,8 +11,8 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
  2. 后端数据校验
 
 ## 环境需求
- 1. **springboot** : 2.x；
- 2. **jdk**:1.8；
+ 1. **springboot** : 2.x
+ 2. **jdk**:1.8
 
 # 使用指南
 点击上面的 wiki，了解查看
