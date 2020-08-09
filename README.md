@@ -6,6 +6,10 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 1. **Springboot 项目，前后端分离项目**
 2. **SpringCloud 项目，前后端分离项目**
 
+# 核心功能
+ 1. Api 接口文档管理。
+ 2. 后端数据校验
+
 ## 环境需求
  1. **springboot** : 2.x；
  2. **jdk**:1.8；
@@ -15,6 +19,8 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
+ 2.2.8 ：支持 java8 多重注解，ApiMethod,ApiController,ApiField 增加 name 属性，是 value 的别名。
+ 2.2.7 : 修复已知BUG，优化界面显示。
  2.2.6 ：修复上传文件(MultipartFile)校验异常。
  2.2.5 ：修复复杂 bean 在文档上显示异常问题，修复数组、集合bean 校验异常，调整接口文档内容过多显示问题。
  2.2.3 ：修复了接口上请求头参数，@RequestHeader 注解不能设置别名异常。
