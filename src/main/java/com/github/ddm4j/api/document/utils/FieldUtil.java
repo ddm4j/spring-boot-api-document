@@ -159,9 +159,9 @@ public class FieldUtil {
 				}
 
 				FieldInfo info = null;
-				
-				//TODO ApiField afi = field.getAnnotation(ApiField.class);
-				ApiField afi = AnnotationUtils.getAnnotation(field,ApiField.class);
+
+				// TODO ApiField afi = field.getAnnotation(ApiField.class);
+				ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
 				if (null != afi) {
 					if (afi.hide()) {
 						continue;
@@ -353,7 +353,7 @@ public class FieldUtil {
 				if (m.getName().startsWith("get") && !"getDeclaringClass".equals(m.getName())
 						&& !"getClass".equals(m.getName())) {
 					try {
-						sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i])+" ;   ");
+						sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i]) + " ;   ");
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

@@ -84,9 +84,9 @@ public class MethodRequestUtil {
 		if (null != list && list.size() > 0) {
 			// 删除隐藏的
 			ApiParamIgnore hides = method.getAnnotation(ApiParamIgnore.class);
-			if (null != hides && null != hides.value() && hides.value().length > 0) {
+			if (null != hides) {
 				// 判断是不是只保留，被 ApiParam 标识的
-				if (hides.value().length == 1 && FieldUtil.isEmpty(hides.value()[0])) {
+				if (null == hides.value() || hides.value().length == 0) {
 					list = removeNotApiParam(list, apiParams);
 				} else {
 					// 删除指定的

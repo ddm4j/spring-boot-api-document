@@ -39,9 +39,17 @@ public class MethodResponseUtil {
 
 		// 删除隐藏的
 		ApiResponseIgnore hides = method.getAnnotation(ApiResponseIgnore.class);
-		if (null != hides && null != hides.value() && hides.value().length > 0) {
-			for (String field : hides.value()) {
-				FieldUtil.removeField(list, field);
+		if (null != hides) {
+
+			if (null == hides.value() || hides.value().length == 0) {
+				// 删除除了被 ApiResponse 标识之外字段
+				list = removeNotResponse(list, responses);
+			} else {
+				// 删除指定的
+				for (String field : hides.value()) {
+					if (!FieldUtil.isEmpty(field))
+						FieldUtil.removeField(list, field);
+				}
 			}
 		}
 		// 注解替换
@@ -53,6 +61,68 @@ public class MethodResponseUtil {
 		entity.setRight(list);
 
 		return entity;
+	}
+
+	/**
+	 * 删除全部清空，只剩下被 ApiParam 标识的
+	 * 
+	 * @param list
+	 *            字段
+	 * @param apiParams
+	 *            注解集合
+	 * @return 处理后的数据
+	 */
+	private List<ResponseVo> removeNotResponse(List<ResponseVo> list, ApiResponse[] responses) {
+		for (int i = 0; i < list.size(); i++) {
+			ResponseVo vo = list.get(i);
+			boolean isOk = false;
+			for (ApiResponse param : responses) {
+				String[] keys = param.field().split("\\.");
+				if (keys[0].equals(vo.getField())) {
+					if (keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+						list.get(i).setChildren(removeNotResponse(vo.getChildren(), keys, 1));
+					}
+					isOk = true;
+					break;
+				}
+			}
+			if (!isOk) {
+				list.remove(i);
+				i--;
+			}
+
+		}
+		return list;
+	}
+
+	/**
+	 * 删除全部清空，只剩下被 ApiParam 标识的，子集合
+	 * 
+	 * @param list
+	 *            子集合
+	 * @param keys
+	 *            标识 field
+	 * @param index
+	 *            keys 索引
+	 * @return 处理后的集合
+	 */
+	private List<ResponseVo> removeNotResponse(List<ResponseVo> list, String[] keys, int index) {
+		for (int i = 0; i < list.size(); i++) {
+			ResponseVo vo = list.get(i);
+			boolean isOk = false;
+			if (keys[index].equals(vo.getField())) {
+				if (index < keys.length - 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+					list.get(i).setChildren(removeNotResponse(vo.getChildren(), keys, index++));
+				}
+				isOk = true;
+				break;
+			}
+			if (!isOk) {
+				list.remove(i);
+				i--;
+			}
+		}
+		return list;
 	}
 
 	public List<ResponseVo> extractField(List<FieldInfo> infos) {
