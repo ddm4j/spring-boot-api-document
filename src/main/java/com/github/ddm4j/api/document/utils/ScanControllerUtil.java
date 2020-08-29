@@ -190,21 +190,19 @@ public class ScanControllerUtil {
 			return headVosConfig;
 		}
 		List<HeadVo> headVos = new ArrayList<HeadVo>();
-		if (headerCancel.value().length == 1) {
-			// 为空，取消全部
-			if (!FieldUtil.isEmpty(headerCancel.value()[0])) {
-				// 不为空，取消指定的
-				for (HeadVo headVo : headVosConfig) {
-					boolean isOk = true;
-					for (String key : headerCancel.value()) {
-						if (key.equals(headVo.getField())) {
-							isOk = false;
-							break;
-						}
+		// 为空，取消全部
+		if (null != headerCancel.value() && headerCancel.value().length > 0) {
+			// 不为空，取消指定的
+			for (HeadVo headVo : headVosConfig) {
+				boolean isOk = true;
+				for (String key : headerCancel.value()) {
+					if (key.equals(headVo.getField())) {
+						isOk = false;
+						break;
 					}
-					if (isOk) {
-						headVos.add(headVo);
-					}
+				}
+				if (isOk) {
+					headVos.add(headVo);
 				}
 			}
 		}
@@ -248,8 +246,9 @@ public class ScanControllerUtil {
 	private ControllerVo extractControllerInfo(Class<?> cla, String base_path) {
 		ControllerVo cvo = new ControllerVo();
 		// 名称
-		
-		//cvo.setController(cla.getName().substring(cla.getName().lastIndexOf(".") + 1));
+
+		// cvo.setController(cla.getName().substring(cla.getName().lastIndexOf(".") +
+		// 1));
 		cvo.setController(cla.getSimpleName());
 		// 判断是不是 JSON
 		Annotation json = cla.getAnnotation(ResponseBody.class);

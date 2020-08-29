@@ -23,14 +23,14 @@ public @interface ApiResponse {
 	public String field();
 
 	/**
-	 * 是否必须，默认 否
+	 * 是否一定会返回，默认 否
 	 * 
 	 * @return false
 	 */
 	public boolean required() default false;
 
 	/**
-	 * 示例说明
+	 * 示例说明，会覆盖 ApiField 的说明
 	 * 
 	 * @return 描述
 	 */

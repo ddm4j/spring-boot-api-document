@@ -17,13 +17,13 @@ import org.springframework.core.annotation.AliasFor;
 public @interface ApiController {
 
 	/**
-	 * @return Controller名称
+	 * @return 名称
 	 */
 	@AliasFor("name")
 	public String value() default "";
 
 	/**
-	 * @return Controller名称
+	 * @return 名称
 	 */
 	@AliasFor("value")
 	public String name() default "";

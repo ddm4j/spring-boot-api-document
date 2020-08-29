@@ -16,5 +16,5 @@ public @interface ApiHeaderCancel {
 	/**
 	 * @return 要隐藏展示请求头的字段，为空，代表取消全部。
 	 */
-	public String[] value() default "";
+	public String[] value() default {};
 }

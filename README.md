@@ -15,10 +15,12 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
  2. **jdk**:1.8
 
 # 使用指南
-点击上面的 wiki，了解查看
+点击上面的 wiki，了解查看。
 
 # 版本历史
 ```
+ 2.2.10：修复文档web在部分浏览器中不能正常显示问题，但依旧不支持 IE，优化注解中的注释。
+ 2.2.9 ：修复已知BUG。
  2.2.8 ：支持 java8 多重注解，ApiMethod,ApiController,ApiField 增加 name 属性，是 value 的别名。
  2.2.7 : 修复已知BUG，优化界面显示。
  2.2.6 ：修复上传文件(MultipartFile)校验异常。

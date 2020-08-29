@@ -16,13 +16,13 @@ import org.springframework.core.annotation.AliasFor;
 @Target(ElementType.FIELD) // 限制只能用于字段上
 public @interface ApiField {
 	/**
-	 * @return 字段名称
+	 * @return 字段名称或说明
 	 */
 	@AliasFor("name")
 	public String value() default "";
 
 	/**
-	 * @return 字段名称
+	 * @return 字段名称或说明
 	 */
 	@AliasFor("value")
 	public String name() default "";
