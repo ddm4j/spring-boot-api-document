@@ -11,6 +11,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -99,6 +104,13 @@ public class ApiParamCheck {
 					}
 				}
 			}
+			// 判断是不是 HttpServletRequest,HttpServletResponse,HttpSession
+			Class<?> cla = jp.getArgs()[i].getClass();
+			if (cla.isAssignableFrom(ServletRequest.class) || cla.isAssignableFrom(ServletResponse.class)
+					|| cla.isAssignableFrom(HttpSession.class) || cla.isAssignableFrom(Servlet.class)) {
+				ignore = true;
+			}
+
 			if (!ignore) {
 				Object obj = jp.getArgs()[i];
 				paramObjs.put(name, obj);
@@ -114,10 +126,10 @@ public class ApiParamCheck {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
-			//System.out.println(apiParam.field());
+			// System.out.println(apiParam.field());
 			boolean empty = true;
 			for (Entry<String, Object> param : params.entrySet()) {
-				//System.out.println("--- :" + param.getKey());
+				// System.out.println("--- :" + param.getKey());
 				// 判断是否为空
 				if (null == param.getValue()) {
 					if (apiParam.field().equals(param.getKey())) {
@@ -132,7 +144,7 @@ public class ApiParamCheck {
 				}
 				// 判断是不是文件
 				else if (MultipartFile.class.isAssignableFrom(param.getValue().getClass())) {
-					
+
 					if (param.getKey().equals(apiParam.field())) {
 						empty = false;
 						MessageBean message = getMessage(apiParam);
@@ -162,7 +174,7 @@ public class ApiParamCheck {
 						|| Number.class.isAssignableFrom(param.getValue().getClass())
 						|| param.getValue().getClass() == String.class
 						|| Boolean.class.isAssignableFrom(param.getValue().getClass())) {
-					//System.out.println("class");
+					// System.out.println("class");
 					if (apiParam.field().equals(param.getKey())) {
 						empty = false;
 						// 查询消息
@@ -333,8 +345,8 @@ public class ApiParamCheck {
 		}
 
 		if (MultipartFile.class.isAssignableFrom(value.getClass())) {
-			MultipartFile file = (MultipartFile)value;
-			if(file.isEmpty()) {
+			MultipartFile file = (MultipartFile) value;
+			if (file.isEmpty()) {
 				if (apiParam.required()) {
 					return getCheckInfo(apiParam, ApiCheckError.EMPTY, bean.getRequired());
 				}

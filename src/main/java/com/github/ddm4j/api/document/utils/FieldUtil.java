@@ -38,7 +38,7 @@ public class FieldUtil {
 	}
 
 	private static KVEntity<String, List<FieldInfo>> extract(Type type, int lovel) {
-		// System.out.println("开始："+type);
+		//System.out.println("开始：" + type);
 		if (null == type) {
 			return null;
 		}
@@ -62,9 +62,11 @@ public class FieldUtil {
 			if (type instanceof GenericArrayType) {
 				isArray = true;
 			}
+			//System.out.println("T -- " + isArray + " -- " + type.getTypeName());
 			KVEntity<Class<?>, Type> ct = extractGenType(type);
 			cla = ct.getLeft();
 			type = ct.getRight();
+			//System.out.println("cla=" + cla + " --- " + type);
 		}
 
 		if (null == cla) {
@@ -112,7 +114,7 @@ public class FieldUtil {
 				kv.setRight(kv2.getRight());
 			}
 		} else {
-
+			//System.out.println(" 解析："+cla.getTypeName()+" --- "+cla.getName());
 			if (cla.getTypeName().equals(cla.getName())) {
 				typeStr = "Object";
 				kv.setRight(extractField(cla, type, lovel));
@@ -152,7 +154,7 @@ public class FieldUtil {
 				if (null != ignore) {
 					continue;
 				}
-
+				//System.out.println("字段："+field.getName());
 				// 属性是静态的或Final 修饰的，不处理
 				if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
 					continue;
@@ -177,7 +179,7 @@ public class FieldUtil {
 				Class<?> fie = field.getType();
 				String typeStr = null;
 				boolean isArray = false;
-				// System.out.println("field:" + field.getName() + " --- " + fie);
+				//System.out.println("field:" + field.getName() + " --- " + fie);
 				if (fie.isArray()) {
 					isArray = true;
 					fie = fie.getComponentType();
@@ -209,7 +211,7 @@ public class FieldUtil {
 						if (lovel >= LOVEL) {
 							typeStr = "Loop - Limit";
 						} else if (List.class.isAssignableFrom(fie) || Set.class.isAssignableFrom(fie)) {
-							// System.out.println("list --- " + field.getName());
+							//System.out.println("list --- " + field.getName());
 							if (null != field.getGenericType()) {
 
 								if (field.getGenericType() instanceof Class<?>) {
@@ -257,7 +259,7 @@ public class FieldUtil {
 								}
 							}
 						} else if (field.getGenericType() instanceof Class<?>) {
-							// System.out.println("不是泛型 ---" + field.getName());
+							//System.out.println("不是泛型 ---" + field.getName());
 							if (Object.class == fie) {
 								typeStr = "Object<?>";
 							} else {
@@ -268,31 +270,40 @@ public class FieldUtil {
 							}
 						} else if (field.getGenericType() instanceof ParameterizedType
 								|| field.getGenericType() instanceof GenericArrayType) {
-							// System.out.println("是泛型 ---" + field.getName());
+							//System.out.println("是泛型 ---" + field.getName());
 							KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
 							if (null == ct) {
 								// 未指定泛型
 								continue;
 							}
-							KVEntity<String, List<FieldInfo>> kv2 = null;
-							if (null == ct.getRight()) {
+							//System.out.println(ct.getLeft()+" --- "+ct.getRight());
+							
+							if(null == ct.getLeft()) {
+								KVEntity<String, List<FieldInfo>> kv2 = null;
+								if (null == ct.getRight()) {
+									
+									kv2 = extract(genType, lovel);
+								} else {
+									kv2 = extract(ct.getRight(), lovel);
+								}
+								if (null == kv2) {
+									continue;
+								}
+								typeStr = kv2.getLeft();
+								// if(field.getGenericType() instanceof GenericArrayType) {
+								// typeStr = "Array<" + typeStr + ">";
+								// }
 
-								kv2 = extract(genType, lovel);
-							} else {
-								kv2 = extract(ct.getRight(), lovel);
+								info.setChildren(kv2.getRight());
+							}else {
+								List<FieldInfo> tList = extractField(ct.getLeft(),genType,lovel);
+								typeStr = field.getName();
+								info.setChildren(tList);
 							}
-							if (null == kv2) {
-								continue;
-							}
-							typeStr = kv2.getLeft();
-							// if(field.getGenericType() instanceof GenericArrayType) {
-							// typeStr = "Array<" + typeStr + ">";
-							// }
+							
 
-							info.setChildren(kv2.getRight());
 						} else if (!field.getGenericType().getTypeName().equals(field.getType().getTypeName())) {
-							// System.out.println("纯泛型：" + field.getName()+"--- "+field.getGenericType()+"
-							// genType:"+genType);
+							//System.out.println("纯泛型：" + field.getName()+"--- "+field.getGenericType()+"genType:"+genType);
 							KVEntity<String, List<FieldInfo>> kv2 = extract(genType, lovel);
 							if (null == kv2) {
 								continue;
@@ -310,7 +321,7 @@ public class FieldUtil {
 				}
 				info.setType(typeStr);
 				infos.add(info);
-				// System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
+				//System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
 			}
 		}
 
@@ -459,33 +470,44 @@ public class FieldUtil {
 	 * @param <T>
 	 *            删除后的数据
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends ParamChildrenVo<?>> void removeField(List<T> vos, String field) {
-
+	public static <T extends ParamChildrenVo> List<T> removeField(List<T> vos, String field) {
 		if (null == vos) {
-			return;
+			return null;
 		}
-
 		String[] keys = field.split("\\.");
-		List<T> tempChildren = vos;
+		return removeField(vos, keys, 0);
+	}
 
-		for (int i = 0; i < keys.length; i++) {
-			String key = keys[i];
-			if (null == tempChildren) {
-				break;
-			}
-			for (int j = 0; j < tempChildren.size(); j++) {
-				if (tempChildren.get(j).getField().equals(key)) {
-					if (i == keys.length - 1) {
-						tempChildren.remove(j);
-						return;
-					} else {
-						tempChildren = (List<T>) tempChildren.get(j).getChildren();
+	public static <T extends ParamChildrenVo> List<T> removeField(List<T> vos, String[] keys, int index) {
+		int strIndex = keys[index].indexOf("*");
+		for (int i = 0; i < vos.size(); i++) {
+			T vo = vos.get(i);
+			boolean isOk = false;
+			if (strIndex > -1) {
+				if (strIndex == 0) {
+					if (vo.getField().endsWith(keys[index].substring(1))) {
+						isOk = true;
 					}
-					break;
+				} else if (strIndex == keys[index].length() - 1) {
+					if (vo.getField().startsWith(keys[index].substring(0, keys[index].length() - 1))) {
+						isOk = true;
+					}
 				}
+			} else// 匹配模式
+			if (keys[0].equals(vo.getField())) {
+				isOk = true;
+			}
+			if (isOk && keys.length > index + 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+				vo.setChildren(removeField(vo.getChildren(), keys, index + 1));
+			}
+			// 匹配上，就删除
+			if (isOk && index >= keys.length - 1) {
+				vos.remove(i);
+				i--;
 			}
 		}
+		return vos;
+
 	}
 
 	/**

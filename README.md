@@ -19,10 +19,11 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
+ 2.2.11：修复已知文档扫描BUG，修复 HttpServletXXX 对影响数据校验的BUG，参数忽略，增加 * 号匹配方式，只能用字段的前面或后面， @ApiResponseIgnore({"code*.xx*.*ABC"})。
  2.2.10：修复文档web在部分浏览器中不能正常显示问题，但依旧不支持 IE，优化注解中的注释。
  2.2.9 ：修复已知BUG。
  2.2.8 ：支持 java8 多重注解，ApiMethod,ApiController,ApiField 增加 name 属性，是 value 的别名。
- 2.2.7 : 修复已知BUG，优化界面显示。
+ 2.2.7 ：修复已知BUG，优化界面显示。
  2.2.6 ：修复上传文件(MultipartFile)校验异常。
  2.2.5 ：修复复杂 bean 在文档上显示异常问题，修复数组、集合bean 校验异常，调整接口文档内容过多显示问题。
  2.2.3 ：修复了接口上请求头参数，@RequestHeader 注解不能设置别名异常。

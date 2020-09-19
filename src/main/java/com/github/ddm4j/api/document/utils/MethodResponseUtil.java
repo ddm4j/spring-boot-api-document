@@ -7,6 +7,7 @@ import java.util.List;
 import com.github.ddm4j.api.document.annotation.ApiResponseIgnore;
 import com.github.ddm4j.api.document.annotation.ApiResponse;
 import com.github.ddm4j.api.document.annotation.ApiResponses;
+import com.github.ddm4j.api.document.bean.ParamChildrenVo;
 import com.github.ddm4j.api.document.bean.ResponseVo;
 import com.github.ddm4j.api.document.common.model.FieldInfo;
 import com.github.ddm4j.api.document.common.model.KVEntity;
@@ -48,7 +49,7 @@ public class MethodResponseUtil {
 				// 删除指定的
 				for (String field : hides.value()) {
 					if (!FieldUtil.isEmpty(field))
-						FieldUtil.removeField(list, field);
+						list = FieldUtil.removeField(list, field);
 				}
 			}
 		}
@@ -78,13 +79,14 @@ public class MethodResponseUtil {
 			boolean isOk = false;
 			for (ApiResponse param : responses) {
 				String[] keys = param.field().split("\\.");
+				// 匹配模式
 				if (keys[0].equals(vo.getField())) {
-					if (keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
-						list.get(i).setChildren(removeNotResponse(vo.getChildren(), keys, 1));
-					}
 					isOk = true;
-					break;
 				}
+				if (isOk && keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+					list.get(i).setChildren(removeNotResponse(vo.getChildren(), keys, 1));
+				}
+				break;
 			}
 			if (!isOk) {
 				list.remove(i);
@@ -106,17 +108,19 @@ public class MethodResponseUtil {
 	 *            keys 索引
 	 * @return 处理后的集合
 	 */
-	private List<ResponseVo> removeNotResponse(List<ResponseVo> list, String[] keys, int index) {
+	private List<? extends ParamChildrenVo> removeNotResponse(List<? extends ParamChildrenVo> list, String[] keys, int index) {
 		for (int i = 0; i < list.size(); i++) {
-			ResponseVo vo = list.get(i);
+			ParamChildrenVo vo = list.get(i);
 			boolean isOk = false;
-			if (keys[index].equals(vo.getField())) {
-				if (index < keys.length - 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
-					list.get(i).setChildren(removeNotResponse(vo.getChildren(), keys, index++));
-				}
+
+			// 匹配模式
+			if (keys[0].equals(vo.getField())) {
 				isOk = true;
-				break;
 			}
+			if (isOk && index < keys.length - 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+				list.get(i).setChildren(removeNotResponse(vo.getChildren(), keys, index + 1));
+			}
+
 			if (!isOk) {
 				list.remove(i);
 				i--;
@@ -150,11 +154,11 @@ public class MethodResponseUtil {
 	 */
 	private void replaceResponseField(ApiResponse param, List<ResponseVo> list) {
 		String[] keys = param.field().split("\\.");
-		ResponseVo tempVo = null;
-		List<ResponseVo> tempChildren = list;
+		ParamChildrenVo tempVo = null;
+		List<? extends ParamChildrenVo> tempChildren = list;
 
 		for (String key : keys) {
-			for (ResponseVo vo : tempChildren) {
+			for (ParamChildrenVo vo : tempChildren) {
 				if (vo.getField().equals(key)) {
 					tempVo = vo;
 					tempChildren = vo.getChildren();

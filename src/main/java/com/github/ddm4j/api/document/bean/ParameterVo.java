@@ -2,7 +2,7 @@ package com.github.ddm4j.api.document.bean;
 
 import java.io.Serializable;
 
-public class ParameterVo extends ParamChildrenVo<ParameterVo> implements Serializable {
+public class ParameterVo extends ParamChildrenVo implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String regexp;
 	private Integer min;

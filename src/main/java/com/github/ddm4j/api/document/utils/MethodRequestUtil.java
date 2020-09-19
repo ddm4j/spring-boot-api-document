@@ -24,6 +24,7 @@ import com.github.ddm4j.api.document.annotation.ApiParamIgnore;
 import com.github.ddm4j.api.document.annotation.ApiParams;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
+import com.github.ddm4j.api.document.bean.ParamChildrenVo;
 import com.github.ddm4j.api.document.bean.ParameterVo;
 import com.github.ddm4j.api.document.common.model.FieldInfo;
 import com.github.ddm4j.api.document.common.model.KVEntity;
@@ -178,9 +179,9 @@ public class MethodRequestUtil {
 	 *            keys 索引
 	 * @return 处理后的集合
 	 */
-	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, String[] keys, int index) {
+	private List<? extends ParamChildrenVo> removeNotApiParam(List<? extends ParamChildrenVo> list, String[] keys, int index) {
 		for (int i = 0; i < list.size(); i++) {
-			ParameterVo vo = list.get(i);
+			ParamChildrenVo vo = list.get(i);
 			boolean isOk = false;
 			if (keys[index].equals(vo.getField())) {
 				if (index < keys.length - 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
@@ -443,12 +444,12 @@ public class MethodRequestUtil {
 	private void replaceReuestField(ApiParam param, List<ParameterVo> list) {
 		String[] keys = param.field().split("\\.");
 		ParameterVo tempVo = null;
-		List<ParameterVo> tempChildren = list;
+		List<? extends ParamChildrenVo> tempChildren = list;
 
 		for (String key : keys) {
-			for (ParameterVo vo : tempChildren) {
+			for (ParamChildrenVo vo : tempChildren) {
 				if (vo.getField().equals(key)) {
-					tempVo = vo;
+					tempVo = (ParameterVo)vo;
 					tempChildren = vo.getChildren();
 					break;
 				}
