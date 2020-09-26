@@ -372,7 +372,7 @@ public class FieldUtil {
 					try {
 						if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.show())) {
 							info.setName(m.invoke(objs[i]).toString());
-						} else if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.descable())) {
+						} else if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.describe())) {
 							info.setDescribe(m.invoke(objs[i]).toString());
 						} else {
 							sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i]) + " ;   ");
