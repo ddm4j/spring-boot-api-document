@@ -5,6 +5,7 @@ import java.io.Serializable;
 public abstract class ParamBaseVo implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String field;
+	private String fieldName;
 	private String type;
 	private boolean required = false;
 	private String describe;
@@ -15,6 +16,14 @@ public abstract class ParamBaseVo implements Serializable {
 
 	public void setField(String field) {
 		this.field = field;
+	}
+
+	public String getFieldName() {
+		return fieldName;
+	}
+
+	public void setFieldName(String fieldName) {
+		this.fieldName = fieldName;
 	}
 
 	public String getType() {

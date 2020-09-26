@@ -51,26 +51,28 @@ public class MethodRequestUtil {
 		}
 
 		// 描述注解
-		ApiMethod am = AnnotationUtils.getAnnotation(method,ApiMethod.class);
+		ApiMethod am = AnnotationUtils.getAnnotation(method, ApiMethod.class);
 		if (null == am) {
 			ivo.setName(method.getName());
 			// ivo.setVersion("V1.0");
 		}
 
 		if (null != am) {
-
 			ivo.setAuthor(am.author());
 			ivo.setDescribe(am.describe());
 			ivo.setName(am.value());
 			ivo.setVersion(am.version());
 		}
 
-		ApiParam[] apiParams = method.getAnnotationsByType(ApiParam.class);
-		if (null == apiParams) {
-			ApiParams params = method.getAnnotation(ApiParams.class);
-			if (null != params) {
-				apiParams = params.value();
-			}
+		// ApiParam[] apiParams = method.getAnnotationsByType(ApiParam.class);
+		ApiParam[] apiParams = new ApiParam[0];
+		ApiParams aps = AnnotationUtils.getAnnotation(method,ApiParams.class);
+		
+		if (null != aps) {
+			//ApiParams params = method.getAnnotation(ApiParams.class);
+			//if (null != params) {
+				apiParams = aps.value();
+			//}
 		}
 
 		KVEntity<List<ParameterVo>, List<HeadVo>> kv = extrad(method);
@@ -146,26 +148,28 @@ public class MethodRequestUtil {
 	 * @return 处理后的数据
 	 */
 	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, ApiParam[] apiParams) {
+		List<ParameterVo> vos = new ArrayList<ParameterVo>();
+		String[] keys = null;
+		boolean isOk = false;
 		for (int i = 0; i < list.size(); i++) {
 			ParameterVo vo = list.get(i);
-			boolean isOk = false;
+			isOk = false;
 			for (ApiParam param : apiParams) {
-				String[] keys = param.field().split("\\.");
-				if (keys[0].equals(vo.getField())) {
-					if (keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
-						list.get(i).setChildren(removeNotApiParam(vo.getChildren(), keys, 1));
-					}
-					isOk = true;
+				keys = param.field().split("\\.");
+				isOk = keys[0].equals(vo.getField());
+				if (isOk && keys.length > 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+					list.get(i).setChildren(removeNotApiParam(vo.getChildren(), apiParams, 1));
+				}
+				if (isOk) {
 					break;
 				}
 			}
-			if (!isOk) {
-				list.remove(i);
-				i--;
+			if (isOk) {
+				vos.add(vo);
 			}
 
 		}
-		return list;
+		return vos;
 	}
 
 	/**
@@ -179,23 +183,31 @@ public class MethodRequestUtil {
 	 *            keys 索引
 	 * @return 处理后的集合
 	 */
-	private List<? extends ParamChildrenVo> removeNotApiParam(List<? extends ParamChildrenVo> list, String[] keys, int index) {
+	private <T extends ParamChildrenVo> List<T> removeNotApiParam(List<T> list, ApiParam[] apiParams,
+			int index) {
+		List<T> vos = new ArrayList<T>();
+		String[] keys = null;
+		boolean isOk = false;
 		for (int i = 0; i < list.size(); i++) {
-			ParamChildrenVo vo = list.get(i);
-			boolean isOk = false;
-			if (keys[index].equals(vo.getField())) {
-				if (index < keys.length - 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {
-					list.get(i).setChildren(removeNotApiParam(vo.getChildren(), keys, index++));
+			T vo = list.get(i);
+			isOk = false;
+			for(ApiParam param:apiParams) {
+				keys = param.field().split("\\.");
+				if (index <= keys.length - 1) {
+					isOk = keys[index].equals(vo.getField());
+					if (isOk && index < keys.length - 2 && null != vo.getChildren() && vo.getChildren().size() > 0) {
+						vo.setChildren(removeNotApiParam(vo.getChildren(), apiParams, index + 1));
+					}
+					if (isOk) {
+						break;
+					}
 				}
-				isOk = true;
-				break;
 			}
-			if (!isOk) {
-				list.remove(i);
-				i--;
+			if (isOk) {
+				vos.add(vo);
 			}
 		}
-		return list;
+		return vos;
 	}
 
 	// 提取url和请求方式
@@ -425,6 +437,7 @@ public class MethodRequestUtil {
 			vo.setField(info.getName());
 			vo.setType(info.getType());
 			vo.setDescribe(info.getDescribe());
+			vo.setFieldName(info.getField());// 字段名
 			if (null != info.getChildren() && info.getChildren().size() > 0) {
 				vo.setChildren(extractField(info.getChildren()));
 			}
@@ -449,7 +462,7 @@ public class MethodRequestUtil {
 		for (String key : keys) {
 			for (ParamChildrenVo vo : tempChildren) {
 				if (vo.getField().equals(key)) {
-					tempVo = (ParameterVo)vo;
+					tempVo = (ParameterVo) vo;
 					tempChildren = vo.getChildren();
 					break;
 				}

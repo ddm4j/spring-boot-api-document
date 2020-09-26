@@ -3,11 +3,19 @@ package com.github.ddm4j.api.document.common.model;
 import java.util.List;
 
 public class FieldInfo {
-
+	private String field;
 	private String name;
 	private String type;
 	private String describe;
 	private List<FieldInfo> children;
+
+	public String getField() {
+		return field;
+	}
+
+	public void setField(String field) {
+		this.field = field;
+	}
 
 	public String getName() {
 		return name;

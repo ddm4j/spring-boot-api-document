@@ -7,7 +7,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 需要隐藏的参数
+ * 需要隐藏的参数,为空表示，只留下被 ApiResponse 标识的字段
+ * 支持 * 号匹配，只能用于前面或后面如: a_*.*_b
  */
 
 @Documented

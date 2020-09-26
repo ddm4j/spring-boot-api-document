@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>DDM接口文档工具</title>
+<title>DDM4J API Document</title>
 <!-- CSS 导入 -->
 <link href="css/jquery-accordion-menu.css" rel="stylesheet"
 	type="text/css" />
@@ -210,10 +210,9 @@ body {
 
 									<th class="type">类型</th>
 									<th class="required">必填</th>
-									<th class="left">示例说明</th>
+									<th class="length">最大&nbsp;/&nbsp;最小</th>
 									<th class="reg">正则校验</th>
-									<th class="length">最小</th>
-									<th class="length">最大</th>
+									<th class="left">示例说明</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -227,10 +226,9 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item.describe}}</td>
+									<td class="length">{{item.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item.min}}</td>
 									<td class="reg">{{item.regexp}}</td>
-									<td class="length">{{item.min}}</td>
-									<td class="length">{{item.max}}</td>
+									<td class="left">{{item.describe}}</td>
 								</tr>
 							</tbody>
 						</table>
@@ -250,10 +248,10 @@ body {
 									<th class="left field">字段</th>
 									<th class="type">类型</th>
 									<th class="required">必填</th>
-									<th class="left">示例说明</th>
+									<th class="length">最大&nbsp;/&nbsp;最小</th>
 									<th class="reg">正则校验</th>
-									<th class="length">最小</th>
-									<th class="length">最大</th>
+									<th class="left">示例说明</th>
+									
 								</tr>
 							</thead>
 							<tbody>
@@ -273,10 +271,10 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item.describe}}</td>
+									<td class="length">{{item.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item.min}}</td>
 									<td class="reg">{{item.regexp}}</td>
-									<td class="length">{{item.min}}</td>
-									<td class="length">{{item.max}}</td>
+									<td class="left">{{item.describe}}</td>
+									
 								</tr>
 								<template v-if="show.request.one[index].show"
 									v-for="(item2,index2) in item.children"> <!-- 第二层 -->
@@ -293,10 +291,9 @@ body {
 									<td class="required"><span v-if="item2.required"
 										class="required_true">是</span> <span v-if="!item2.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item2.describe}}</td>
+									<td class="length">{{item2.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item2.min}}</td>
 									<td class="reg">{{item2.regexp}}</td>
-									<td class="length">{{item2.min}}</td>
-									<td class="length">{{item2.max}}</td>
+									<td class="left">{{item2.describe}}</td>
 								</tr>
 								<template v-if="show.request.two[index2].show"
 									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
@@ -313,10 +310,9 @@ body {
 									<td class="required"><span v-if="item3.required"
 										class="required_true">是</span> <span v-if="!item3.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item3.describe}}</td>
+									<td class="length">{{item3.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item3.min}}</td>
 									<td class="reg">{{item3.regexp}}</td>
-									<td class="length">{{item3.min}}</td>
-									<td class="length">{{item3.max}}</td>
+									<td class="left">{{item3.describe}}</td>
 								</tr>
 								<!-- 第四层 -->
 								<tr v-if="show.request.three[index3].show"
@@ -333,10 +329,9 @@ body {
 									<td class="required"><span v-if="item4.required"
 										class="required_true">是</span> <span v-if="!item4.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item4.describe}}</td>
+									<td class="length">{{item4.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item4.min}}</td>
 									<td class="reg">{{item4.regexp}}</td>
-									<td class="length">{{item4.min}}</td>
-									<td class="length">{{item4.max}}</td>
+									<td class="left">{{item4.describe}}</td>
 								</tr>
 								</template> </template> </template>
 							</tbody>
@@ -351,7 +346,7 @@ body {
 						<table class="bordered">
 							<thead>
 								<tr>
-									<th class="left field">字段</th>
+									<th class="left field_res">字段</th>
 
 									<th class="type">类型</th>
 									<th class="required">必填</th>
@@ -362,7 +357,7 @@ body {
 								<template v-for="(item,index) in selectionInterface.responses">
 								<!-- 第一层 -->
 								<tr>
-									<td class="left field"><input type="button"
+									<td class="left field_res"><input type="button"
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">{{item.field}}
 										<span class="table-show"
 										v-if="item.children && item.children.length > 0  && add_show_response('1',index)"
@@ -378,7 +373,7 @@ body {
 								<template v-if="show.response.one[index].show"
 									v-for="(item2,index2) in item.children"> <!-- 第二层 -->
 								<tr>
-									<td class="left" field><input type="button"
+									<td class="left"><input type="button"
 										@Click="copyStr(item2.field)" class="copy_btn" value="复制">
 										<span class="param_love">->&nbsp;</span> {{item2.field}} <span
 										class="table-show"
@@ -395,7 +390,7 @@ body {
 								<template v-if="show.response.two[index2].show"
 									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
 								<tr>
-									<td class="left field"><input type="button"
+									<td class="left"><input type="button"
 										@Click="copyStr(item3.field)" class="copy_btn" value="复制">
 										<span class="param_love">->&nbsp;<span style="color: #9c27b0;">-></span>&nbsp;
 									</span>{{item3.field}} <span class="table-show"
@@ -412,7 +407,7 @@ body {
 								<!-- 第四层 -->
 								<tr v-if="show.response.three[index3].show"
 									v-for="item4 in item3.children">
-									<td class="left field"><input type="button"
+									<td class="left"><input type="button"
 										@Click="copyStr(item4.field)" class="copy_btn" value="复制">
 										<span class="param_love">->&nbsp;<span style="color: #9c27b0;">-></span>&nbsp;<span style="color: red;">-></span>&nbsp;
 									</span>{{item4.field}}</td>

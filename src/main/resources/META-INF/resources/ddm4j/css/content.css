@@ -188,7 +188,11 @@
 }
 
 table .field{
-	width: 350px;
+	width: 500px;
+}
+
+table .field_res{
+	width: 500px;
 }
 
 table .type{
@@ -207,7 +211,7 @@ table .length{
 }
 
 table .reg{
-	width: 250px;
+	width: 25%;
 }
 
 /* 页脚 */

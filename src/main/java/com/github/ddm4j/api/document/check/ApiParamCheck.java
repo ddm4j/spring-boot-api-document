@@ -126,6 +126,9 @@ public class ApiParamCheck {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
+			if("".equals(apiParam.field())) {
+				continue;
+			}
 			// System.out.println(apiParam.field());
 			boolean empty = true;
 			for (Entry<String, Object> param : params.entrySet()) {

@@ -15,6 +15,7 @@ import java.util.Set;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.github.ddm4j.api.document.annotation.ApiEnum;
 import com.github.ddm4j.api.document.annotation.ApiField;
 import com.github.ddm4j.api.document.annotation.ApiIgnore;
 import com.github.ddm4j.api.document.bean.ParamChildrenVo;
@@ -38,7 +39,7 @@ public class FieldUtil {
 	}
 
 	private static KVEntity<String, List<FieldInfo>> extract(Type type, int lovel) {
-		//System.out.println("开始：" + type);
+		// System.out.println("开始：" + type);
 		if (null == type) {
 			return null;
 		}
@@ -62,11 +63,11 @@ public class FieldUtil {
 			if (type instanceof GenericArrayType) {
 				isArray = true;
 			}
-			//System.out.println("T -- " + isArray + " -- " + type.getTypeName());
+			// System.out.println("T -- " + isArray + " -- " + type.getTypeName());
 			KVEntity<Class<?>, Type> ct = extractGenType(type);
 			cla = ct.getLeft();
 			type = ct.getRight();
-			//System.out.println("cla=" + cla + " --- " + type);
+			// System.out.println("cla=" + cla + " --- " + type);
 		}
 
 		if (null == cla) {
@@ -86,7 +87,8 @@ public class FieldUtil {
 			typeStr = "Date";
 		} else if (Enum.class.isAssignableFrom(cla)) {
 			typeStr = "Enum";
-			kv.setRight(extractEnum(cla));
+
+			kv.setRight(extractEnum(cla,null));
 		} else if (Boolean.class.isAssignableFrom(cla)) {
 			typeStr = "Boolean";
 		} else if (cla.isPrimitive()) {
@@ -114,7 +116,7 @@ public class FieldUtil {
 				kv.setRight(kv2.getRight());
 			}
 		} else {
-			//System.out.println(" 解析："+cla.getTypeName()+" --- "+cla.getName());
+			// System.out.println(" 解析："+cla.getTypeName()+" --- "+cla.getName());
 			if (cla.getTypeName().equals(cla.getName())) {
 				typeStr = "Object";
 				kv.setRight(extractField(cla, type, lovel));
@@ -154,7 +156,7 @@ public class FieldUtil {
 				if (null != ignore) {
 					continue;
 				}
-				//System.out.println("字段："+field.getName());
+				// System.out.println("字段："+field.getName());
 				// 属性是静态的或Final 修饰的，不处理
 				if (Modifier.isFinal(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) {
 					continue;
@@ -179,7 +181,7 @@ public class FieldUtil {
 				Class<?> fie = field.getType();
 				String typeStr = null;
 				boolean isArray = false;
-				//System.out.println("field:" + field.getName() + " --- " + fie);
+				// System.out.println("field:" + field.getName() + " --- " + fie);
 				if (fie.isArray()) {
 					isArray = true;
 					fie = fie.getComponentType();
@@ -200,7 +202,7 @@ public class FieldUtil {
 					typeStr = "Date";
 				} else if (Enum.class.isAssignableFrom(fie)) {
 					typeStr = "Enum";
-					info.setChildren(extractEnum(fie));
+					info.setChildren(extractEnum(fie,AnnotationUtils.getAnnotation(field, ApiEnum.class)));
 				} else {
 					if (MultipartFile.class.isAssignableFrom(fie)) {
 						typeStr = "File";
@@ -211,7 +213,7 @@ public class FieldUtil {
 						if (lovel >= LOVEL) {
 							typeStr = "Loop - Limit";
 						} else if (List.class.isAssignableFrom(fie) || Set.class.isAssignableFrom(fie)) {
-							//System.out.println("list --- " + field.getName());
+							// System.out.println("list --- " + field.getName());
 							if (null != field.getGenericType()) {
 
 								if (field.getGenericType() instanceof Class<?>) {
@@ -259,7 +261,7 @@ public class FieldUtil {
 								}
 							}
 						} else if (field.getGenericType() instanceof Class<?>) {
-							//System.out.println("不是泛型 ---" + field.getName());
+							// System.out.println("不是泛型 ---" + field.getName());
 							if (Object.class == fie) {
 								typeStr = "Object<?>";
 							} else {
@@ -270,18 +272,18 @@ public class FieldUtil {
 							}
 						} else if (field.getGenericType() instanceof ParameterizedType
 								|| field.getGenericType() instanceof GenericArrayType) {
-							//System.out.println("是泛型 ---" + field.getName());
+							// System.out.println("是泛型 ---" + field.getName());
 							KVEntity<Class<?>, Type> ct = extractGenType(field.getGenericType());
 							if (null == ct) {
 								// 未指定泛型
 								continue;
 							}
-							//System.out.println(ct.getLeft()+" --- "+ct.getRight());
-							
-							if(null == ct.getLeft()) {
+							// System.out.println(ct.getLeft()+" --- "+ct.getRight());
+
+							if (null == ct.getLeft()) {
 								KVEntity<String, List<FieldInfo>> kv2 = null;
 								if (null == ct.getRight()) {
-									
+
 									kv2 = extract(genType, lovel);
 								} else {
 									kv2 = extract(ct.getRight(), lovel);
@@ -295,15 +297,15 @@ public class FieldUtil {
 								// }
 
 								info.setChildren(kv2.getRight());
-							}else {
-								List<FieldInfo> tList = extractField(ct.getLeft(),genType,lovel);
+							} else {
+								List<FieldInfo> tList = extractField(ct.getLeft(), genType, lovel);
 								typeStr = field.getName();
 								info.setChildren(tList);
 							}
-							
 
 						} else if (!field.getGenericType().getTypeName().equals(field.getType().getTypeName())) {
-							//System.out.println("纯泛型：" + field.getName()+"--- "+field.getGenericType()+"genType:"+genType);
+							// System.out.println("纯泛型：" + field.getName()+"---
+							// "+field.getGenericType()+"genType:"+genType);
 							KVEntity<String, List<FieldInfo>> kv2 = extract(genType, lovel);
 							if (null == kv2) {
 								continue;
@@ -319,9 +321,10 @@ public class FieldUtil {
 				if (isArray) {
 					typeStr = "Array<" + typeStr + ">";
 				}
+				info.setField(info.getName());
 				info.setType(typeStr);
 				infos.add(info);
-				//System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
+				// System.out.println("提取属性1：" + info.getName() + " --- " + typeStr);
 			}
 		}
 
@@ -349,7 +352,8 @@ public class FieldUtil {
 	 *            枚举类
 	 * @return 提取结果
 	 */
-	private static List<FieldInfo> extractEnum(Class<?> cla) {
+	private static List<FieldInfo> extractEnum(Class<?> cla,ApiEnum aem) {
+
 		List<FieldInfo> infos = new ArrayList<FieldInfo>();
 
 		Object[] objs = cla.getEnumConstants();
@@ -358,13 +362,21 @@ public class FieldUtil {
 		StringBuffer sb = null;
 		for (int i = 0; i < fies.length; i++) {
 			FieldInfo info = new FieldInfo();
+
 			info.setName(fies[i].getName());
+			info.setField(fies[i].getName());
 			sb = new StringBuffer();
 			for (Method m : mes) {
 				if (m.getName().startsWith("get") && !"getDeclaringClass".equals(m.getName())
 						&& !"getClass".equals(m.getName())) {
 					try {
-						sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i]) + " ;   ");
+						if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.show())) {
+							info.setName(m.invoke(objs[i]).toString());
+						} else if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.descable())) {
+							info.setDescribe(m.invoke(objs[i]).toString());
+						} else {
+							sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i]) + " ;   ");
+						}
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
