@@ -15,8 +15,7 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
  2. **jdk**:1.8
 
 # 使用指南
-点击上面的 wiki，了解查看。
-[link](https://github.com/ddm4j/spring-boot-api-document/wiki/spring-boot-api-document-使用指南)
+[使用指南](https://github.com/ddm4j/spring-boot-api-document/wiki/spring-boot-api-document-使用指南)
 
 # 版本历史
 ```
