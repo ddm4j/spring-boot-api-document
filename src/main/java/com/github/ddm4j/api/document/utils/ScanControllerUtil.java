@@ -26,17 +26,20 @@ import com.github.ddm4j.api.document.bean.ResponseVo;
 import com.github.ddm4j.api.document.common.model.KVEntity;
 import com.github.ddm4j.api.document.config.CheckConfig;
 import com.github.ddm4j.api.document.config.DocumentConfig;
+import com.github.ddm4j.api.document.config.ResponseCodeConfig;
 import com.github.ddm4j.api.document.config.bean.RequestHeaderBean;
 
 public class ScanControllerUtil {
 	CheckConfig config;
 	DocumentConfig documentConfig;
+	ResponseCodeConfig codeConfig;
 
 	Logger logger = LoggerFactory.getLogger(ScanControllerUtil.class);
 
-	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig) {
+	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig,ResponseCodeConfig codeConfig) {
 		this.config = config;
 		this.documentConfig = documentConfig;
+		this.codeConfig = codeConfig; 
 	}
 
 	public List<ControllerVo> scan(String packagePath, String base_path) {
@@ -51,7 +54,7 @@ public class ScanControllerUtil {
 		List<ControllerVo> controllers = new ArrayList<ControllerVo>();
 
 		MethodRequestUtil requestUtil = new MethodRequestUtil(config);
-		MethodResponseUtil responseUtil = new MethodResponseUtil();
+		MethodResponseUtil responseUtil = new MethodResponseUtil(codeConfig);
 
 		// 提取上的请求头信息
 		List<HeadVo> headVosConfig = extractHeaderInfo();

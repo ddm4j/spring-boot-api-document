@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.ddm4j.api.document.config.CheckConfig;
 import com.github.ddm4j.api.document.config.DocumentConfig;
+import com.github.ddm4j.api.document.config.ResponseCodeConfig;
 
 @Controller
 public class ApiDocumentController {
@@ -17,6 +18,8 @@ public class ApiDocumentController {
 	DocumentConfig config;
 	@Autowired
 	CheckConfig chConfig;
+	@Autowired
+	ResponseCodeConfig codeConfig;
 
 	/**
 	 * 获取数据
@@ -99,7 +102,7 @@ public class ApiDocumentController {
 		// }
 		// path = prefix + path;
 		// }
-		ScanControllerUtil util = new ScanControllerUtil(chConfig, config);
+		ScanControllerUtil util = new ScanControllerUtil(chConfig, config, codeConfig);
 		// 扫描
 		doc.setControllers(util.scan(config.getPath(), path));
 		return doc;

@@ -3,6 +3,8 @@ package com.github.ddm4j.api.document.utils;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.springframework.core.annotation.AnnotationUtils;
 
@@ -14,8 +16,15 @@ import com.github.ddm4j.api.document.bean.ParamChildrenVo;
 import com.github.ddm4j.api.document.bean.ResponseVo;
 import com.github.ddm4j.api.document.common.model.FieldInfo;
 import com.github.ddm4j.api.document.common.model.KVEntity;
+import com.github.ddm4j.api.document.config.ResponseCodeConfig;
 
 public class MethodResponseUtil {
+
+	ResponseCodeConfig config;
+
+	public MethodResponseUtil(ResponseCodeConfig config) {
+		this.config = config;
+	}
 
 	public KVEntity<String, List<ResponseVo>> getResponseVo(Method method) {
 
@@ -59,9 +68,9 @@ public class MethodResponseUtil {
 			}
 		}
 		// code 隐藏或删除
-		ApiResponseCode code = method.getAnnotation(ApiResponseCode.class);
-		if (null != code && code.codes().length > 0) {
-			removeCode(list,code);
+		ApiResponseCode code = AnnotationUtils.getAnnotation(method, ApiResponseCode.class);
+		if (null != code) {
+			removeCode(list, code);
 		}
 
 		// 注解替换
@@ -76,58 +85,108 @@ public class MethodResponseUtil {
 	}
 
 	private List<ResponseVo> removeCode(List<ResponseVo> list, ApiResponseCode code) {
-		String[] keys = code.field().split("\\.");
-		return removeCode(list,code,keys,0);
+		String field = code.field();
+		if (FieldUtil.isEmpty(field)) {
+			if (FieldUtil.isEmpty(config.getField())) {
+				return list;
+			} else {
+				field = config.getField();
+			}
+		}
+		// 状态码字段
+		String[] keys = field.split("\\.");
+
+		Set<String> codes = new TreeSet<String>();
+		for (String codeStr : code.codes()) {
+			if (!FieldUtil.isEmpty(codeStr)) {
+				codes.add(codeStr);
+			}
+		}
+
+		if (null != config.getCodes() && config.getCodes().length > 0) {
+			int index = -1;
+			for (String codeStr : config.getCodes()) {
+				if (!FieldUtil.isEmpty(codeStr)) {
+					if (code.cancel().length > 0) {
+						for (String checkCode : code.cancel()) {
+							index = checkCode.indexOf("*");
+							if (index > -1 && index == 0) {
+								// 匹配后面
+								if (!codeStr.endsWith(checkCode.substring(1))) {
+									codes.add(codeStr);
+								}
+							} else if (index > 0) {
+								// 匹配后面
+								if (!codeStr.startsWith(checkCode.substring(0, checkCode.length() - 1))) {
+									codes.add(codeStr);
+								}
+							} else {
+								// 不匹配
+								if (!codeStr.equals(checkCode)) {
+									codes.add(codeStr);
+								}
+							}
+						}
+					} else {
+						codes.add(codeStr);
+					}
+				}
+			}
+		}
+
+		return removeCode(list, codes, code.hide(), keys, 0);
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends ParamChildrenVo> List<T> removeCode(List<T> list, ApiResponseCode code, String[] keys, int index) {
+	private <T extends ParamChildrenVo> List<T> removeCode(List<T> list, Set<String> codes, boolean hide, String[] keys,
+			int index) {
 		List<T> vos = new ArrayList<T>();
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).getField().equals(keys[index])) {
 				if (null != list.get(i).getChildren() && list.get(i).getChildren().size() > 0) {
-					boolean isOK = code.hide();// 是否隐藏
+					boolean isOK = hide;// 是否隐藏
 					for (int j = 0; j < list.get(i).getChildren().size(); j++) {
-						isOK = code.hide();// 是否隐藏
-						
-						for (String key : code.codes()) {
+						isOK = hide;// 是否隐藏
+
+						for (String key : codes) {
 							index = key.indexOf("*");
 							if (index > -1 && index == 0) {
 								// 匹配后面
-								if(list.get(i).getChildren().get(j).getFieldName().endsWith(key.substring(1))) {
-									if(code.hide()) {
+								if (list.get(i).getChildren().get(j).getFieldName().endsWith(key.substring(1))) {
+									if (hide) {
 										// 如果是隐藏，就不要加入了
 										isOK = false;
-									}else {
+									} else {
 										// 如果是显示，就得加入了
 										isOK = true;
 									}
 								}
 							} else if (index > 0) {
 								// 匹配后面
-								if(list.get(i).getChildren().get(j).getFieldName().startsWith(key.substring(0,key.length()-1))) {
-									if(code.hide()) {
+								if (list.get(i).getChildren().get(j).getFieldName()
+										.startsWith(key.substring(0, key.length() - 1))) {
+									if (hide) {
 										// 如果是隐藏，就不要加入了
 										isOK = false;
-									}else {
+									} else {
 										// 如果是显示，就得加入了
 										isOK = true;
 									}
 								}
 							} else {
 								// 不匹配
-								if(list.get(i).getChildren().get(j).getFieldName().equals(key)) {
-									if(code.hide()) {
+								if (list.get(i).getChildren().get(j).getFieldName().equals(key)) {
+									if (hide) {
 										// 如果是隐藏，就不要加入了
 										isOK = false;
-									}else {
+									} else {
 										// 如果是显示，就得加入了
 										isOK = true;
 									}
 								}
 							}
 						}
-						if(isOK) {
+						if (isOK) {
 							vos.add((T) list.get(i).getChildren().get(j));
 						}
 					}

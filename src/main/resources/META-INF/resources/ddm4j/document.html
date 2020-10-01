@@ -210,9 +210,9 @@ body {
 
 									<th class="type">类型</th>
 									<th class="required">必填</th>
-									<th class="length">最大&nbsp;/&nbsp;最小</th>
-									<th class="reg">正则校验</th>
 									<th class="left">示例说明</th>
+									<th class="length">最小&nbsp;/&nbsp;最大</th>
+									<th class="reg">正则校验</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -226,9 +226,9 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="length">{{item.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item.min}}</td>
-									<td class="reg">{{item.regexp}}</td>
 									<td class="left">{{item.describe}}</td>
+									<td class="length">{{(item.min || item.min == 0)?item.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item.max || item.max == 0)?item.max:'-'}}</td>
+									<td class="reg">{{item.regexp}}</td>
 								</tr>
 							</tbody>
 						</table>
@@ -248,10 +248,9 @@ body {
 									<th class="left field">字段</th>
 									<th class="type">类型</th>
 									<th class="required">必填</th>
-									<th class="length">最大&nbsp;/&nbsp;最小</th>
-									<th class="reg">正则校验</th>
 									<th class="left">示例说明</th>
-									
+									<th class="length">最小&nbsp;/&nbsp;最大</th>
+									<th class="reg">正则校验</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -271,9 +270,9 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="length">{{item.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item.min}}</td>
-									<td class="reg">{{item.regexp}}</td>
 									<td class="left">{{item.describe}}</td>
+									<td class="length">{{(item.min || item.min == 0)?item.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item.max || item.max == 0)?item.max:'-'}}</td>
+									<td class="reg">{{item.regexp}}</td>
 									
 								</tr>
 								<template v-if="show.request.one[index].show"
@@ -291,9 +290,9 @@ body {
 									<td class="required"><span v-if="item2.required"
 										class="required_true">是</span> <span v-if="!item2.required"
 										class="required_false">否</span></td>
-									<td class="length">{{item2.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item2.min}}</td>
-									<td class="reg">{{item2.regexp}}</td>
 									<td class="left">{{item2.describe}}</td>
+									<td class="length">{{(item2.min || item2.min == 0)?item2.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item2.max || item2.max == 0)?item2.max:'-'}}</td>
+									<td class="reg">{{item2.regexp}}</td>
 								</tr>
 								<template v-if="show.request.two[index2].show"
 									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
@@ -310,9 +309,10 @@ body {
 									<td class="required"><span v-if="item3.required"
 										class="required_true">是</span> <span v-if="!item3.required"
 										class="required_false">否</span></td>
-									<td class="length">{{item3.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item3.min}}</td>
-									<td class="reg">{{item3.regexp}}</td>
+									
 									<td class="left">{{item3.describe}}</td>
+									<td class="length">{{(item3.min || item3.min == 0 )?item3.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item3.max || item3.max == 0)?item3.max:'-'}}</td>
+									<td class="reg">{{item3.regexp}}</td>
 								</tr>
 								<!-- 第四层 -->
 								<tr v-if="show.request.three[index3].show"
@@ -329,9 +329,9 @@ body {
 									<td class="required"><span v-if="item4.required"
 										class="required_true">是</span> <span v-if="!item4.required"
 										class="required_false">否</span></td>
-									<td class="length">{{item4.max}}&nbsp;&nbsp;/&nbsp;&nbsp;{{item4.min}}</td>
-									<td class="reg">{{item4.regexp}}</td>
 									<td class="left">{{item4.describe}}</td>
+									<td class="length">{{(item4.min || item4.min == 0)?item4.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item4.max || item4.max == 0)?item4.max:'-'}}</td>
+									<td class="reg">{{item4.regexp}}</td>
 								</tr>
 								</template> </template> </template>
 							</tbody>

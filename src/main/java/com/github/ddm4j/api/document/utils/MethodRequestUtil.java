@@ -73,6 +73,12 @@ public class MethodRequestUtil {
 			//if (null != params) {
 				apiParams = aps.value();
 			//}
+		}else {
+			ApiParam param = method.getAnnotation(ApiParam.class);
+			if(null != param) {
+				apiParams = new ApiParam[1];
+				apiParams[0] = param;
+			}
 		}
 
 		KVEntity<List<ParameterVo>, List<HeadVo>> kv = extrad(method);
