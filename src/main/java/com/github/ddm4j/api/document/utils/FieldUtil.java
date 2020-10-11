@@ -39,7 +39,7 @@ public class FieldUtil {
 	}
 
 	private static KVEntity<String, List<FieldInfo>> extract(Type type, int lovel) {
-		// System.out.println("开始：" + type);
+		//System.out.println("开始：" + type);
 		if (null == type) {
 			return null;
 		}
@@ -48,13 +48,13 @@ public class FieldUtil {
 		Class<?> cla = null;
 		if (type instanceof Class) {
 			cla = (Class<?>) type;
-			// System.out.println(" --- "+cla);
+			//System.out.println(" --- "+cla);
 			if (cla.isArray()) {
 				isArray = true;
 				cla = cla.getComponentType();
 				KVEntity<Class<?>, Type> ct = extractGenType(type);
 				type = ct.getRight();
-				// System.out.println(" ----- 222 "+ct.getRight());
+				//System.out.println(" ----- 222 "+ct.getRight());
 			} else {
 				type = null;
 			}
@@ -63,11 +63,11 @@ public class FieldUtil {
 			if (type instanceof GenericArrayType) {
 				isArray = true;
 			}
-			// System.out.println("T -- " + isArray + " -- " + type.getTypeName());
+			//System.out.println("T -- " + isArray + " -- " + type.getTypeName());
 			KVEntity<Class<?>, Type> ct = extractGenType(type);
 			cla = ct.getLeft();
 			type = ct.getRight();
-			// System.out.println("cla=" + cla + " --- " + type);
+			//System.out.println("cla=" + cla + " --- " + type);
 		}
 
 		if (null == cla) {
@@ -88,7 +88,7 @@ public class FieldUtil {
 		} else if (Enum.class.isAssignableFrom(cla)) {
 			typeStr = "Enum";
 
-			kv.setRight(extractEnum(cla,null));
+			kv.setRight(extractEnum(cla, null));
 		} else if (Boolean.class.isAssignableFrom(cla)) {
 			typeStr = "Boolean";
 		} else if (cla.isPrimitive()) {
@@ -116,9 +116,10 @@ public class FieldUtil {
 				kv.setRight(kv2.getRight());
 			}
 		} else {
-			// System.out.println(" 解析："+cla.getTypeName()+" --- "+cla.getName());
+			//System.out.println(" 解析："+cla.getTypeName()+" --- "+cla.getName());
 			if (cla.getTypeName().equals(cla.getName())) {
 				typeStr = "Object";
+				
 				kv.setRight(extractField(cla, type, lovel));
 			} else {
 				typeStr = "Object<?>";
@@ -202,7 +203,7 @@ public class FieldUtil {
 					typeStr = "Date";
 				} else if (Enum.class.isAssignableFrom(fie)) {
 					typeStr = "Enum";
-					info.setChildren(extractEnum(fie,AnnotationUtils.getAnnotation(field, ApiEnum.class)));
+					info.setChildren(extractEnum(fie, AnnotationUtils.getAnnotation(field, ApiEnum.class)));
 				} else {
 					if (MultipartFile.class.isAssignableFrom(fie)) {
 						typeStr = "File";
@@ -352,7 +353,7 @@ public class FieldUtil {
 	 *            枚举类
 	 * @return 提取结果
 	 */
-	private static List<FieldInfo> extractEnum(Class<?> cla,ApiEnum aem) {
+	private static List<FieldInfo> extractEnum(Class<?> cla, ApiEnum aem) {
 
 		List<FieldInfo> infos = new ArrayList<FieldInfo>();
 
@@ -366,15 +367,23 @@ public class FieldUtil {
 			info.setName(fies[i].getName());
 			info.setField(fies[i].getName());
 			sb = new StringBuffer();
+			boolean append = true;
 			for (Method m : mes) {
 				if (m.getName().startsWith("get") && !"getDeclaringClass".equals(m.getName())
 						&& !"getClass".equals(m.getName())) {
 					try {
-						if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.show())) {
+						append = true;
+						if (null != aem && !isEmpty(aem.show()) && m.getName().substring(3).toLowerCase().equals(aem.show())) {
 							info.setName(m.invoke(objs[i]).toString());
-						} else if (null != aem && m.getName().substring(3).toLowerCase().equals(aem.describe())) {
+							append = false;
+						} 
+						
+						if (null != aem && !isEmpty(aem.describe()) && m.getName().substring(3).toLowerCase().equals(aem.describe())) {
 							info.setDescribe(m.invoke(objs[i]).toString());
-						} else {
+							append = false;
+						}
+						
+						if(append){
 							sb.append(m.getName().substring(3).toLowerCase() + ": " + m.invoke(objs[i]) + " ;   ");
 						}
 					} catch (Exception e) {
@@ -382,7 +391,7 @@ public class FieldUtil {
 					}
 				}
 			}
-			if (sb.length() > 1) {
+			if (null != sb && sb.length() > 1 && isEmpty(info.getDescribe())) {
 				info.setDescribe(sb.toString());
 			}
 			info.setType("enum");

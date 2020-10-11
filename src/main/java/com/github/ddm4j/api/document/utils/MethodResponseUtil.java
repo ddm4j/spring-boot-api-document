@@ -2,7 +2,9 @@ package com.github.ddm4j.api.document.utils;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -26,7 +28,7 @@ public class MethodResponseUtil {
 		this.config = config;
 	}
 
-	public KVEntity<String, List<ResponseVo>> getResponseVo(Method method) {
+	public KVEntity<String, List<ResponseVo>> getResponseVo(Method method, ApiResponseCode typeCode) {
 
 		// 提取返回值注解
 		// ApiResponse[] responses = method.getAnnotationsByType(ApiResponse.class);
@@ -69,8 +71,8 @@ public class MethodResponseUtil {
 		}
 		// code 隐藏或删除
 		ApiResponseCode code = AnnotationUtils.getAnnotation(method, ApiResponseCode.class);
-		if (null != code) {
-			removeCode(list, code);
+		if (null != code || null != typeCode || (null != config && null != config.getField())) {
+			removeCode(list, code, typeCode);
 		}
 
 		// 注解替换
@@ -84,8 +86,14 @@ public class MethodResponseUtil {
 		return entity;
 	}
 
-	private List<ResponseVo> removeCode(List<ResponseVo> list, ApiResponseCode code) {
-		String field = code.field();
+	private List<ResponseVo> removeCode(List<ResponseVo> list, ApiResponseCode code, ApiResponseCode typeCode) {
+		String field = null;
+
+		if (null != code) {
+			field = code.field();
+		} else if (null != typeCode) {
+			field = typeCode.field();
+		}
 		if (FieldUtil.isEmpty(field)) {
 			if (FieldUtil.isEmpty(config.getField())) {
 				return list;
@@ -95,59 +103,144 @@ public class MethodResponseUtil {
 		}
 		// 状态码字段
 		String[] keys = field.split("\\.");
-
+		// 需要的
 		Set<String> codes = new TreeSet<String>();
-		for (String codeStr : code.codes()) {
-			if (!FieldUtil.isEmpty(codeStr)) {
-				codes.add(codeStr);
-			}
-		}
+		// 描述
+		Map<String, String> descs = new HashMap<String, String>();
+		// 排除配置文件上的
+		Set<String> cancelCodes = new TreeSet<String>();
 
-		if (null != config.getCodes() && config.getCodes().length > 0) {
-			int index = -1;
-			for (String codeStr : config.getCodes()) {
+		// Controller上的
+		if (null != typeCode) {
+			for (String codeStr : typeCode.codes()) {
 				if (!FieldUtil.isEmpty(codeStr)) {
-					if (code.cancel().length > 0) {
-						for (String checkCode : code.cancel()) {
-							index = checkCode.indexOf("*");
-							if (index > -1 && index == 0) {
-								// 匹配后面
-								if (!codeStr.endsWith(checkCode.substring(1))) {
-									codes.add(codeStr);
-								}
-							} else if (index > 0) {
-								// 匹配后面
-								if (!codeStr.startsWith(checkCode.substring(0, checkCode.length() - 1))) {
-									codes.add(codeStr);
-								}
-							} else {
-								// 不匹配
-								if (!codeStr.equals(checkCode)) {
-									codes.add(codeStr);
-								}
-							}
+					if (codeStr.indexOf(":") > 0) {
+						codes.add(codeStr.substring(0, codeStr.indexOf(":")));
+						if (codeStr.indexOf(":") + 1 < codeStr.length()) {
+							descs.put(codeStr.substring(0, codeStr.indexOf(":")),
+									codeStr.substring(codeStr.indexOf(":") + 1));
 						}
 					} else {
 						codes.add(codeStr);
 					}
 				}
 			}
+			for (String codeStr : typeCode.cancel()) {
+				if (!FieldUtil.isEmpty(codeStr)) {
+					cancelCodes.add(codeStr);
+				}
+			}
 		}
 
-		return removeCode(list, codes, code.hide(), keys, 0);
+		// 方法上的
+		if (null != code) {
+			for (String codeStr : code.codes()) {
+				if (!FieldUtil.isEmpty(codeStr)) {
+					if (codeStr.indexOf(":") > 0) {
+						codes.add(codeStr.substring(0, codeStr.indexOf(":")));
+						if (codeStr.indexOf(":") + 1 < codeStr.length()) {
+							descs.put(codeStr.substring(0, codeStr.indexOf(":")),
+									codeStr.substring(codeStr.indexOf(":") + 1));
+						}
+
+					} else {
+						codes.add(codeStr);
+					}
+				}
+			}
+			for (String codeStr : code.cancel()) {
+				if (!FieldUtil.isEmpty(codeStr)) {
+					cancelCodes.add(codeStr);
+				}
+			}
+		}
+
+		if (null != config.getCodes() && config.getCodes().length > 0) {
+			int index = -1;
+			
+			for (String codeStr : config.getCodes()) {
+				if (!FieldUtil.isEmpty(codeStr)) {
+					String desc = "";
+					if (codeStr.indexOf(":") > 0) {
+						if (codeStr.indexOf(":") + 1 < codeStr.length()) {
+							desc = codeStr.substring(codeStr.indexOf(":") + 1);
+						}
+						codeStr = codeStr.substring(0, codeStr.indexOf(":"));
+					}
+					if (cancelCodes.size() > 0) {
+						for (String checkCode : cancelCodes) {
+							if (checkCode.indexOf(":") > 0) {
+								checkCode = checkCode.substring(0, checkCode.indexOf(":"));
+							}
+							index = checkCode.indexOf("*");
+							if (index > -1 && index == 0) {
+								// 匹配后面
+								if (!codeStr.endsWith(checkCode.substring(1))) {
+									codes.add(codeStr);
+									if (!FieldUtil.isEmpty(desc)) {
+										descs.put(codeStr, desc);
+									}
+								}
+							} else if (index > 0) {
+								// 匹配后面
+								if (!codeStr.startsWith(checkCode.substring(0, checkCode.length() - 1))) {
+									codes.add(codeStr);
+									if (!FieldUtil.isEmpty(desc)) {
+										descs.put(codeStr, desc);
+									}
+								}
+							} else {
+								// 不匹配
+								if (!codeStr.equals(checkCode)) {
+									codes.add(codeStr);
+									if (!FieldUtil.isEmpty(desc)) {
+										descs.put(codeStr, desc);
+									}
+								}
+							}
+						}
+					} else {
+						codes.add(codeStr);
+						if (!FieldUtil.isEmpty(desc)) {
+							descs.put(codeStr, desc);
+						}
+
+					}
+				}
+			}
+		}
+		
+		if(codes.size() == 0) {
+			return list;
+		}
+		
+		boolean hide = false;
+		if (null != code) {
+			hide = code.hide();
+		} else if (null != typeCode) {
+			hide = typeCode.hide();
+		}
+		return removeCode(list, codes, hide, keys, descs, 0);
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T extends ParamChildrenVo> List<T> removeCode(List<T> list, Set<String> codes, boolean hide, String[] keys,
-			int index) {
+			Map<String, String> descs,int index) {
 		List<T> vos = new ArrayList<T>();
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).getField().equals(keys[index])) {
+				
+				// 判断是否达到目标区域了
+				if(index < keys.length -1) {
+					list.get(i).setChildren(removeCode(list.get(i).getChildren(), codes, hide, keys, descs, index + 1));
+					return list;
+				}
+				String desc = null;
 				if (null != list.get(i).getChildren() && list.get(i).getChildren().size() > 0) {
 					boolean isOK = hide;// 是否隐藏
 					for (int j = 0; j < list.get(i).getChildren().size(); j++) {
 						isOK = hide;// 是否隐藏
-
+						desc = null;
 						for (String key : codes) {
 							index = key.indexOf("*");
 							if (index > -1 && index == 0) {
@@ -159,6 +252,7 @@ public class MethodResponseUtil {
 									} else {
 										// 如果是显示，就得加入了
 										isOK = true;
+										desc = descs.get(key);
 									}
 								}
 							} else if (index > 0) {
@@ -171,6 +265,7 @@ public class MethodResponseUtil {
 									} else {
 										// 如果是显示，就得加入了
 										isOK = true;
+										desc = descs.get(key);
 									}
 								}
 							} else {
@@ -182,12 +277,17 @@ public class MethodResponseUtil {
 									} else {
 										// 如果是显示，就得加入了
 										isOK = true;
+										desc = descs.get(key);
 									}
 								}
 							}
 						}
 						if (isOK) {
-							vos.add((T) list.get(i).getChildren().get(j));
+							T code = (T) list.get(i).getChildren().get(j);
+							if (null != desc) {
+								code.setDescribe(desc);
+							}
+							vos.add(code);
 						}
 					}
 				}

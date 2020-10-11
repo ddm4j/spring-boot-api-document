@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.github.ddm4j.api.document.annotation.ApiController;
 import com.github.ddm4j.api.document.annotation.ApiHeaderCancel;
 import com.github.ddm4j.api.document.annotation.ApiIgnore;
+import com.github.ddm4j.api.document.annotation.ApiResponseCode;
 import com.github.ddm4j.api.document.bean.ControllerVo;
 import com.github.ddm4j.api.document.bean.HeadVo;
 import com.github.ddm4j.api.document.bean.InterfaceVo;
@@ -36,10 +37,10 @@ public class ScanControllerUtil {
 
 	Logger logger = LoggerFactory.getLogger(ScanControllerUtil.class);
 
-	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig,ResponseCodeConfig codeConfig) {
+	public ScanControllerUtil(CheckConfig config, DocumentConfig documentConfig, ResponseCodeConfig codeConfig) {
 		this.config = config;
 		this.documentConfig = documentConfig;
-		this.codeConfig = codeConfig; 
+		this.codeConfig = codeConfig;
 	}
 
 	public List<ControllerVo> scan(String packagePath, String base_path) {
@@ -81,6 +82,9 @@ public class ScanControllerUtil {
 			Method[] methods = cla.getMethods();
 			if (null != methods && methods.length > 0) {
 				interfaces = new ArrayList<InterfaceVo>();
+
+				ApiResponseCode code = cla.getAnnotation(ApiResponseCode.class);
+
 				for (Method method : methods) {
 
 					// 判断是否忽略了
@@ -100,7 +104,7 @@ public class ScanControllerUtil {
 						}
 
 						// 提取方法上的返回值
-						KVEntity<String, List<ResponseVo>> kv = responseUtil.getResponseVo(method);
+						KVEntity<String, List<ResponseVo>> kv = responseUtil.getResponseVo(method, code);
 						if (null != kv) {
 							ivo.setResponseMethod(kv.getLeft());
 							ivo.setResponses(kv.getRight());

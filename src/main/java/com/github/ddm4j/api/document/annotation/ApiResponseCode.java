@@ -14,7 +14,7 @@ import org.springframework.core.annotation.AliasFor;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
+@Target({ ElementType.METHOD, ElementType.TYPE })
 public @interface ApiResponseCode {
 	/**
 	 * @return 返回值字段名
@@ -27,17 +27,19 @@ public @interface ApiResponseCode {
 	public boolean hide() default false;
 
 	/**
-	 * @return 只保留需要返回的 code，字段名，支持 * 匹配，只能于用前面或后面，如: *A , A*
+	 * @return 只保留需要返回的 code，字段名，支持 * 匹配，只能于用前面或后面，如: *A , A* ;示例说明使用英文:隔开，如：
+	 *         SUCCESS:操作成功
 	 */
 	@AliasFor("codes")
 	public String[] value() default {};
-	
+
 	/**
-	 * @return 只保留需要返回的 code，字段名，支持 * 匹配，只能于用前面或后面，如: *A , A*
+	 * @return 只保留需要返回的 code，字段名，支持 * 匹配，只能于用前面或后面，如: *A , A*;示例说明使用英文:隔开，如：
+	 *         SUCCESS:操作成功
 	 */
 	@AliasFor("value")
 	public String[] codes() default {};
-	
+
 	/**
 	 * @return 隐藏在配置文件中配置，统一返回的状态码，支持 * 匹配，只能于用前面或后面，如: *A , A*
 	 */

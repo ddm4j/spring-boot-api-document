@@ -16,9 +16,11 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 使用指南
 点击上面的 wiki，了解查看。
+[使用指南](https://github.com/ddm4j/spring-boot-api-document/wiki/spring-boot-api-document-使用指南)
 
 # 版本历史
 ```
+ 2.4.1 ：修复已知BUG。
  2.4.0 ：ResponseCode 支持在配置文件中配置，修复已知BUG。
  2.3.1 ：修复错误的命名。
  2.3.0 : 修复已各BUG，优化文档显示，增加 ApiEnum 注解、用于描述 Enum的文档显示，增加 ApiResonseCode 注解、用于控制集中状态码，只在文档上该接口需要的状态码。 
