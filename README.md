@@ -20,6 +20,7 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
+ 2.4.2 ：修复已知BUG。
  2.4.1 ：修复已知BUG。
  2.4.0 ：ResponseCode 支持在配置文件中配置，修复已知BUG。
  2.3.1 ：修复错误的命名。

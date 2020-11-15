@@ -35,10 +35,13 @@ public class MethodResponseUtil {
 		ApiResponse[] responses = new ApiResponse[0];
 		ApiResponses responsess = AnnotationUtils.getAnnotation(method, ApiResponses.class);
 		if (null != responsess) {
-			// ApiResponses params = method.getAnnotation(ApiResponses.class);
-			// if (null != params) {
 			responses = responsess.value();
-			// }
+		} else {
+			ApiResponse response = method.getAnnotation(ApiResponse.class);
+			if (null != response) {
+				responses = new ApiResponse[1];
+				responses[0] = response;
+			}
 		}
 
 		KVEntity<String, List<FieldInfo>> kv = FieldUtil.extract(method.getGenericReturnType());
@@ -157,7 +160,7 @@ public class MethodResponseUtil {
 
 		if (null != config.getCodes() && config.getCodes().length > 0) {
 			int index = -1;
-			
+
 			for (String codeStr : config.getCodes()) {
 				if (!FieldUtil.isEmpty(codeStr)) {
 					String desc = "";
@@ -209,11 +212,11 @@ public class MethodResponseUtil {
 				}
 			}
 		}
-		
-		if(codes.size() == 0) {
+
+		if (codes.size() == 0) {
 			return list;
 		}
-		
+
 		boolean hide = false;
 		if (null != code) {
 			hide = code.hide();
@@ -225,13 +228,13 @@ public class MethodResponseUtil {
 
 	@SuppressWarnings("unchecked")
 	private <T extends ParamChildrenVo> List<T> removeCode(List<T> list, Set<String> codes, boolean hide, String[] keys,
-			Map<String, String> descs,int index) {
+			Map<String, String> descs, int index) {
 		List<T> vos = new ArrayList<T>();
 		for (int i = 0; i < list.size(); i++) {
 			if (list.get(i).getField().equals(keys[index])) {
-				
+
 				// 判断是否达到目标区域了
-				if(index < keys.length -1) {
+				if (index < keys.length - 1) {
 					list.get(i).setChildren(removeCode(list.get(i).getChildren(), codes, hide, keys, descs, index + 1));
 					return list;
 				}

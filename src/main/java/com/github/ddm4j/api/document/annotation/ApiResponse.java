@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * 只能用在 @ApiResponses 注解中，用于描述 返回值 字段
+ * 用于描述 返回值 字段
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
