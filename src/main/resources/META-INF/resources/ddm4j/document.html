@@ -461,6 +461,7 @@ body {
             // 账号密码
             account: null,
             password: null,
+            is_input: false,
             // 是否登录
             login: false,
             // 是否初始化
@@ -492,6 +493,16 @@ body {
 
         created(){
             var that = this;
+            if(typeof(sessionStorage) !== undefined){
+            	 let account = sessionStorage.getItem("login_account");
+            	 let password = sessionStorage.getItem("login_password");
+            	 if(account || password){
+            		 that.account = account;
+            		 that.password = password;
+            	 }
+            }else{
+            	console.log("不支持 sessionStorage")
+            }
             that.loadData();
         },
         methods: {
@@ -683,6 +694,8 @@ body {
             loadData: function () {
                 var that = this;
                 
+               
+                
                 // 加载数据
                 $.ajax(
                         {
@@ -693,7 +706,7 @@ body {
                             	password: that.password
                             },
                             success: function (data) {
-                                console.log("收到数据：", data);
+                                //console.log("收到数据：", data);
                                
                                 if(data.name){
                                 	that.system = data.name;
@@ -707,6 +720,12 @@ body {
                                 
                                 if (1000 == data.code) {
                                 	
+                                	// 保存输入的数据
+                                   	if(that.account || that.passowrd){
+                                   		sessionStorage.setItem("login_account",that.account);
+                                      	sessionStorage.setItem("login_password",that.password);
+                                   	}
+                                	
                                 	that.login = true;
                                 	that.login_tip = false;
                                     // datas = data.content;
@@ -717,8 +736,6 @@ body {
                                     that.selectionController = data.controllers[0];
                                     that.selectionInterface = data.controllers[0].interfaces[0];
                                     
-                                    
-
                                     setTimeout(function () {
                                         jQuery("#jquery-accordion-menu").jqueryAccordionMenu();
                                         //绑定顶部导航切换
@@ -741,6 +758,9 @@ body {
                                 		},3000)
                                 	}
                                 	
+                                	// 删除输入的数据
+                                   	sessionStorage.removeItem("login_account");
+                                    sessionStorage.removeItem("login_password");
                                 }else if(3001 == data.code){
                                 	if(that.is_init){
                                 		that.login = false;

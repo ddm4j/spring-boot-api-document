@@ -50,6 +50,22 @@ public class ApiParamCheck {
 	// 日志对象
 	static Logger logger = LoggerFactory.getLogger(ApiParamCheck.class);
 
+	@Before("execution(public * *(..)) && @annotation(apiParam)")
+	public void checkParam(JoinPoint jp, ApiParam apiParam) throws Exception {
+		if (null == config || !config.isEnable()) {
+			// 未打开校验功能
+			return;
+		}
+
+		if (null == apiParam) {
+			// 未配置
+			return;
+		}
+		ApiParam[] params = new ApiParam[1];
+		params[0] = apiParam;
+		checkParam(jp, params);
+	}
+
 	/**
 	 * 全局校验
 	 * 
@@ -63,7 +79,7 @@ public class ApiParamCheck {
 	@Before("execution(public * *(..)) && @annotation(apiParams)")
 	public void checkParam(JoinPoint jp, ApiParams apiParams) throws Exception {
 		if (null == config || !config.isEnable()) {
-			// 未开校验
+			// 未打开校验功能
 			return;
 		}
 		ApiParam[] params = apiParams.value();
@@ -72,6 +88,10 @@ public class ApiParamCheck {
 			return;
 		}
 
+		checkParam(jp, params);
+	}
+
+	public void checkParam(JoinPoint jp, ApiParam[] params) throws Exception {
 		if (null == jp.getArgs() || jp.getArgs().length == 0) {
 			logger.error("未查询到参数，不进行校验");
 			// 没有参数
@@ -126,7 +146,7 @@ public class ApiParamCheck {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
-			if("".equals(apiParam.field())) {
+			if ("".equals(apiParam.field())) {
 				continue;
 			}
 			// System.out.println(apiParam.field());
