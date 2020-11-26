@@ -5,11 +5,14 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -66,16 +69,16 @@ public class MethodRequestUtil {
 
 		// ApiParam[] apiParams = method.getAnnotationsByType(ApiParam.class);
 		ApiParam[] apiParams = new ApiParam[0];
-		ApiParams aps = AnnotationUtils.getAnnotation(method,ApiParams.class);
-		
+		ApiParams aps = AnnotationUtils.getAnnotation(method, ApiParams.class);
+
 		if (null != aps) {
-			//ApiParams params = method.getAnnotation(ApiParams.class);
-			//if (null != params) {
-				apiParams = aps.value();
-			//}
-		}else {
+			// ApiParams params = method.getAnnotation(ApiParams.class);
+			// if (null != params) {
+			apiParams = aps.value();
+			// }
+		} else {
 			ApiParam param = method.getAnnotation(ApiParam.class);
-			if(null != param) {
+			if (null != param) {
 				apiParams = new ApiParam[1];
 				apiParams[0] = param;
 			}
@@ -138,7 +141,6 @@ public class MethodRequestUtil {
 		// 判断是不是 json 请求
 		if (json) {
 			ivo.setJson(true);
-			ivo.setMethod("POST");
 		}
 
 		return ivo;
@@ -189,15 +191,14 @@ public class MethodRequestUtil {
 	 *            keys 索引
 	 * @return 处理后的集合
 	 */
-	private <T extends ParamChildrenVo> List<T> removeNotApiParam(List<T> list, ApiParam[] apiParams,
-			int index) {
+	private <T extends ParamChildrenVo> List<T> removeNotApiParam(List<T> list, ApiParam[] apiParams, int index) {
 		List<T> vos = new ArrayList<T>();
 		String[] keys = null;
 		boolean isOk = false;
 		for (int i = 0; i < list.size(); i++) {
 			T vo = list.get(i);
 			isOk = false;
-			for(ApiParam param:apiParams) {
+			for (ApiParam param : apiParams) {
 				keys = param.field().split("\\.");
 				if (index <= keys.length - 1) {
 					isOk = keys[index].equals(vo.getField());
@@ -222,8 +223,8 @@ public class MethodRequestUtil {
 		InterfaceVo ivo = new InterfaceVo();
 
 		// 提取路径
-		ArrayList<String> types = new ArrayList<String>();
-		ArrayList<String> uris = new ArrayList<String>();
+		Set<String> types = new TreeSet<String>();
+		Set<String> uris = new TreeSet<String>();
 		for (Annotation at : method.getAnnotations()) {
 			if (at instanceof RequestMapping) {
 				RequestMapping rm = (RequestMapping) at;
@@ -296,7 +297,7 @@ public class MethodRequestUtil {
 		}
 
 		if (uris.size() > 0) {
-			ivo.setUris(uris);
+			ivo.setUris(new ArrayList<String>(uris));
 		} else {
 			// 没有返回空
 			return null;
@@ -341,6 +342,7 @@ public class MethodRequestUtil {
 				RequestHeader head = null;
 
 				boolean ignore = false;
+				boolean url = false;
 				for (int j = 0; j < ans.length; j++) {
 					if (ans[j] instanceof RequestBody) {
 						json = true;
@@ -354,6 +356,10 @@ public class MethodRequestUtil {
 
 					if (ans[j] instanceof RequestHeader) {
 						head = (RequestHeader) ans[j];
+					}
+					
+					if(ans[j] instanceof PathVariable) {
+						url = true;
 					}
 				}
 				// 忽略了，下一个
@@ -394,7 +400,9 @@ public class MethodRequestUtil {
 
 				} else {
 					for (ParameterVo vo : list) {
-						if (json && i != index) {
+						if (json && i != index && !url) {
+							vo.setGet(true);
+						}else if(url) {
 							vo.setUrl(true);
 						}
 						vos.add(vo);

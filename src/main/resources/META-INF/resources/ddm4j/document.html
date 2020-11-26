@@ -6,6 +6,8 @@
 <meta charset="utf-8">
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="image/mj.png" type="image/x-icon">  <!--在网页标题左侧显示图标 -->
+<link rel="shortcut icon" href="image/mj.png" type="image/x-icon">  <!--在收藏夹显示图标-->
 <title>DDM4J API Document</title>
 <!-- CSS 导入 -->
 <link href="css/jquery-accordion-menu.css" rel="stylesheet"
@@ -259,8 +261,9 @@ body {
 								<tr>
 									<td class="left field"><input type="button"
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">
-										<span v-if="item.url" class="tag">URI</span> {{item.field}} <span
-										class="table-show"
+										<span v-if="item.url" class="tag">URI</span> 
+										<span v-if="item.get" class="tag">GET</span> 
+										{{item.field}} <span class="table-show"
 										v-if="item.children && item.children.length > 0 && add_show_request('1',index)"
 										@Click="show_request('1',index)">
 											{{show.request.one[index].show?"-":"+"}}</span>

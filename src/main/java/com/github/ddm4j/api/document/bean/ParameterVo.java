@@ -8,6 +8,7 @@ public class ParameterVo extends ParamChildrenVo implements Serializable {
 	private Integer min;
 	private Integer max;
 	private boolean url;
+	private boolean get;
 
 	public Integer getMin() {
 		return min;
@@ -39,6 +40,14 @@ public class ParameterVo extends ParamChildrenVo implements Serializable {
 
 	public void setUrl(boolean url) {
 		this.url = url;
+	}
+
+	public boolean isGet() {
+		return get;
+	}
+
+	public void setGet(boolean get) {
+		this.get = get;
 	}
 
 }
