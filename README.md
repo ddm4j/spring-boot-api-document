@@ -19,7 +19,11 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
- 2.4.0 ：ResponseCode 支持在配置文件中配置，修复已知BUG。
+ 2.4.4 ：修复已知BUG，修复 @PathVariable 注解问题，请求类型错误问题，增加接口文档logo。
+ 2.4.3 ：修复已知BUG，单个 ApiParam 注解不能校验问题，接口文档页面，刷新需要重新输入账号密码问题。
+ 2.4.2 ：修复已知BUG。
+ 2.4.1 ：修复已知BUG。
+ 2.4.0 ： ResponseCode 支持在配置文件中配置，修复已知BUG。
  2.3.1 ：修复错误的命名。
  2.3.0 : 修复已各BUG，优化文档显示，增加 ApiEnum 注解、用于描述 Enum的文档显示，增加 ApiResonseCode 注解、用于控制集中状态码，只在文档上该接口需要的状态码。 
  2.2.11：修复已知文档扫描BUG，修复 HttpServletXXX 对影响数据校验的BUG，参数忽略，增加 * 号匹配方式，只能用字段的前面或后面， @ApiResponseIgnore({"code*.xx*.*ABC"})。
