@@ -515,7 +515,7 @@ public class FieldUtil {
 					}
 				}
 			} else// 匹配模式
-			if (keys[0].equals(vo.getField())) {
+			if (keys[index].equals(vo.getField())) {
 				isOk = true;
 			}
 			if (isOk && keys.length > index + 1 && null != vo.getChildren() && vo.getChildren().size() > 0) {

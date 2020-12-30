@@ -19,6 +19,7 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
+ 2.4.5 ：修复已知BUG
  2.4.4 ：修复已知BUG，修复 @PathVariable 注解问题，请求类型错误问题，增加接口文档logo。
  2.4.3 ：修复已知BUG，单个 ApiParam 注解不能校验问题，接口文档页面，刷新需要重新输入账号密码问题。
  2.4.2 ：修复已知BUG。
