@@ -124,17 +124,18 @@ public class ApiParamCheck {
 					}
 				}
 			}
-			// 判断是不是 HttpServletRequest,HttpServletResponse,HttpSession
-			Class<?> cla = jp.getArgs()[i].getClass();
-			if (cla.isAssignableFrom(ServletRequest.class) || cla.isAssignableFrom(ServletResponse.class)
-					|| cla.isAssignableFrom(HttpSession.class) || cla.isAssignableFrom(Servlet.class)) {
-				ignore = true;
+			if (null != jp.getArgs()[i]) {
+				Class<?> cla = jp.getArgs()[i].getClass();
+				if (cla.isAssignableFrom(ServletRequest.class) || cla.isAssignableFrom(ServletResponse.class)
+						|| cla.isAssignableFrom(HttpSession.class) || cla.isAssignableFrom(Servlet.class)) {
+					ignore = true;
+				}
 			}
-
 			if (!ignore) {
 				Object obj = jp.getArgs()[i];
 				paramObjs.put(name, obj);
 			}
+
 		}
 		// 校验
 		checkParam(paramObjs, names, params);
