@@ -19,6 +19,7 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
+ 2.4.7 ：修复@ApiParamIgnore，会清除 @PathVariable 标识参数，并且将 @PathVariable 标识的参数单独在文档中显示，修复其它已知BUG。
  2.4.6 ：修复表单提交，数据为空异常
  2.4.5 ：修复已知BUG
  2.4.4 ：修复已知BUG，修复 @PathVariable 注解问题，请求类型错误问题，增加接口文档logo。

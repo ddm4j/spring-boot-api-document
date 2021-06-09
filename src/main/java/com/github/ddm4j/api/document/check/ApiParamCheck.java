@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,20 +62,32 @@ public class ApiParamCheck {
 			// 未配置
 			return;
 		}
-		ApiParam[] params = new ApiParam[1];
-		params[0] = apiParam;
-		checkParam(jp, params);
+		Long time = System.currentTimeMillis();// 开始时间
+		try {
+			ApiParam[] params = new ApiParam[1];
+			params[0] = apiParam;
+			// 提取参数
+			Map<String, Object> paramObjs = extractParam(jp);
+			if (null != paramObjs && paramObjs.size() > 0) {
+				// 校验
+				checkParam(paramObjs, params);
+			} else {
+				if (params.length > 0) {
+					logger.warn("未找到方法上的参数，不进行校验");
+				}
+			}
+		} finally {
+			logger.debug("校验结束,花费时间：" + (System.currentTimeMillis() - time) + "毫秒");
+		}
+
 	}
 
 	/**
 	 * 全局校验
 	 * 
-	 * @param jp
-	 *            参数对象
-	 * @param apiParams
-	 *            注解
-	 * @throws Exception
-	 *             异常信息
+	 * @param jp        参数对象
+	 * @param apiParams 注解
+	 * @throws Exception 异常信息
 	 */
 	@Before("execution(public * *(..)) && @annotation(apiParams)")
 	public void checkParam(JoinPoint jp, ApiParams apiParams) throws Exception {
@@ -87,15 +100,28 @@ public class ApiParamCheck {
 			// 未配置
 			return;
 		}
-
-		checkParam(jp, params);
+		Long time = System.currentTimeMillis();// 开始时间
+		try {
+			// 提取参数
+			Map<String, Object> paramObjs = extractParam(jp);
+			if (null != paramObjs && paramObjs.size() > 0) {
+				// 校验
+				checkParam(paramObjs, params);
+			} else {
+				if (params.length > 0) {
+					logger.warn("未找到方法上的参数，不进行校验");
+				}
+			}
+		} finally {
+			logger.debug("校验结束,花费时间：" + (System.currentTimeMillis() - time) + "毫秒");
+		}
 	}
 
-	public void checkParam(JoinPoint jp, ApiParam[] params) throws Exception {
+	// 提取参数
+	public Map<String, Object> extractParam(JoinPoint jp) throws Exception {
 		if (null == jp.getArgs() || jp.getArgs().length == 0) {
-			logger.error("未查询到参数，不进行校验");
 			// 没有参数
-			return;
+			return null;
 		}
 		// 判断是不是JSON
 
@@ -115,12 +141,22 @@ public class ApiParamCheck {
 					ignore = true;
 					break;
 				}
+				// 请求头数据
 				if (annotation instanceof RequestHeader) {
 					RequestHeader rh = (RequestHeader) annotation;
 					if (!isEmpty(rh.value())) {
 						name = rh.value();
 					} else if (!isEmpty(rh.name())) {
 						name = rh.name();
+					}
+				}
+				// uri 上的数据
+				if (annotation instanceof PathVariable) {
+					PathVariable pv = (PathVariable) annotation;
+					if (!isEmpty(pv.value())) {
+						name = pv.value();
+					} else if (!isEmpty(pv.name())) {
+						name = pv.name();
 					}
 				}
 			}
@@ -133,106 +169,45 @@ public class ApiParamCheck {
 			}
 			if (!ignore) {
 				Object obj = jp.getArgs()[i];
+				// System.out.println("校验数据：" + name + " -- " + obj);
 				paramObjs.put(name, obj);
 			}
 
 		}
-		// 校验
-		checkParam(paramObjs, names, params);
+		return paramObjs;
 	}
 
 	// 校验参数
-	public void checkParam(Map<String, Object> params, String[] names, ApiParam[] apiParams)
-			throws Exception, Exception {
+	public void checkParam(Map<String, Object> params, ApiParam[] apiParams) throws Exception, Exception {
 		List<ApiCheckInfo> infos = new ArrayList<ApiCheckInfo>();
 
 		for (ApiParam apiParam : apiParams) {
 			if ("".equals(apiParam.field())) {
 				continue;
 			}
-			// System.out.println(apiParam.field());
+			String[] keys = apiParam.field().split("\\.");
+			// System.out.println("校验:"+apiParam.field());
 			boolean empty = true;
-			for (Entry<String, Object> param : params.entrySet()) {
-				// System.out.println("--- :" + param.getKey());
-				// 判断是否为空
-				if (null == param.getValue()) {
-					if (apiParam.field().equals(param.getKey())) {
-						empty = false;
-						// 查询消息
-						MessageBean message = getMessage(apiParam);
-						ApiCheckInfo info = getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired());
-						if (null != info) {
-							infos.add(info);
-						}
-					}
-				}
-				// 判断是不是文件
-				else if (MultipartFile.class.isAssignableFrom(param.getValue().getClass())) {
 
-					if (param.getKey().equals(apiParam.field())) {
-						empty = false;
-						MessageBean message = getMessage(apiParam);
-						ApiCheckInfo checkInfo = checkValue(param.getValue(), apiParam, message);
-						if (null != checkInfo)
-							infos.add(checkInfo);
-					}
-				}
-				// 判断是不是数组和集合
-				else if (param.getValue().getClass().isArray()
-						|| List.class.isAssignableFrom(param.getValue().getClass())
-						|| Set.class.isAssignableFrom(param.getValue().getClass())) {
-					// System.out.println("array");
-					String[] keys = apiParam.field().split("\\.");
-					// 数组或集合
-					MessageBean message = getMessage(apiParam);
-					KVEntity<Boolean, ApiCheckInfo> info = checkParamArray(param.getValue(), keys, 0, apiParam,
-							message);
-					if (null != info) {
-						empty = info.getLeft();
-						if (null != info.getRight())
-							infos.add(info.getRight());
-					}
-				}
-				// 判断是否是接口类型或是否是基本类型
-				else if (param.getValue().getClass().isInterface()
-						|| Number.class.isAssignableFrom(param.getValue().getClass())
-						|| param.getValue().getClass() == String.class
-						|| Boolean.class.isAssignableFrom(param.getValue().getClass())) {
-					// System.out.println("class");
-					if (apiParam.field().equals(param.getKey())) {
-						empty = false;
-						// 查询消息
-						MessageBean message = getMessage(apiParam);
-						ApiCheckInfo info = checkValue(param.getValue(), apiParam, message);
-						if (null != info) {
-							infos.add(info);
-						}
-					} else {
-						continue;
-					}
+			Object value = params.get(keys[0]);
 
+			if (null != value) {
+
+				empty = checkType(value, apiParam, keys, 1, infos);
+				// System.out.println("校验方式1 - 1 = " + empty);
+				if (empty) {
+					// 判断是不是在下级
+					// System.out.println("校验方式1 - 0 = "+empty);
+					empty = checkType(value, apiParam, keys, 0, infos);
 				}
-				// 其他类型
-				else {
-					// System.out.println("other:" + param.getValue().getClass().getTypeName() + "
-					// --- "
-					// + param.getValue().getClass().getName());
-					String[] keys = apiParam.field().split("\\.");
-					MessageBean message = getMessage(apiParam);
-					KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(param.getValue(), keys, 0, apiParam, message,
-							param.getValue());
-					if (null != info) {
-						empty = info.getLeft();
-						if (null != info.getRight())
-							infos.add(info.getRight());
-					}
-					if (empty) {
-						if (param.getKey().equals(apiParam.field())) {
-							empty = false;
-							ApiCheckInfo checkInfo = checkValue(param.getValue(), apiParam, message);
-							if (null != checkInfo)
-								infos.add(checkInfo);
-						}
+			} else if (!params.containsKey(apiParam.field())) {
+				// System.out.println("校验方式2");
+				// 当前不存在，是否在下一级
+				for (Entry<String, Object> param : params.entrySet()) {
+					empty = checkType(param.getValue(), apiParam, keys, 0, infos);
+					// 找到了，就不循环了
+					if (!empty) {
+						break;
 					}
 				}
 			}
@@ -246,15 +221,71 @@ public class ApiParamCheck {
 				// 找不到对应key
 				logger.error("未找field:" + apiParam.field() + "  跳过校验");
 			}
+
 			if (null != infos && infos.size() > 0 && !config.isAll()) {
 				throw new ApiCheckException(infos);
 			}
-
 		}
 		if (null != infos && infos.size() > 0) {
 			throw new ApiCheckException(infos);
 		}
 
+	}
+
+	private boolean checkType(Object value, ApiParam apiParam, String[] keys, int index, List<ApiCheckInfo> infos)
+			throws Exception {
+
+		boolean empty = false;
+		MessageBean message = getMessage(apiParam);
+		// 判断是否为空
+		if (null == value && apiParam.required()) {
+			// System.out.println("检查：null");
+			ApiCheckInfo info = getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired());
+			if (null != info) {
+				infos.add(info);
+			}
+		}
+		// 判断是不是文件
+		else if (MultipartFile.class.isAssignableFrom(value.getClass())) {
+			// System.out.println("检查：file");
+			ApiCheckInfo checkInfo = checkValue(value, apiParam, message);
+			if (null != checkInfo)
+				infos.add(checkInfo);
+		}
+		// 判断是否是接口类型或是否是基本类型
+		else if (value.getClass().isInterface() || Number.class.isAssignableFrom(value.getClass())
+				|| value.getClass() == String.class || Boolean.class.isAssignableFrom(value.getClass())) {
+			// System.out.println("检查：基本类型");
+			// 查询消息
+			ApiCheckInfo info = checkValue(value, apiParam, message);
+			if (null != info) {
+				infos.add(info);
+			}
+
+		}
+		// 判断是不是数组和集合
+		else if (value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())
+				|| Set.class.isAssignableFrom(value.getClass())) {
+			// System.out.println("检查：array");
+			// 数组或集合
+			KVEntity<Boolean, ApiCheckInfo> info = checkParamArray(value, keys, index, apiParam, message);
+			if (null != info) {
+				empty = info.getLeft();
+				if (null != info.getRight())
+					infos.add(info.getRight());
+			}
+		}
+		// 其他类型
+		else {
+			// System.out.println("检查：其它类型，自定义 bean");
+			KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(value, keys, index, apiParam, message, value);
+			if (null != info) {
+				empty = info.getLeft();
+				if (null != info.getRight())
+					infos.add(info.getRight());
+			}
+		}
+		return empty;
 	}
 
 	// 处理数组或集合
@@ -312,24 +343,25 @@ public class ApiParamCheck {
 	private KVEntity<Boolean, ApiCheckInfo> checkFieldValue(Object value, String[] keys, int index, ApiParam apiParam,
 			MessageBean message, Object obj) throws IllegalAccessException, Exception {
 
-		// System.out.println("array 1---------- " + value);
+		// System.out.println("field 1---------- " + value);
 
 		KVEntity<Boolean, ApiCheckInfo> info = new KVEntity<Boolean, ApiCheckInfo>();
 		info.setLeft(true);
 		Object value2 = value;
 		Field field = null;
 		for (int i = index; i < keys.length; i++) {
-			// System.out.println("array 2---------- " + keys[i] + " ---- " + value2);
+			// System.out.println("field 2---------- " + keys[i] + " ---- " + value2);
 			field = getField(value2.getClass(), keys[i]);
 			if (null != field) {
-				info.setLeft(true);
+				// info.setLeft(true);
 				if (i < keys.length - 1) {
-					// System.out.println("array 3---------- " + keys[i] + " ---- " + value2);
+					// System.out.println("field 3---------- " + keys[i] + " ---- " + value2);
 					field.setAccessible(true);
 					value2 = field.get(value2);
 					if (value2.getClass().isArray() || List.class.isAssignableFrom(value2.getClass())
 							|| Set.class.isAssignableFrom(value2.getClass())) {
 						// 递归校验
+						// System.out.println("field 4---------- " + keys[i] + " ---- " + value2);
 						return checkParamArray(value2, keys, i + 1, apiParam, message);
 					}
 				}
@@ -338,7 +370,7 @@ public class ApiParamCheck {
 
 		// 校验值
 		if (null != field) {
-			// System.out.println("array end---------- " + value2);
+			// System.out.println("field end---------- " + value2);
 			info.setLeft(false);
 			field.setAccessible(true);
 			Object v = field.get(value2);
@@ -354,10 +386,8 @@ public class ApiParamCheck {
 	/**
 	 * 校验值
 	 * 
-	 * @param value
-	 *            值
-	 * @param apiParam
-	 *            注解对象
+	 * @param value    值
+	 * @param apiParam 注解对象
 	 */
 	private ApiCheckInfo checkValue(Object value, ApiParam apiParam, MessageBean bean) {
 
@@ -614,8 +644,7 @@ public class ApiParamCheck {
 	/**
 	 * 判断字符串是否为空
 	 * 
-	 * @param str
-	 *            字符串
+	 * @param str 字符串
 	 * @return 结果： true 为空 ,false 不为空
 	 */
 	public static boolean isEmpty(String str) {

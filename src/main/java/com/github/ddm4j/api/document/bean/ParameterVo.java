@@ -7,7 +7,6 @@ public class ParameterVo extends ParamChildrenVo implements Serializable {
 	private String regexp;
 	private Integer min;
 	private Integer max;
-	private boolean url;
 	private boolean get;
 
 	public Integer getMin() {
@@ -32,14 +31,6 @@ public class ParameterVo extends ParamChildrenVo implements Serializable {
 
 	public void setRegexp(String regexp) {
 		this.regexp = regexp;
-	}
-
-	public boolean isUrl() {
-		return url;
-	}
-
-	public void setUrl(boolean url) {
-		this.url = url;
 	}
 
 	public boolean isGet() {

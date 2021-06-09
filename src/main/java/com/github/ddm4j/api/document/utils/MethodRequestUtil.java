@@ -31,6 +31,7 @@ import com.github.ddm4j.api.document.bean.ParamChildrenVo;
 import com.github.ddm4j.api.document.bean.ParameterVo;
 import com.github.ddm4j.api.document.common.model.FieldInfo;
 import com.github.ddm4j.api.document.common.model.KVEntity;
+import com.github.ddm4j.api.document.common.model.LMREntity;
 import com.github.ddm4j.api.document.config.CheckConfig;
 
 public class MethodRequestUtil {
@@ -84,14 +85,14 @@ public class MethodRequestUtil {
 			}
 		}
 
-		KVEntity<List<ParameterVo>, List<HeadVo>> kv = extrad(method);
-		if (null == kv) {
+		LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>> lmr = extrad(method);
+		if (null == lmr) {
 			return ivo;
 		}
 
 		ivo.setJsonMethod(jsonMethod);
-
-		List<ParameterVo> list = kv.getLeft();
+		// 请求参数
+		List<ParameterVo> list = lmr.getLeft();
 
 		if (null != list && list.size() > 0) {
 			// 删除隐藏的
@@ -115,8 +116,33 @@ public class MethodRequestUtil {
 			}
 		}
 		ivo.setParameters(list);
-		// 请头参数
-		List<HeadVo> headVos = kv.getRight();
+
+		// uri 参数
+		List<HeadVo> uriVos = lmr.getMiddle();
+		if (null != uriVos && uriVos.size() > 0) {
+			if (null != apiParams && apiParams.length > 0) {
+				for (ApiParam param : apiParams) {
+					for (HeadVo uriVo : uriVos) {
+						if (uriVo.getField().equals(param.field())) {
+							if (!FieldUtil.isEmpty(param.describe())) {
+								uriVo.setDescribe(param.describe());
+							}
+							uriVo.setRequired(param.required());
+
+							uriVo.setMax(2147483647 == param.max() ? null : param.max());
+							uriVo.setMin(-2147483648 == param.min() ? null : param.min());
+
+							uriVo.setRegexp(getRegexp(param.regexp()));
+						}
+					}
+				}
+			}
+
+			ivo.setUriParams(uriVos);
+		}
+
+		// 请求头参数
+		List<HeadVo> headVos = lmr.getRight();
 		if (null != headVos && headVos.size() > 0) {
 			if (null != apiParams && apiParams.length > 0) {
 				for (ApiParam param : apiParams) {
@@ -149,10 +175,8 @@ public class MethodRequestUtil {
 	/**
 	 * 删除全部清空，只剩下被 ApiParam 标识的
 	 * 
-	 * @param list
-	 *            字段
-	 * @param apiParams
-	 *            注解集合
+	 * @param list      字段
+	 * @param apiParams 注解集合
 	 * @return 处理后的数据
 	 */
 	private List<ParameterVo> removeNotApiParam(List<ParameterVo> list, ApiParam[] apiParams) {
@@ -162,6 +186,7 @@ public class MethodRequestUtil {
 		for (int i = 0; i < list.size(); i++) {
 			ParameterVo vo = list.get(i);
 			isOk = false;
+
 			for (ApiParam param : apiParams) {
 				keys = param.field().split("\\.");
 				isOk = keys[0].equals(vo.getField());
@@ -172,10 +197,10 @@ public class MethodRequestUtil {
 					break;
 				}
 			}
+
 			if (isOk) {
 				vos.add(vo);
 			}
-
 		}
 		return vos;
 	}
@@ -183,12 +208,9 @@ public class MethodRequestUtil {
 	/**
 	 * 删除全部清空，只剩下被 ApiParam 标识的，子集合
 	 * 
-	 * @param list
-	 *            子集合
-	 * @param keys
-	 *            标识 field
-	 * @param index
-	 *            keys 索引
+	 * @param list  子集合
+	 * @param keys  标识 field
+	 * @param index keys 索引
 	 * @return 处理后的集合
 	 */
 	private <T extends ParamChildrenVo> List<T> removeNotApiParam(List<T> list, ApiParam[] apiParams, int index) {
@@ -317,8 +339,8 @@ public class MethodRequestUtil {
 		return ivo;
 	}
 
-	// 提取详细参数
-	private KVEntity<List<ParameterVo>, List<HeadVo>> extrad(Method method) {
+	// 提取详细参数<请求参数，uri参数，请求头参数>
+	private LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>> extrad(Method method) {
 
 		if (null != method.getParameterAnnotations() && method.getParameterAnnotations().length >= 1) {
 			LocalVariableTableParameterNameDiscoverer u = new LocalVariableTableParameterNameDiscoverer();
@@ -330,17 +352,21 @@ public class MethodRequestUtil {
 			List<ParameterVo> vos = new ArrayList<ParameterVo>();
 			// 请求头
 			List<HeadVo> headVos = new ArrayList<HeadVo>();
-
-			KVEntity<List<ParameterVo>, List<HeadVo>> kv = new KVEntity<List<ParameterVo>, List<HeadVo>>();
-			kv.setLeft(vos);
-			kv.setRight(headVos);
+			// 路径参数
+			List<HeadVo> uriVos = new ArrayList<HeadVo>();
+			LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>> lmr = new LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>>();
+			// KVEntity<List<ParameterVo>, List<HeadVo>> kv = new
+			// KVEntity<List<ParameterVo>, List<HeadVo>>();
+			lmr.setLeft(vos);
+			lmr.setRight(headVos);
+			lmr.setMiddle(uriVos);
 
 			// boolean json = false;
 			int index = -1;
 			for (int i = 0; i < method.getParameterAnnotations().length; i++) {
 				Annotation[] ans = method.getParameterAnnotations()[i];
 				RequestHeader head = null;
-
+				PathVariable path = null;
 				boolean ignore = false;
 				boolean url = false;
 				for (int j = 0; j < ans.length; j++) {
@@ -357,8 +383,9 @@ public class MethodRequestUtil {
 					if (ans[j] instanceof RequestHeader) {
 						head = (RequestHeader) ans[j];
 					}
-					
-					if(ans[j] instanceof PathVariable) {
+
+					if (ans[j] instanceof PathVariable) {
+						path = (PathVariable) ans[j];
 						url = true;
 					}
 				}
@@ -397,19 +424,38 @@ public class MethodRequestUtil {
 							break;
 						}
 					}
+				} else if (path != null) {
+					for (ParameterVo vo : list) {
+						HeadVo headVo = new HeadVo();
+						headVo.setDescribe(vo.getDescribe());
+						headVo.setField(vo.getField());
+						headVo.setRequired(vo.isRequired());
+						headVo.setType(vo.getType());
+						headVo.setRegexp(vo.getRegexp());
+						headVo.setMax(vo.getMax());
+						headVo.setMin(vo.getMin());
 
+						uriVos.add(headVo);
+						// 指定了名称就只能有一个了
+						if (!FieldUtil.isEmpty(path.value()) || !FieldUtil.isEmpty(path.name())) {
+							if (!FieldUtil.isEmpty(path.value())) {
+								headVo.setField(path.value());
+							} else {
+								headVo.setField(path.name());
+							}
+							break;
+						}
+					}
 				} else {
 					for (ParameterVo vo : list) {
 						if (json && i != index && !url) {
 							vo.setGet(true);
-						}else if(url) {
-							vo.setUrl(true);
 						}
 						vos.add(vo);
 					}
 				}
 			}
-			return kv;
+			return lmr;
 		}
 		return null;
 	}
@@ -463,10 +509,8 @@ public class MethodRequestUtil {
 	/**
 	 * 参数注解替换
 	 * 
-	 * @param param
-	 *            注解
-	 * @param list
-	 *            返回值对象
+	 * @param param 注解
+	 * @param list  返回值对象
 	 */
 	private void replaceReuestField(ApiParam param, List<ParameterVo> list) {
 		String[] keys = param.field().split("\\.");

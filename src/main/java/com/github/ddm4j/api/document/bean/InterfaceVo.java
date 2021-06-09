@@ -19,9 +19,10 @@ public class InterfaceVo implements Serializable {
 	// 返回值是否是 Array
 	private String responseMethod = "Object";
 
-	private List<HeadVo> heads;
-	private List<ParameterVo> parameters;
-	private List<ResponseVo> responses;
+	private List<HeadVo> heads;// 请求头参数
+	private List<HeadVo> uriParams;// 路径上参数
+	private List<ParameterVo> parameters;// 请求参数
+	private List<ResponseVo> responses;// 返回数据
 
 	public String getName() {
 		return name;
@@ -125,6 +126,14 @@ public class InterfaceVo implements Serializable {
 
 	public void setParamArray(boolean paramArray) {
 		this.paramArray = paramArray;
+	}
+
+	public List<HeadVo> getUriParams() {
+		return uriParams;
+	}
+
+	public void setUriParams(List<HeadVo> uriParams) {
+		this.uriParams = uriParams;
 	}
 
 	public String getResponseMethod() {

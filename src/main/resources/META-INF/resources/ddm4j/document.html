@@ -204,12 +204,11 @@ body {
 					<!-- 请求头 -->
 					<div class="content-table"
 						v-if="selectionInterface.heads && selectionInterface.heads.length > 0">
-						<div class="title">Headers：请求头</div>
+						<div class="title">Headers</div>
 						<table class="bordered">
 							<thead>
 								<tr>
 									<th class="left field">字段</th>
-
 									<th class="type">类型</th>
 									<th class="required">必填</th>
 									<th class="left">示例说明</th>
@@ -223,7 +222,6 @@ body {
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">
 										{{item.field}}</td>
 									</td>
-
 									<td class="type">{{item.type}}</td>
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
@@ -235,14 +233,47 @@ body {
 							</tbody>
 						</table>
 					</div>
+					<!-- uri参数 -->
+					<div class="content-table"
+						v-if="selectionInterface.uriParams && selectionInterface.uriParams.length > 0">
+						<div class="title">URI</div>
+						<table class="bordered">
+							<thead>
+								<tr>
+									<th class="left field">字段</th>
+									<th class="type">类型</th>
+									<th class="required">必填</th>
+									<th class="left">示例说明</th>
+									<th class="length">最小&nbsp;/&nbsp;最大</th>
+									<th class="reg">正则校验</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="item in selectionInterface.uriParams">
+									<td class="left field"><input type="button"
+										@Click="copyStr(item.field)" class="copy_btn" value="复制">
+										{{item.field}}</td>
+									</td>
+									<td class="type">{{item.type}}</td>
+									<td class="required">
+										<span class="required_true">是</span>
+									<td class="left">{{item.describe}}</td>
+									<td class="length">{{(item.min || item.min == 0)?item.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item.max || item.max == 0)?item.max:'-'}}</td>
+									<td class="reg">{{item.regexp}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<!-- 请求参数 -->
 					<div class="content-table"
 						v-if="selectionInterface.parameters && selectionInterface.parameters.length > 0">
 						<div class="title">
-							Request：&nbsp;&nbsp;&nbsp;&nbsp; <span class="tag"
-								v-show="selectionInterface.json">JSON</span> <span class="tag"
-								v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; <span
-								class="tag" v-if="selectionInterface.jsonMethod">{{selectionInterface.jsonMethod}}</span>
+							Request：&nbsp;&nbsp;&nbsp;&nbsp; 
+							<span class="interface-method tag"
+								v-show="selectionInterface.method">{{selectionInterface.method}}&nbsp;&nbsp;</span> 
+							<span class="tag" v-show="selectionInterface.json">JSON</span> 
+							<span class="tag" v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; 
+							<span class="tag" v-if="selectionInterface.jsonMethod">{{selectionInterface.jsonMethod}}</span>
 						</div>
 						<table class="bordered">
 							<thead>
@@ -261,7 +292,6 @@ body {
 								<tr>
 									<td class="left field"><input type="button"
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">
-										<span v-if="item.url" class="tag">URI</span> 
 										<span v-if="item.get" class="tag">GET</span> 
 										{{item.field}} <span class="table-show"
 										v-if="item.children && item.children.length > 0 && add_show_request('1',index)"
@@ -435,11 +465,10 @@ body {
 			<span class="title">GitHub:&nbsp;&nbsp;<a
 				href="https://github.com/ddm4j/spring-boot-api-document"
 				target="_blank">https://github.com/ddm4j/spring-boot-api-document</a></span>
-			<!--			<span class="version">V1.1</span>-->
 		</div>
 
 		<div class="my_tip">
-			<div class="copy_tip" v-show="copy_tip">已复制到剪切板：{{copy_str}}</div>
+			<div class="copy_tip" v-show="copy_tip">copy：{{copy_str}}</div>
 		</div>
 		<div class="my_tip">
 			<div class="copy_tip tip_error" v-show="login_tip">{{login_str}}</div>

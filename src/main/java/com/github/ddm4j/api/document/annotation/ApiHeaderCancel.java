@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 用来表示该方法请求不需要请求头
+ * 用来表示该方法请求不需要请求头，为空，代表取消全部。
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
