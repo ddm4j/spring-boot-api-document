@@ -1,10 +1,11 @@
 # spring-boot-api-document
-spring-boot-api-document 是一个基本Springboot 开发的一个接口文档管理工具，清晰的向前端开发人员展示数据结构和数据标准，并具有后端数据校验功能。
+spring-boot-api-document 是一个基本SpringBoot开发的一个接口文档管理工具，清晰的向前端开发人员展示数据结构和数据标准，并具有后端数据校验功能。
 
 # 技术要求
 ## 应用场景
 1. **Springboot 项目，前后端分离项目**
 2. **SpringCloud 项目，前后端分离项目**
+3. **SpringCloudAlibaba 项目，前后端分离项目**
 
 # 核心功能
  1. Api 接口文档管理。
@@ -19,6 +20,7 @@ spring-boot-api-document 是一个基本Springboot 开发的一个接口文档�
 
 # 版本历史
 ```
+ 2.5.0 ：接口文档页面上增加Api测试功能，Api测试功能不支持文件下载，增加对 @PatchMapper注解的支持。
  2.4.7 ：修复@ApiParamIgnore，会清除 @PathVariable 标识参数，并且将 @PathVariable 标识的参数单独在文档中显示，修复其它已知BUG。
  2.4.6 ：修复表单提交，数据为空异常
  2.4.5 ：修复已知BUG

@@ -34,6 +34,7 @@ body {
 	margin: 0;
 	width: 100%;
 	height: 100%;
+	overflow: hidden;
 }
 
 #vue_app {
@@ -115,6 +116,23 @@ body {
 	background: #ededed;
 }
 
+#test_box ::-webkit-scrollbar{
+	width: 6px; /*高宽分别对应横竖滚动条的尺寸*/
+	height: 5px;
+}
+#test_box ::-webkit-scrollbar-thumb {
+	/*滚动条里面小方块*/
+	border-radius: 10px;
+	box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+	/*background: #00cb9f;*/
+	background: #aaa;
+}
+#test_box ::-webkit-scrollbar-track {
+	/*滚动条里面轨道*/
+	box-shadow: inset 0 0 5px rgba(167, 163, 163, 0.2);
+	border-radius: 10px;
+	background: #ededed;
+}
 </style>
 <!-- JS 导入 -->
 <script src="js/jquery-1.11.2.min.js" type="text/javascript"></script>
@@ -177,18 +195,22 @@ body {
 					<div class="content-controller">
 						<div class="controller-title"><span v-if="selectionController.name">{{selectionController.name}}&nbsp;:&nbsp;&nbsp;</span>{{selectionController.controller}}</div>
 						<div class="controller-version">
-							<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}};&nbsp;&nbsp;</span>
+							<span v-if="selectionController.author">作者：&nbsp;&nbsp;{{selectionController.author}}&nbsp;;&nbsp;&nbsp;&nbsp;</span>
 							<span v-if="selectionController.version">版本：{{selectionController.version}}</span>
 						</div>
 						<!-- <div class="controller-uri" v-if="selectionController.uri">请求路径:
 						&nbsp;&nbsp;{{selectionController.uri}}</div> -->
 						<div class="controller-desc" v-if="selectionController.describe">描述说明：&nbsp;&nbsp;{{selectionController.describe}}</div>
+						
 					</div>
-					<hr>
+					<hr style="margin-top:0px">
 
 					<!-- 接口说明 -->
 					<div class="content-interface">
-						<div class="interface-title">{{selectionInterface.name}}&nbsp;<span v-if="selectionInterface.version">:&nbsp;&nbsp;{{selectionInterface.version}}</span></div>
+						<div class="interface-title">{{selectionInterface.name}}&nbsp;<span v-if="selectionInterface.version">:&nbsp;&nbsp;{{selectionInterface.version}}</span>
+							<input type="button" @Click="click_test" class="test_btn" title="打开测试窗口，并还原显示位置"
+								value="测试窗口">
+						</div>
 						<div class="interface-uri">
 							请求路径: <span class="interface-method tag"
 								v-show="selectionInterface.method">{{selectionInterface.method}}</span>
@@ -199,6 +221,7 @@ body {
 						<div class="controller-desc" v-if="selectionInterface.describe">描述说明：&nbsp;&nbsp;{{selectionInterface.describe}}</div>
 						<div class="other" v-if="selectionInterface.author">
 							<span class="interface-author">作者：&nbsp;&nbsp;{{selectionInterface.author}}</span>
+							
 						</div>
 					</div>
 					<!-- 请求头 -->
@@ -270,7 +293,7 @@ body {
 						<div class="title">
 							Request：&nbsp;&nbsp;&nbsp;&nbsp; 
 							<span class="interface-method tag"
-								v-show="selectionInterface.method">{{selectionInterface.method}}&nbsp;&nbsp;</span> 
+								v-show="selectionInterface.method">{{selectionInterface.method}}</span>&nbsp;&nbsp; 
 							<span class="tag" v-show="selectionInterface.json">JSON</span> 
 							<span class="tag" v-show="!selectionInterface.json">form-data</span>&nbsp;&nbsp; 
 							<span class="tag" v-if="selectionInterface.jsonMethod">{{selectionInterface.jsonMethod}}</span>
@@ -289,9 +312,11 @@ body {
 							<tbody>
 								<template v-for="(item,index) in selectionInterface.parameters">
 								<!-- 第一层 -->
+								<template v-if="selectionInterface.json || (item.type.indexOf('Object') == -1 || item.type.indexOf('Object<?>') != -1)">
 								<tr>
 									<td class="left field"><input type="button"
 										@Click="copyStr(item.field)" class="copy_btn" value="复制">
+										<span v-if="item.url" class="tag">URI</span> 
 										<span v-if="item.get" class="tag">GET</span> 
 										{{item.field}} <span class="table-show"
 										v-if="item.children && item.children.length > 0 && add_show_request('1',index)"
@@ -308,7 +333,8 @@ body {
 									<td class="reg">{{item.regexp}}</td>
 									
 								</tr>
-								<template v-if="show.request.one[index].show"
+								
+								<template v-if="show.request.one[index].show && selectionInterface.json"
 									v-for="(item2,index2) in item.children"> <!-- 第二层 -->
 								<tr>
 									<td class="left field"><input type="button"
@@ -366,6 +392,7 @@ body {
 									<td class="length">{{(item4.min || item4.min == 0)?item4.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item4.max || item4.max == 0)?item4.max:'-'}}</td>
 									<td class="reg">{{item4.regexp}}</td>
 								</tr>
+								</template>
 								</template> </template> </template>
 							</tbody>
 						</table>
@@ -468,22 +495,105 @@ body {
 		</div>
 
 		<div class="my_tip">
-			<div class="copy_tip" v-show="copy_tip">copy：{{copy_str}}</div>
+			<div class="copy_tip" v-show="copy_tip">{{copy_str}}</div>
 		</div>
 		<div class="my_tip">
 			<div class="copy_tip tip_error" v-show="login_tip">{{login_str}}</div>
 		</div>
-
-
+		<!-- 测试窗口 -->
+		<template>
+			<div v-drag id="test_box" v-show="test_show && login">
+				<div id="test_bar" title="按鼠标左键可拖动">测试窗口&nbsp;&nbsp;-&nbsp;&nbsp;{{selectionInterface.name}}
+					<button @click="click_test_colse" class="test_close">隐藏</button>
+				</div>
+        		<div id="test_content">
+        			<div>请求路径:&nbsp;&nbsp;{{selectionInterface.uri}}</div>
+        			<hr class="test_hr" />
+        			<div>请求方式:&nbsp;&nbsp;
+        				<select v-model="test_method" :disabled="selectionInterface.method">
+        					<option value="POST">POST</option>
+							<option value="GET">GET</option>
+							<option value="PUT">PUT</option>
+							<option value="PATCH">PATCH</option>
+							<option value="DELETE">DELETE</option>
+        				</select>
+        				
+        			</div>
+        			<hr class="test_hr" />
+        			<div class="test_content">
+        				<div title="自己添加的会覆盖接口要求的同名请求头参数">请求头：Headers <button @click="click_add_header" class="add_header">添加</button> </div>
+        				<div class="test_param_content">
+        					<div v-if="test_headers && test_headers.length > 0" v-for="(item,index) in test_headers" key="index">
+        						<div class="test_item_center">
+        							<span class="test_name">{{item.field}}&nbsp;&nbsp;:</span>
+       								<span class="test_input_span test_input"><input v-model="test_headers[index].value"></input></span>
+        						</div>
+        					</div>
+        					<div v-if="test_headers_custom && test_headers_custom.length > 0" v-for="(item,index) in test_headers_custom" key="index">
+        						<div class="test_item_center">
+        							<span class="test_name"><input :value="item.field" v-model="test_headers_custom[index].field" class="test_input_field"></input>&nbsp;&nbsp;:</span>
+       								<span class="test_input_span">
+       									<input v-model="test_headers_custom[index].value" class=""></input>
+       									<span class="test_delete_header" @click="del_header(index)">x</span>
+       								</span>
+        						</div>
+        					</div>
+        				</div>
+        			</div>
+        			<hr class="test_hr" />
+        			<div class="test_content" v-if="test_uri_params && test_uri_params.length > 0">
+        				<div>路径参数：URI</div>
+        				<div class="test_param_content">
+        					<div v-for="(item,index) in test_uri_params" key="index">
+        						<div class="test_item_center">
+        							<span class="test_name">{{item.field}}&nbsp;&nbsp;:</span>
+       								<span class="test_input_span test_input"><input v-model="test_uri_params[index].value"></input></span>
+        						</div>
+        					</div>
+        				</div>
+        				<hr class="test_hr" />
+        			</div>
+        			<div class="test_content" v-if="test_params && test_params.length > 0">
+        				<div>请求参数：Request <span class="test_json_tab" v-show="selectionInterface.json">JSON</span></div>
+        				<div class="test_param_content">
+        					<div class="test_item_json" v-if="selectionInterface.json">
+        						<textarea rows="15" cols="50" style="resize: none;" v-model="test_param_json"></textarea>
+        					</div>
+        					<form action="" id="myForm">
+        						<div v-for="(item,index) in test_params" key="index" class="test_item" v-if="!selectionInterface.json">
+        						
+	       							<!-- 去除扫描出来，Object 类型的参数，后台无法接收 -->
+	      							<div class="test_item_center" v-if="item.type.indexOf('Object') == -1 || item.type.indexOf('Object<?>') != -1">
+	      								<span class="test_name">
+	      									{{item.array == 2?"":item.field}}
+	      									&nbsp;&nbsp;
+	      									{{item.array?"":":"}}
+	      									</span>
+	      								<span class="test_input_span" :class="item.array?'':'test_input'">
+	      									<input :name="item.field" v-model="test_params[index].value" :type="item.type.indexOf('File') != -1?'file':'text'"></input>
+	      									<span class="test_delete_header" @click="add_array_param(index)" v-if="item.array == 1">+</span>
+	      									<span class="test_delete_header" @click="del_array_param(index)" v-if="item.array == 2">x</span>
+	      								</span>
+	      							</div>
+        						</div>
+        					</form>
+        				</div>
+        			</div>
+        			<button class="test_btn_send" @click="click_send">send</button>
+        			<div class="test_res_content" v-show="test_res_center">
+        				<pre id="test_res_center" v-html="test_res_center"></pre>
+        			</div>
+        		</div>
+			</div>
+		</template>
 	</div>
 	<script>
-	
     var vm = new Vue({
         el: '#vue_app',
         data: {
             system:"DDM API Document",
             version:"V1.0",
-            describe:"高效,快速，免费的接口文档工具",
+            describe:"高效,快捷，免费的接口文档管理工具，后端数据校验工具",
             // 复制提示
             copy_str:"",
             copy_tip:false,
@@ -520,9 +630,40 @@ body {
             },
             selectionController: {},// 选择的Controller
             selectionInterface: {},// 选择的接口
-            scan_str: "",
+            scan_str: "",// 搜索输入内容
+            test_show: true,// 是否显示测试窗口
+            test_method: 'POST', // 请求方式
+            test_json: false,// 是不是 JSON 请求
+            test_headers:[],// 请求头参数
+            test_headers_custom:[],// 自定义请求头参数
+            test_uri_params: [],// 路径参数
+            test_params: [],// 请求参数
+            test_param_json: "",// json 请求参数
+            test_res_center: '',// 测试返回结果
+           
+            
         },
-
+        // 添加鼠标拖动指令
+        directives: {
+        	drag(el, bindings){
+       	      el.onmousedown = function(e) {
+       	    	// 限制，只能是拖动标题才能移动
+       	    	if(e.path[0].id != "test_bar"){
+       	    		return;
+       	    	}
+       	        var disx = e.pageX - el.offsetLeft;
+       	        var disy = e.pageY - el.offsetTop;
+       	        
+       	        document.onmousemove = function (e) {
+       	          el.style.left = e.pageX - disx + 'px';
+       	          el.style.top = e.pageY - disy + 'px';
+       	        }
+       	        document.onmouseup = function() {
+       	          document.onmousemove = document.onmouseup = null;
+       	        }
+       	      }
+       	    }
+        },
         created(){
             var that = this;
             if(typeof(sessionStorage) !== undefined){
@@ -535,9 +676,129 @@ body {
             }else{
             	console.log("不支持 sessionStorage")
             }
-            that.loadData();
+            that.loadData();// 加载数据
         },
         methods: {
+        	// 添加form-data的数组数据项
+        	add_array_param(index){
+        		this.test_params.splice(index+1,0,{array:2,type:this.test_params[index].type,field:this.test_params[index].field,value:""});
+        	},
+        	// 删除form-data的数组数据项
+        	del_array_param(index){
+        		this.test_params.splice(index,1);
+        	},
+        	// 点击测试窗口按钮，打开测试窗口
+        	click_test(){
+        		this.test_show = true;
+        		//$("#test_box").css("top:158px;right:12px");
+        		// 显示位置还原，避免拖出浏览器，而无法显示
+        		var box = document.getElementById("test_box");
+        		box.style.left = "";
+        		box.style.top = "155px";
+        		box.style.right = "10px";
+        	},
+        	// 点击隐藏测试窗口按钮
+        	click_test_colse(){
+        		this.test_show = false;
+        		this.copyStr("已隐藏测试窗口,打开按钮在右上角处",true);
+        	},
+        	// 点击发送按钮
+        	click_send(){
+        		let that = this;
+        		var url = that.selectionInterface.uri;
+        		// 整理请求头参数
+        		var headers = {};
+        		// 固定请求头
+        		if(that.test_headers && that.test_headers.length > 0){
+        			that.test_headers.forEach(function(item,index){
+        				headers[item.field] = item.value;
+        			});
+        		}
+        		// 自定义请求头
+        		if(that.test_headers_custom && that.test_headers_custom.length > 0){
+        			that.test_headers_custom.forEach(function(item,index){
+        				headers[item.field] = item.value;
+        			});
+        		}
+        		//console.log(headers);
+        		// 整理URI参数
+        		if(that.test_uri_params && that.test_uri_params.length > 0){
+        			that.test_uri_params.forEach(function(item,index){
+        				url = url.replaceAll("{"+item.field+"}",item.value);
+        			});
+        		}
+        		// 整理请求参数
+        		var params = null;
+        		if(!that.selectionInterface.json && that.test_params && that.test_params.length > 0){
+        			params = new FormData(document.querySelector("form"));
+        			that.test_params.forEach(function(item,index){
+       					if(item.value){
+       						// params.append(item.field,item.value);
+       					}
+        			});
+        		}
+        		// console.log(params)
+        		// 请求后端
+        		var method = that.selectionInterface.method;
+        		if(!method || method == ''){
+        			method = 'post';
+        		}
+        		
+        		// 判断是不是 json 请求
+        		if(that.selectionInterface.json){
+        			params = that.test_param_json;
+        			headers['Content-Type'] = "application/json; charset=UTF-8";
+        		}
+        		
+        		var dataType = that.selectionInterface.json?"json":null;
+        		$.ajax({
+                    url: url,
+                    type:method,
+                    headers: headers,
+                    data: params,
+                    dataType: dataType,
+                    contentType:false,
+                    processData:false,// 不格式化数据
+                    success: function(data){
+                        console.log(data);
+                        that.test_res_center = that.syntaxHighlight(data);
+                    },
+                    error: function(){
+                        alert('请求失败，请检查网络');
+                    }
+                });
+        		
+        	},
+        	// 点击添加自定义请求头
+        	click_add_header(){
+        		this.test_headers_custom.push({field:"",value:""});
+        	},
+        	// 点击删除算定义请求头
+        	del_header(index){
+        		this.test_headers_custom.splice(index,1);
+        	},
+        	// 格式JSON输出
+        	syntaxHighlight(json) {
+                if (typeof json != 'string') {
+                    json = JSON.stringify(json, undefined, 2);
+                }
+                json = json.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+                return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+                    var cls = 'number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'key';
+                        } else {
+                            cls = 'string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                });
+            },
         	// 添加返回值索引
         	add_show_request(lovel,index){
         		if(1 == lovel){
@@ -672,9 +933,9 @@ body {
         		}
         		return true;
         	},
-        	copyStr(str){
+        	copyStr(str,isNotCopy){
         		var that = this;
-        		this.copy_str = str;
+        		this.copy_str = (isNotCopy?'':'copy：')+str;
         		this.copy_tip = true;
         		// 倒计时，消失
         		setTimeout(function(){
@@ -697,7 +958,7 @@ body {
         	// 输入框搜索事件
         	sacn: function(e){
         		var that = this;
-        		console.log(that.scan_str)
+        		//console.log(that.scan_str)
         		
         		for(var i=0;i<this.interfaceDatas.length;i++){
         			var hide = true;
@@ -725,9 +986,6 @@ body {
         	// 初始化加载数据
             loadData: function () {
                 var that = this;
-                
-               
-                
                 // 加载数据
                 $.ajax(
                         {
@@ -764,10 +1022,15 @@ body {
                                     //console.log("请求成功,开始加载数据", data.content);
                                     that.interfaceDatas = data.controllers;
                                     // 延时初始化插件，由使用 jQuery 菜单，所以要延时
-                                    
+                                    // 默认选中数据
                                     that.selectionController = data.controllers[0];
                                     that.selectionInterface = data.controllers[0].interfaces[0];
                                     
+                                    /* that.test_headers =  that.selectionInterface.heads;// 请求头参数
+                                    that.test_uri_params =  that.selectionInterface.uriParams;// uri 参数
+                                    that.test_params =  that.selectionInterface.parameters;// 请求参数 */
+                                    that.myClickOne(that.selectionController,that.selectionInterface)
+                                    // 延时加载导航
                                     setTimeout(function () {
                                         jQuery("#jquery-accordion-menu").jqueryAccordionMenu();
                                         //绑定顶部导航切换
@@ -830,9 +1093,92 @@ body {
                 this.show.response.three = [];
                 this.selectionController = item;
                 this.selectionInterface = interfaces;
+                this.test_headers = interfaces.heads;// 请求头参数
+                this.test_uri_params = interfaces.uriParams;// uri 参数
+                this.test_params = Object.create(interfaces.parameters);// 请求参数
+                this.test_method = interfaces.method?interfaces.method.toUpperCase():"POST";// 请求方式，默认POST
+                let that = this;
                 
-            }
-
+                if(!interfaces.json){
+                	this.test_params.forEach(function(item,index){
+                		if(item.type.indexOf("Array") == 0){
+                			item['array'] = 1;
+                		}
+                	})
+                }
+                
+                // json 请求，格式输出
+                if(interfaces.json){
+                	var data = {};// 数据
+                	var arrayNum = 0;// array次数
+                	interfaces.parameters.forEach(function(item,index){
+                		if(item.children){
+                			var data2 = {};
+                			item.children.forEach(function(item2,index2){
+                				if(item2.children){
+                					var data3 = {};
+                					item2.children(function(item3,index3){
+                						if(item3.children){
+                							var data4 = {};
+                							item3.children.forEach(function(item4,index4){
+                								arrayNum = that.queryStrNum(item4.type,"Array");
+                                    			data4[item4.field] = that.createJsonArray("",arrayNum);
+                								//data4[item4.field] = "";
+                								//console.log("data4",data4)
+                							})
+                							arrayNum = that.queryStrNum(item3.type,"Array");
+                							data3[item3.field] = that.createJsonArray(data4,arrayNum);
+                						}else{
+                							//data3[item3.field] = "";
+                							arrayNum = that.queryStrNum(item3.type,"Array");
+                                			data3[item3.field] = that.createJsonArray("",arrayNum);
+                						}
+                						//console.log("data3",data3)
+                					})
+                					arrayNum = that.queryStrNum(item2.type,"Array");
+        							data2[item2.field] = that.createJsonArray(data3,arrayNum);
+                				}else{
+                					//data2[item2.field] = "";
+                					arrayNum = that.queryStrNum(item2.type,"Array");
+                        			data2[item2.field] = that.createJsonArray("",arrayNum);
+                				}
+                				//console.log("data2",data2)
+                			})
+                			arrayNum = that.queryStrNum(item.type,"Array");
+							data[item.field] = that.createJsonArray(data2,arrayNum);
+							//console.log("data1 arr",data,arrayNum)
+                		}else{
+                			arrayNum = that.queryStrNum(item.type,"Array");
+                			data[item.field] = that.createJsonArray("",arrayNum);
+                			//console.log("data1 fi",data,arrayNum);
+                		}
+                		
+                	})
+                	arrayNum = that.queryStrNum(interfaces.jsonMethod,"Array");
+                	that.test_param_json = JSON.stringify(that.createJsonArray(data,arrayNum), undefined, 2);
+                }
+            },
+            // 查询字符中某字符出现次数
+            queryStrNum(str,query){
+            	var num = 0;
+            	var index = str.indexOf(query);
+            	while(index != -1){
+            		num++;// 次数+1
+            		index = str.indexOf(query,index+1);
+            	}
+            	return num;// 返回数量
+            },
+            // 处理json array
+            createJsonArray(jsonObj,num){
+            	var data = jsonObj;
+            	if(num > 0){
+            		for(var i = 0;i < num;i++){
+                		var data2 = [data];
+                		data = data2;
+                	}
+            	}
+            	return data;
+            },
         }
     })
 </script>

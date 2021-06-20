@@ -1,24 +1,20 @@
 /* 登录 */
-#login{
+#login {
 	padding-top: 5%;
 	text-align: center;
 	text-transform: uppercase;
-	
 	font-family: 'Montserrat', sans-serif;
-	text-rendering : optimizeLegibility;
-	-webkit-font-smoothing : antialiased;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
 }
-
 
 .login {
 	width: 600px;
 	height: 500px;
 	background-color: #fff;
 	padding-top: 30px;
-	
 	padding-left: 50px;
 	padding-right: 50px;
-	
 	margin: 0 auto;
 }
 
@@ -43,7 +39,6 @@
 	padding: 14px;
 	background-color: #00B72E;
 	margin-top: 20px;
-	
 	width: 100%;
 	border: 0px;
 }
@@ -53,16 +48,14 @@
 	font-weight: lighter;
 	border: none;
 	background-color: #F0F0F0;
-	color: #465347!important;
+	color: #465347 !important;
 	padding: 26px 30px;
 	border-radius: 50px;
-	transition : 0.2s;
-	
+	transition: 0.2s;
 	height: 60px;
 	width: 100%;
 	margin-bottom: 20px;
 }
-
 
 .forgot-password {
 	text-align: right;
@@ -79,10 +72,7 @@
 	opacity: 1;
 }
 
-
 /* 正文 -------------------------------------------- */
-
-
 .content-right {
 	margin-left: 260px;
 	width: calc(100% - 260px);
@@ -91,147 +81,149 @@
 	overflow-y: auto;
 }
 
-
-
-
-.menu-header{
-    height: 50px;
-    line-height: 50px;
+.menu-header {
+	height: 50px;
+	line-height: 50px;
 }
-
 
 /* controller  */
 .content-head .title {
-    line-height: 60px;
-    font-size: 28px;
-    margin-left: 30px;
+	line-height: 60px;
+	font-size: 28px;
+	margin-left: 30px;
 }
+
 .content-head .head-system {
-    position: absolute;
-    top: 0;
-    width: 100%;
-    line-height: 60px;
-    text-align: center;
-    font-size: 20px;
-    /*margin: 0 auto;*/
+	position: absolute;
+	top: 0;
+	width: 100%;
+	line-height: 60px;
+	text-align: center;
+	font-size: 20px;
+	/*margin: 0 auto;*/
 }
 
 .content-head .desc {
-    position: absolute;
-    top: 0;
-    right: 20px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    text-align: right;
-    font-size: 14px;
+	position: absolute;
+	top: 0;
+	right: 20px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+	text-align: right;
+	font-size: 14px;
 }
 
 /* controller 容器*/
 .content-controller {
-    margin-left: 20px;
+	margin-left: 20px;
+	padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .content-controller .controller-title {
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 40px;
+	font-size: 18px;
+	font-weight: 700;
+	/* line-height: 40px; */
 }
 
 /* 接口描述 */
 .content-interface {
-    margin-left: 20px;
+	margin-left: 20px;
 }
 
 .content-interface .interface-title {
-    font-size: 16px;
-    font-weight: 700;
-    /* line-height: 40px; */
+	font-size: 16px;
+	font-weight: 700;
+	/* line-height: 40px; */
 }
+
 .content-interface .interface-uri {
-    line-height: 25px;
+	line-height: 25px;
 }
+
 .interface-uri {
-	margin-top: 3px;	
-}
-.content-interface .other{
-    margin-right: 30px;
+	margin-top: 3px;
 }
 
-.tag{
-    /*border: thin solid #555;*/
-    border-radius: 25px;
-    background-color: #88be04;
-    padding-left: 10px;
-    padding-right: 10px;
-    position: relative;
-    top: 2px;
+.content-interface .other {
+	margin-right: 30px;
 }
 
-
+.tag {
+	/*border: thin solid #555;*/
+	border-radius: 25px;
+	background-color: #88be04;
+	padding-left: 10px;
+	padding-right: 10px;
+	position: relative;
+	top: 2px;
+}
 
 /* table */
 .content-table {
-    margin-left: 20px;
-    margin-top: 10px;
-    padding-right: 10px;
+	margin-left: 20px;
+	margin-top: 10px;
+	padding-right: 10px;
 }
 
 .content-table .title {
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 40px;
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 40px;
 }
 
 .content-table .desc {
-    font-size: 12px;
-    font-weight: 400;
+	font-size: 12px;
+	font-weight: 400;
 }
 
-table .field{
+table .field {
 	width: 420px;
 }
 
-table .field_res{
+table .field_res {
 	width: 500px;
 }
 
-table .type{
+table .type {
 	width: 200px;
 }
 
-table .left{
-    text-align: left;
+table .left {
+	text-align: left;
 }
 
-table .required{
+table .required {
 	width: 80px;
 }
-table .length{
+
+table .length {
 	width: 150px;
 }
 
-table .reg{
+table .reg {
 	width: 25%;
 }
 
 /* 页脚 */
-.content-footer{
-    position: fixed;
-    bottom: 0px;
-    margin-top: 30px;
-    height: 60px;
-    width: 100%;
-    background-color: rgba(43, 43, 43, 0.25);
-    text-align: center;
-    line-height: 60px;
+.content-footer {
+	position: fixed;
+	bottom: 0px;
+	margin-top: 30px;
+	height: 60px;
+	width: 100%;
+	background-color: rgba(43, 43, 43, 0.25);
+	text-align: center;
+	line-height: 60px;
 }
 
-.content-footer .title{
-    font-size: 20px;
-    color: #4e4949;
+.content-footer .title {
+	font-size: 20px;
+	color: #4e4949;
 }
-.content-footer .version{
-    color: #0b46ff;
+
+.content-footer .version {
+	color: #0b46ff;
 }
 
 /* 嵌套符号 */
@@ -247,47 +239,51 @@ table .reg{
 }
 /*是否必须颜色 */
 .required_false {
-	
+	color: #000;
 }
 
 /* 复制按钮 */
-.copy_btn{
+.copy_btn {
 	margin-right: 20px;
-    background-color: #39ef7e;
-    color: white;
-    outline: none;
-    border: none;
-    border-radius: 4px;
-    line-height: 30px;
-    padding: 0px 20px;
-    font-size: 22px;
-    font-family: cursive;
-    cursor: pointer;
-    vertical-align: middle;
+	background-color: #39ef7e;
+	color: white;
+	outline: none;
+	border: none;
+	border-radius: 4px;
+	line-height: 30px;
+	padding: 0px 20px;
+	font-size: 22px;
+	font-family: cursive;
+	cursor: pointer;
+	vertical-align: middle;
+}
+.copy_btn:hover {
+	background-color: #aaa;
+}
+.copy_btn:active{
+	background-color: white;
 }
 /* 提示 */
-.my_tip{
+.my_tip {
 	position: fixed;
-	top:70px;
+	top: 70px;
 	width: 99%;
 }
 /* 复制提示 */
-.copy_tip{
-	
+.copy_tip {
 	/* left: 45%; */
 	color: white;
 	border-radius: 5px;
-	
 	margin: 0 auto;
 	width: 500px;
-	line-height:40px;
-	padding-left:40px;
-	padding-right:40px;
-	text-align:center;
+	line-height: 40px;
+	padding-left: 40px;
+	padding-right: 40px;
+	text-align: center;
 	background-color: #62e49f;
 }
 /* 错误提示 */
-.tip_error{
+.tip_error {
 	background-color: #ff0000;
 }
 /* 展开与隐藏 下级 */
@@ -300,5 +296,183 @@ table .reg{
 	font-size: 28px;
 	color: red;
 }
+/* 接口测试 */
+/* 打开测试窗口 */
+.test_btn {
+	float: right;
+    margin-right: 10px;
+    height: 30px;
+    width: 100px;
+    border: 0;
+    background-color: #aaa;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 18px;
+	font-family: cursive;
+	color: white;
+}
+.test_btn:hover{
+	background-color: #88be04;
+}
+.test_btn:active{
+	background-color: white;
+}
+/* 测试窗口容器 */
+#test_box {
+	position: absolute;
+	top: 155px;
+    right: 10px;
+	width: 420px;
+}
 
+#test_bar {
+	padding-left: 12px;
+	height: 50px;
+	line-height: 50px;
+	color: white;
+	background-color: #aaa;
+	cursor: move;
+}
 
+#test_content {
+	padding: 8px 10px 0 10px;
+	max-height: 600px;
+	background-color: #eee;
+	border: 1px #aaa solid;
+	overflow: hidden;
+	overflow-y: auto;
+}
+/* 隐藏测试窗口按钮 */
+.test_close {
+	color: white;
+	cursor: pointer;
+	float: right;
+	margin-top: 15px;
+	margin-right: 15px;
+	border: 0px;
+	background-color: #aaa;
+}
+.test_close:hover{
+	color: #39ef7e;
+}
+.test_close:active{
+	color: #80ff00;
+}
+/* 参数容器 */
+.test_param_content {
+	padding-left: 20px;
+}
+/* 分害线 */
+.test_hr{
+	opacity: 0.2;
+    margin-top: 3px;
+    margin-bottom: 1px;
+}
+/* 请求方式，是否是 JSON */
+.test_json_tab{
+	margin-left: 10px;
+	color: #88be04;
+    font-size: 12px;
+}
+
+.test_item {
+	/* border-bottom: 1px #aaa solid; */
+	width: 100%;
+}
+
+.test_item_children {
+	padding-left: 20px;
+}
+
+.test_item_center {
+	padding-bottom: 3px;
+	padding-top: 3px;
+}
+
+.test_name {
+	display: inline-block;
+	min-width: 80px;
+	max-width: 120px;
+	/* text-align: right; */
+}
+/* 输入框 */
+.test_input_span {
+	display: block;
+	/* margin-left: 30px; */
+	float: right;
+	margin-right: 10px;
+}
+/* 请求头 */
+.test_input_field{
+	max-width: 100px;
+}
+.test_input{
+	margin-right: 25px;
+}
+/* 删除自定义请求头 */
+.test_delete_header{
+	cursor: pointer;
+	color: blue;
+	display: inline-block;
+    width: 10px;
+}
+.test_delete_header:hover{
+	color: red;
+}
+.test_delete_header:active{
+	color: #ffff80;
+}
+/* 请求头，添加按钮 */
+.add_header{
+	border: 0px;
+	display: block;
+	float: right;
+	margin-right: 25px;
+	cursor: pointer;
+	
+}
+.add_header:hover{
+	color: blue;
+}
+.add_header:active{
+	color: red;
+}
+/* json 输入框 */
+.test_item_json{
+	margin-top:10px;
+}
+/* 发送按钮 */
+.test_btn_send {
+	display: block;
+	margin: 0 auto;
+	width: 100px;
+	height: 30px;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	cursor: pointer;
+}
+/* 格式化输出 */
+pre {
+	outline: 1px solid #ccc;
+	overflow: auto;
+}
+
+.string {
+	color: green;
+}
+
+.number {
+	color: darkorange;
+}
+
+.boolean {
+	color: blue;
+}
+
+.null {
+	color: magenta;
+}
+
+.key {
+	color: red;
+}

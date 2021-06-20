@@ -12,6 +12,7 @@ import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -314,6 +315,18 @@ public class MethodRequestUtil {
 					}
 				}
 				types.add("PUT");
+			} else if (at instanceof PatchMapping) {
+				PatchMapping dm = (PatchMapping) at;
+				if (null != dm.path() && dm.path().length > 0) {
+					for (String path : dm.path()) {
+						uris.add(path);
+					}
+				} else if (null != dm.value() && dm.value().length > 0) {
+					for (String path : dm.value()) {
+						uris.add(path);
+					}
+				}
+				types.add("PATCH");
 			}
 			// 其它忽略
 		}
