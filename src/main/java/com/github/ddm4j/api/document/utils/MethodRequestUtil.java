@@ -534,6 +534,9 @@ public class MethodRequestUtil {
 			for (ParamChildrenVo vo : tempChildren) {
 				if (vo.getField().equals(key)) {
 					tempVo = (ParameterVo) vo;
+					if(param.required()) {
+						tempVo.setRequired(param.required());// 为必须
+					}
 					tempChildren = vo.getChildren();
 					break;
 				}
@@ -543,12 +546,29 @@ public class MethodRequestUtil {
 			if (!FieldUtil.isEmpty(param.describe())) {
 				tempVo.setDescribe(param.describe());
 			}
-			tempVo.setRequired(param.required());
+			//tempVo.setRequired(param.required());
 			tempVo.setRegexp(getRegexp(param.regexp()));
 
 			// 最大或最小
 			tempVo.setMax(2147483647 == param.max() ? null : param.max());
 			tempVo.setMin(-2147483648 == param.min() ? null : param.min());
+			
+			// 所有上级，设置为必须
+			if(tempVo.isRequired()) {
+				tempVo = null;
+				tempChildren = list;
+				for (String key : keys) {
+					for (ParamChildrenVo vo : tempChildren) {
+						if (vo.getField().equals(key)) {
+							tempVo = (ParameterVo) vo;
+							
+							tempChildren = vo.getChildren();
+							break;
+						}
+					}
+				}
+			}
+			
 		}
 	}
 

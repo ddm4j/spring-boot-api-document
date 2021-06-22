@@ -186,28 +186,26 @@ public class ApiParamCheck {
 				continue;
 			}
 			String[] keys = apiParam.field().split("\\.");
-			// System.out.println("校验:"+apiParam.field());
+			//System.out.println("校验开始:"+apiParam.field());
 			boolean empty = true;
 
 			Object value = params.get(keys[0]);
 
 			if (null != value) {
-
-				empty = checkType(value, apiParam, keys, 1, infos);
-				// System.out.println("校验方式1 - 1 = " + empty);
-				if (empty) {
-					// 判断是不是在下级
-					// System.out.println("校验方式1 - 0 = "+empty);
-					empty = checkType(value, apiParam, keys, 0, infos);
-				}
-			} else if (!params.containsKey(apiParam.field())) {
-				// System.out.println("校验方式2");
+				//System.out.println("校验方式1 - 1 = " + empty);
+				empty = checkType(keys[0],value, apiParam, keys, 0, infos);
+			} 
+			// 如果上一个，找不到，那就下个参数中查找
+			if(empty) {
+				//System.out.println("校验方式2");
 				// 当前不存在，是否在下一级
 				for (Entry<String, Object> param : params.entrySet()) {
-					empty = checkType(param.getValue(), apiParam, keys, 0, infos);
-					// 找到了，就不循环了
-					if (!empty) {
-						break;
+					if(!param.getKey().equals(keys[0])) {
+						empty = checkType(param.getKey(),param.getValue(), apiParam, keys, 0, infos);
+						// 找到了，就不循环了
+						if (!empty) {
+							break;
+						}
 					}
 				}
 			}
@@ -232,41 +230,54 @@ public class ApiParamCheck {
 
 	}
 
-	private boolean checkType(Object value, ApiParam apiParam, String[] keys, int index, List<ApiCheckInfo> infos)
-			throws Exception {
-
+	private boolean checkType(String fieldName, Object value, ApiParam apiParam, String[] keys, int index,
+			List<ApiCheckInfo> infos) throws Exception {
+		//System.out.println("校验："+fieldName);
 		boolean empty = false;
 		MessageBean message = getMessage(apiParam);
 		// 判断是否为空
-		if (null == value && apiParam.required()) {
-			// System.out.println("检查：null");
-			ApiCheckInfo info = getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired());
-			if (null != info) {
-				infos.add(info);
+		if (null == value) {
+			//System.out.println("检查：null");
+			if (fieldName.equals(keys[index])) {
+				if(apiParam.required()) {
+					ApiCheckInfo info = getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired());
+					if (null != info) {
+						infos.add(info);
+					}
+				}
+			} else {
+				empty = true;
 			}
-		}
+		} else
 		// 判断是不是文件
-		else if (MultipartFile.class.isAssignableFrom(value.getClass())) {
-			// System.out.println("检查：file");
-			ApiCheckInfo checkInfo = checkValue(value, apiParam, message);
-			if (null != checkInfo)
-				infos.add(checkInfo);
+		if (MultipartFile.class.isAssignableFrom(value.getClass())) {
+			if (fieldName.equals(keys[index])) {
+				ApiCheckInfo checkInfo = checkValue(value, apiParam, message);
+				if (null != checkInfo)
+					infos.add(checkInfo);
+			} else {
+				empty = true;
+			}
 		}
 		// 判断是否是接口类型或是否是基本类型
 		else if (value.getClass().isInterface() || Number.class.isAssignableFrom(value.getClass())
 				|| value.getClass() == String.class || Boolean.class.isAssignableFrom(value.getClass())) {
-			// System.out.println("检查：基本类型");
+			//System.out.println("检查：base");
 			// 查询消息
-			ApiCheckInfo info = checkValue(value, apiParam, message);
-			if (null != info) {
-				infos.add(info);
+			if (fieldName.equals(keys[index])) {
+				ApiCheckInfo info = checkValue(value, apiParam, message);
+				if (null != info) {
+					infos.add(info);
+				}
+			} else {
+				empty = true;
 			}
 
 		}
 		// 判断是不是数组和集合
 		else if (value.getClass().isArray() || List.class.isAssignableFrom(value.getClass())
 				|| Set.class.isAssignableFrom(value.getClass())) {
-			// System.out.println("检查：array");
+			//System.out.println("检查：array");
 			// 数组或集合
 			KVEntity<Boolean, ApiCheckInfo> info = checkParamArray(value, keys, index, apiParam, message);
 			if (null != info) {
@@ -277,7 +288,7 @@ public class ApiParamCheck {
 		}
 		// 其他类型
 		else {
-			// System.out.println("检查：其它类型，自定义 bean");
+			//System.out.println("检查：其它类型，自定义 bean");
 			KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(value, keys, index, apiParam, message, value);
 			if (null != info) {
 				empty = info.getLeft();
@@ -343,25 +354,25 @@ public class ApiParamCheck {
 	private KVEntity<Boolean, ApiCheckInfo> checkFieldValue(Object value, String[] keys, int index, ApiParam apiParam,
 			MessageBean message, Object obj) throws IllegalAccessException, Exception {
 
-		// System.out.println("field 1---------- " + value);
+		//System.out.println("field 1---------- " + value);
 
 		KVEntity<Boolean, ApiCheckInfo> info = new KVEntity<Boolean, ApiCheckInfo>();
 		info.setLeft(true);
 		Object value2 = value;
 		Field field = null;
 		for (int i = index; i < keys.length; i++) {
-			// System.out.println("field 2---------- " + keys[i] + " ---- " + value2);
+			//System.out.println("field 2---------- " + keys[i] + " ---- " + value2);
 			field = getField(value2.getClass(), keys[i]);
 			if (null != field) {
 				// info.setLeft(true);
 				if (i < keys.length - 1) {
-					// System.out.println("field 3---------- " + keys[i] + " ---- " + value2);
+					//System.out.println("field 3---------- " + keys[i] + " ---- " + value2);
 					field.setAccessible(true);
 					value2 = field.get(value2);
 					if (value2.getClass().isArray() || List.class.isAssignableFrom(value2.getClass())
 							|| Set.class.isAssignableFrom(value2.getClass())) {
 						// 递归校验
-						// System.out.println("field 4---------- " + keys[i] + " ---- " + value2);
+						//System.out.println("field 4---------- " + keys[i] + " ---- " + value2);
 						return checkParamArray(value2, keys, i + 1, apiParam, message);
 					}
 				}
@@ -370,10 +381,11 @@ public class ApiParamCheck {
 
 		// 校验值
 		if (null != field) {
-			// System.out.println("field end---------- " + value2);
+			//System.out.println("field end---------- " + value2);
 			info.setLeft(false);
 			field.setAccessible(true);
 			Object v = field.get(value2);
+			//System.out.println("field end---------- " + v);
 			// 校验值
 			ApiCheckInfo checkInfo = checkValue(v, apiParam, message);
 			if (null != checkInfo) {

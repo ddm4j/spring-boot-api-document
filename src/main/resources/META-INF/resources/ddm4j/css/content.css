@@ -353,10 +353,10 @@ table .reg {
 	background-color: #aaa;
 }
 .test_close:hover{
-	color: #39ef7e;
+	color: #88be04;
 }
 .test_close:active{
-	color: #80ff00;
+	color: white;
 }
 /* 参数容器 */
 .test_param_content {
@@ -432,10 +432,10 @@ table .reg {
 	
 }
 .add_header:hover{
-	color: blue;
+	color: #88be04;
 }
 .add_header:active{
-	color: red;
+	color: white;
 }
 /* json 输入框 */
 .test_item_json{
@@ -475,4 +475,30 @@ pre {
 
 .key {
 	color: red;
+}
+.test_btn_div{
+	position: relative;
+}
+/* 清空按钮 */
+.test_clean_btn{
+	position: absolute;
+    right: 11px;
+    top: 11px;
+    border: 0px;
+    cursor: pointer;
+}
+.test_clean_btn:hover{
+	color:#88be04;
+}
+.test_clean_btn:active{
+	color:white;
+}
+/* 未返回数据显示区 */
+.test_response_empty{
+	color: red;
+	text-align: center;
+    width: 100%;
+    display: block;
+    margin-top: 25px;
+    margin-bottom: 20px;
 }

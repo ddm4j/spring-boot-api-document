@@ -408,6 +408,9 @@ public class MethodResponseUtil {
 			for (ParamChildrenVo vo : tempChildren) {
 				if (vo.getField().equals(key)) {
 					tempVo = vo;
+					if(param.required()) {
+						tempVo.setRequired(true);// 为必须
+					}
 					tempChildren = vo.getChildren();
 					break;
 				}

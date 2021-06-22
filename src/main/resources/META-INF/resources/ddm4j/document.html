@@ -553,17 +553,38 @@ body {
         				</div>
         				<hr class="test_hr" />
         			</div>
+        			
+        			<div class="test_content" v-if="test_params && test_params.length > 0 && test_get_param">
+        				<div>请求参数：Request <span class="test_json_tab">GET</span></div>
+        				<div class="test_param_content">
+        					<form action="" id="myFormGet">
+        						<div v-for="(item,index) in test_params" key="index" class="test_item" >
+	       							<!-- 去除扫描出来，Object 类型的参数，后台无法接收 -->
+	      							<div class="test_item_center" v-if="(item.type.indexOf('Object') == -1 || item.type.indexOf('Object<?>') != -1) && item.get">
+	      								<span class="test_name">
+	      									{{item.array == 2?"":item.field}}
+	      									&nbsp;&nbsp;
+	      									{{item.array?"":":"}}
+	      									</span>
+	      								<span class="test_input_span" :class="item.array?'':'test_input'">
+	      									<input :name="item.field" v-model="test_params[index].value"></input>
+	      								</span>
+	      							</div>
+        						</div>
+        					</form>
+        				</div>
+        			</div>
+        			
         			<div class="test_content" v-if="test_params && test_params.length > 0">
         				<div>请求参数：Request <span class="test_json_tab" v-show="selectionInterface.json">JSON</span></div>
         				<div class="test_param_content">
         					<div class="test_item_json" v-if="selectionInterface.json">
         						<textarea rows="15" cols="50" style="resize: none;" v-model="test_param_json"></textarea>
         					</div>
-        					<form action="" id="myForm">
+        					<form action="" id="myFormParam">
         						<div v-for="(item,index) in test_params" key="index" class="test_item" v-if="!selectionInterface.json">
-        						
 	       							<!-- 去除扫描出来，Object 类型的参数，后台无法接收 -->
-	      							<div class="test_item_center" v-if="item.type.indexOf('Object') == -1 || item.type.indexOf('Object<?>') != -1">
+	      							<div class="test_item_center" v-if="(item.type.indexOf('Object') == -1 || item.type.indexOf('Object<?>') != -1) && !item.get">
 	      								<span class="test_name">
 	      									{{item.array == 2?"":item.field}}
 	      									&nbsp;&nbsp;
@@ -579,7 +600,10 @@ body {
         					</form>
         				</div>
         			</div>
-        			<button class="test_btn_send" @click="click_send">send</button>
+        			<div class="test_btn_div">
+	        			<button class="test_btn_send" @click="click_send">send</button>
+	        			<button class="test_clean_btn" @click="clean_response">clean</button>
+        			</div>
         			<div class="test_res_content" v-show="test_res_center">
         				<pre id="test_res_center" v-html="test_res_center"></pre>
         			</div>
@@ -634,6 +658,7 @@ body {
             test_show: true,// 是否显示测试窗口
             test_method: 'POST', // 请求方式
             test_json: false,// 是不是 JSON 请求
+            test_get_param: false,// 有没有get请求参数
             test_headers:[],// 请求头参数
             test_headers_custom:[],// 自定义请求头参数
             test_uri_params: [],// 路径参数
@@ -679,6 +704,10 @@ body {
             that.loadData();// 加载数据
         },
         methods: {
+        	// 点击清空按钮
+        	clean_response(){
+        		this.test_res_center = "<span class='test_response_empty'>Response data</span>";
+        	},
         	// 添加form-data的数组数据项
         	add_array_param(index){
         		this.test_params.splice(index+1,0,{array:2,type:this.test_params[index].type,field:this.test_params[index].field,value:""});
@@ -727,15 +756,26 @@ body {
         				url = url.replaceAll("{"+item.field+"}",item.value);
         			});
         		}
+        		// 整理Get请求参数
+        		var getParams = [];
+        		var urlGetParamStr = "";
+        		if(that.test_params && that.test_params.length > 0){
+        			that.test_params.forEach(function(item,index){
+        				console.log('param',item)
+        				if(item.get){
+        					urlGetParamStr += item.field+"="+item.value+"&";
+        				}
+        			})
+        		}
+        		if(urlGetParamStr.length > 0){
+        			urlGetParamStr = "?"+urlGetParamStr;
+        			urlGetParamStr = urlGetParamStr.slice(0,urlGetParamStr.lastIndexOf('&'));
+        		}
+        		console.log("urlGet:"+urlGetParamStr);
         		// 整理请求参数
         		var params = null;
         		if(!that.selectionInterface.json && that.test_params && that.test_params.length > 0){
-        			params = new FormData(document.querySelector("form"));
-        			that.test_params.forEach(function(item,index){
-       					if(item.value){
-       						// params.append(item.field,item.value);
-       					}
-        			});
+        			params = new FormData(document.querySelector("#myFormParam"));
         		}
         		// console.log(params)
         		// 请求后端
@@ -752,7 +792,7 @@ body {
         		
         		var dataType = that.selectionInterface.json?"json":null;
         		$.ajax({
-                    url: url,
+                    url: url + urlGetParamStr,
                     type:method,
                     headers: headers,
                     data: params,
@@ -1097,7 +1137,19 @@ body {
                 this.test_uri_params = interfaces.uriParams;// uri 参数
                 this.test_params = Object.create(interfaces.parameters);// 请求参数
                 this.test_method = interfaces.method?interfaces.method.toUpperCase():"POST";// 请求方式，默认POST
+                this.clean_response();// 清空返回数据
                 let that = this;
+                that.test_get_param = false;
+                // 判断有没有 get 请求参数
+                if(this.test_params && this.test_params.length > 0){
+                	for(var i=0;i<this.test_params.length;i++){
+                    	if(this.test_params[i].get){
+                    		that.test_get_param = true;
+                    		break;
+                    	}
+                    }
+                }
+                
                 
                 if(!interfaces.json){
                 	this.test_params.forEach(function(item,index){
@@ -1112,47 +1164,48 @@ body {
                 	var data = {};// 数据
                 	var arrayNum = 0;// array次数
                 	interfaces.parameters.forEach(function(item,index){
-                		if(item.children){
-                			var data2 = {};
-                			item.children.forEach(function(item2,index2){
-                				if(item2.children){
-                					var data3 = {};
-                					item2.children(function(item3,index3){
-                						if(item3.children){
-                							var data4 = {};
-                							item3.children.forEach(function(item4,index4){
-                								arrayNum = that.queryStrNum(item4.type,"Array");
-                                    			data4[item4.field] = that.createJsonArray("",arrayNum);
-                								//data4[item4.field] = "";
-                								//console.log("data4",data4)
-                							})
-                							arrayNum = that.queryStrNum(item3.type,"Array");
-                							data3[item3.field] = that.createJsonArray(data4,arrayNum);
-                						}else{
-                							//data3[item3.field] = "";
-                							arrayNum = that.queryStrNum(item3.type,"Array");
-                                			data3[item3.field] = that.createJsonArray("",arrayNum);
-                						}
-                						//console.log("data3",data3)
-                					})
-                					arrayNum = that.queryStrNum(item2.type,"Array");
-        							data2[item2.field] = that.createJsonArray(data3,arrayNum);
-                				}else{
-                					//data2[item2.field] = "";
-                					arrayNum = that.queryStrNum(item2.type,"Array");
-                        			data2[item2.field] = that.createJsonArray("",arrayNum);
-                				}
-                				//console.log("data2",data2)
-                			})
-                			arrayNum = that.queryStrNum(item.type,"Array");
-							data[item.field] = that.createJsonArray(data2,arrayNum);
-							//console.log("data1 arr",data,arrayNum)
-                		}else{
-                			arrayNum = that.queryStrNum(item.type,"Array");
-                			data[item.field] = that.createJsonArray("",arrayNum);
-                			//console.log("data1 fi",data,arrayNum);
+                		if(!item.get){
+                			if(item.children){
+                    			var data2 = {};
+                    			item.children.forEach(function(item2,index2){
+                    				if(item2.children){
+                    					var data3 = {};
+                    					item2.children(function(item3,index3){
+                    						if(item3.children){
+                    							var data4 = {};
+                    							item3.children.forEach(function(item4,index4){
+                    								arrayNum = that.queryStrNum(item4.type,"Array");
+                                        			data4[item4.field] = that.createJsonArray("",arrayNum);
+                    								//data4[item4.field] = "";
+                    								//console.log("data4",data4)
+                    							})
+                    							arrayNum = that.queryStrNum(item3.type,"Array");
+                    							data3[item3.field] = that.createJsonArray(data4,arrayNum);
+                    						}else{
+                    							//data3[item3.field] = "";
+                    							arrayNum = that.queryStrNum(item3.type,"Array");
+                                    			data3[item3.field] = that.createJsonArray("",arrayNum);
+                    						}
+                    						//console.log("data3",data3)
+                    					})
+                    					arrayNum = that.queryStrNum(item2.type,"Array");
+            							data2[item2.field] = that.createJsonArray(data3,arrayNum);
+                    				}else{
+                    					//data2[item2.field] = "";
+                    					arrayNum = that.queryStrNum(item2.type,"Array");
+                            			data2[item2.field] = that.createJsonArray("",arrayNum);
+                    				}
+                    				//console.log("data2",data2)
+                    			})
+                    			arrayNum = that.queryStrNum(item.type,"Array");
+    							data[item.field] = that.createJsonArray(data2,arrayNum);
+    							//console.log("data1 arr",data,arrayNum)
+                    		}else{
+                    			arrayNum = that.queryStrNum(item.type,"Array");
+                    			data[item.field] = that.createJsonArray("",arrayNum);
+                    			//console.log("data1 fi",data,arrayNum);
+                    		}
                 		}
-                		
                 	})
                 	arrayNum = that.queryStrNum(interfaces.jsonMethod,"Array");
                 	that.test_param_json = JSON.stringify(that.createJsonArray(data,arrayNum), undefined, 2);

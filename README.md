@@ -20,6 +20,7 @@ spring-boot-api-document 是一个基本SpringBoot开发的一个接口文档管
 
 # 版本历史
 ```
+ 2.5.1 ：修改已知校验异常BUG，修改JSON请求带Get参数时，不能传参问题。
  2.5.0 ：接口文档页面上增加Api测试功能，Api测试功能不支持文件下载，增加对 @PatchMapper注解的支持。
  2.4.7 ：修复@ApiParamIgnore，会清除 @PathVariable 标识参数，并且将 @PathVariable 标识的参数单独在文档中显示，修复其它已知BUG。
  2.4.6 ：修复表单提交，数据为空异常
