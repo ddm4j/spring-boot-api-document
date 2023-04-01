@@ -112,7 +112,7 @@ public class MethodRequestUtil {
 			// 注解替换
 			if (null != apiParams && apiParams.length > 0) {
 				for (ApiParam param : apiParams) {
-					replaceReuestField(param, list);
+					replaceRequestField(param, list);
 				}
 			}
 		}
@@ -352,7 +352,11 @@ public class MethodRequestUtil {
 		return ivo;
 	}
 
-	// 提取详细参数<请求参数，uri参数，请求头参数>
+	/**
+	 * 提取详细参数<请求参数，uri参数，请求头参数>
+	 * @param method
+	 * @return
+	 */
 	private LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>> extrad(Method method) {
 
 		if (null != method.getParameterAnnotations() && method.getParameterAnnotations().length >= 1) {
@@ -365,11 +369,10 @@ public class MethodRequestUtil {
 			List<ParameterVo> vos = new ArrayList<ParameterVo>();
 			// 请求头
 			List<HeadVo> headVos = new ArrayList<HeadVo>();
-			// 路径参数
+			// 路径参数F
 			List<HeadVo> uriVos = new ArrayList<HeadVo>();
 			LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>> lmr = new LMREntity<List<ParameterVo>, List<HeadVo>, List<HeadVo>>();
-			// KVEntity<List<ParameterVo>, List<HeadVo>> kv = new
-			// KVEntity<List<ParameterVo>, List<HeadVo>>();
+
 			lmr.setLeft(vos);
 			lmr.setRight(headVos);
 			lmr.setMiddle(uriVos);
@@ -525,12 +528,20 @@ public class MethodRequestUtil {
 	 * @param param 注解
 	 * @param list  返回值对象
 	 */
-	private void replaceReuestField(ApiParam param, List<ParameterVo> list) {
+	private void replaceRequestField(ApiParam param, List<ParameterVo> list) {
+
+		if(null == list || list.isEmpty()){
+			return;
+		}
+
 		String[] keys = param.field().split("\\.");
 		ParameterVo tempVo = null;
 		List<? extends ParamChildrenVo> tempChildren = list;
 
 		for (String key : keys) {
+			if(null == tempChildren || tempChildren.isEmpty()){
+				return;
+			}
 			for (ParamChildrenVo vo : tempChildren) {
 				if (vo.getField().equals(key)) {
 					tempVo = (ParameterVo) vo;

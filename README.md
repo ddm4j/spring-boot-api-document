@@ -20,6 +20,7 @@ spring-boot-api-document 是一个基本SpringBoot开发的一个接口文档管
 
 # 版本历史
 ```
+ 2.6.0 ：修复 list,set 校验，会出现空指针异常问题,ApiParam 注解增加 name 属性，describe 标识为过时属性。
  2.5.2 ：增加StringPrarmTrimComponent组件，用于去除方法上String类型参数的空格，只有空格则为null，使用方式：继承该组件，添加注解 @Aspect和@Component，并重写 doOperation 方法，方法上增加 @Pointcut("execution(public * com.sy.controller.*.*(..))")注解。
  2.5.1 ：修改已知校验异常BUG，修改JSON请求带Get参数时，不能传参问题。
  2.5.0 ：接口文档页面上增加Api测试功能，Api测试功能不支持文件下载，增加对 @PatchMapper注解的支持。

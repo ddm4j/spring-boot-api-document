@@ -5,6 +5,8 @@ import com.github.ddm4j.api.document.common.exception.ApiCheckError;
 public class ApiCheckInfo {
 	private String message;
 	private String field;
+	private String name;
+	@Deprecated
 	private String describe;
 	private ApiCheckError error;
 
@@ -24,10 +26,17 @@ public class ApiCheckInfo {
 		this.field = field;
 	}
 
+	public String getName(){
+		return this.name;
+	}
+	public void setName(String name){
+		this.name = name;
+	}
+	@Deprecated
 	public String getDescribe() {
 		return describe;
 	}
-
+	@Deprecated
 	public void setDescribe(String describe) {
 		this.describe = describe;
 	}
