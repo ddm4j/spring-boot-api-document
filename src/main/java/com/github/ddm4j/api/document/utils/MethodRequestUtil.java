@@ -125,8 +125,8 @@ public class MethodRequestUtil {
 				for (ApiParam param : apiParams) {
 					for (HeadVo uriVo : uriVos) {
 						if (uriVo.getField().equals(param.field())) {
-							if (!FieldUtil.isEmpty(param.describe())) {
-								uriVo.setDescribe(param.describe());
+							if (!FieldUtil.isEmpty(param.name())) {
+								uriVo.setName(param.name());
 							}
 							uriVo.setRequired(param.required());
 
@@ -149,8 +149,8 @@ public class MethodRequestUtil {
 				for (ApiParam param : apiParams) {
 					for (HeadVo headVo : headVos) {
 						if (headVo.getField().equals(param.field())) {
-							if (!FieldUtil.isEmpty(param.describe())) {
-								headVo.setDescribe(param.describe());
+							if (!FieldUtil.isEmpty(param.name())) {
+								headVo.setName(param.name());
 							}
 							headVo.setRequired(param.required());
 
@@ -208,11 +208,11 @@ public class MethodRequestUtil {
 
 	/**
 	 * 删除全部清空，只剩下被 ApiParam 标识的，子集合
-	 * 
-	 * @param list  子集合
-	 * @param keys  标识 field
-	 * @param index keys 索引
-	 * @return 处理后的集合
+	 * @param list
+	 * @param apiParams
+	 * @param index
+	 * @param <T>
+	 * @return
 	 */
 	private <T extends ParamChildrenVo> List<T> removeNotApiParam(List<T> list, ApiParam[] apiParams, int index) {
 		List<T> vos = new ArrayList<T>();
@@ -418,7 +418,7 @@ public class MethodRequestUtil {
 
 					for (ParameterVo vo : list) {
 						HeadVo headVo = new HeadVo();
-						headVo.setDescribe(vo.getDescribe());
+						headVo.setName(vo.getName());
 						headVo.setField(vo.getField());
 						headVo.setRequired(vo.isRequired());
 						headVo.setType(vo.getType());
@@ -443,7 +443,7 @@ public class MethodRequestUtil {
 				} else if (path != null) {
 					for (ParameterVo vo : list) {
 						HeadVo headVo = new HeadVo();
-						headVo.setDescribe(vo.getDescribe());
+						headVo.setName(vo.getName());
 						headVo.setField(vo.getField());
 						headVo.setRequired(vo.isRequired());
 						headVo.setType(vo.getType());
@@ -512,7 +512,7 @@ public class MethodRequestUtil {
 			ParameterVo vo = new ParameterVo();
 			vo.setField(info.getName());
 			vo.setType(info.getType());
-			vo.setDescribe(info.getDescribe());
+			vo.setName(info.getDescribe());
 			vo.setFieldName(info.getField());// 字段名
 			if (null != info.getChildren() && info.getChildren().size() > 0) {
 				vo.setChildren(extractField(info.getChildren()));
@@ -554,8 +554,8 @@ public class MethodRequestUtil {
 			}
 		}
 		if (tempVo != null) {
-			if (!FieldUtil.isEmpty(param.describe())) {
-				tempVo.setDescribe(param.describe());
+			if (!FieldUtil.isEmpty(param.name())) {
+				tempVo.setName(param.name());
 			}
 			//tempVo.setRequired(param.required());
 			tempVo.setRegexp(getRegexp(param.regexp()));

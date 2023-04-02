@@ -83,14 +83,6 @@ public @interface ApiParam {
     public String name() default "";
 
     /**
-     * 示例说明，会覆盖 ApiField 的说明
-     *
-     * @return 示例说明
-     */
-    @Deprecated
-    public String describe() default "";
-
-    /**
      * 校验错误消息，使用 ${key} 读取配置文件中的配置;
      * 默认： ${default}， 可以配置文件中重写;
      * required: 不能为空;

@@ -1,14 +1,16 @@
 package com.github.ddm4j.api.document.common.exception.bean;
 
+import com.github.ddm4j.api.document.annotation.ApiParam;
 import com.github.ddm4j.api.document.common.exception.ApiCheckError;
 
 public class ApiCheckInfo {
 	private String message;
 	private String field;
 	private String name;
-	@Deprecated
-	private String describe;
+
 	private ApiCheckError error;
+
+	private ApiParam apiParam;
 
 	public String getMessage() {
 		return message;
@@ -32,14 +34,6 @@ public class ApiCheckInfo {
 	public void setName(String name){
 		this.name = name;
 	}
-	@Deprecated
-	public String getDescribe() {
-		return describe;
-	}
-	@Deprecated
-	public void setDescribe(String describe) {
-		this.describe = describe;
-	}
 
 	public ApiCheckError getError() {
 		return error;
@@ -47,6 +41,13 @@ public class ApiCheckInfo {
 
 	public void setError(ApiCheckError error) {
 		this.error = error;
+	}
+
+	public void setApiParam(ApiParam param){
+		this.apiParam = param;
+	}
+	public ApiParam getApiParam(){
+		return this.apiParam;
 	}
 
 }

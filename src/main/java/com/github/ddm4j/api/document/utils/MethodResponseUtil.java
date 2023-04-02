@@ -288,7 +288,7 @@ public class MethodResponseUtil {
 						if (isOK) {
 							T code = (T) list.get(i).getChildren().get(j);
 							if (null != desc) {
-								code.setDescribe(desc);
+								code.setName(desc);
 							}
 							vos.add(code);
 						}
@@ -381,7 +381,7 @@ public class MethodResponseUtil {
 			ResponseVo vo = new ResponseVo();
 			vo.setField(info.getName());
 			vo.setType(info.getType());
-			vo.setDescribe(info.getDescribe());
+			vo.setName(info.getDescribe());
 			vo.setFieldName(info.getField());// 字段名
 			if (null != info.getChildren() && info.getChildren().size() > 0) {
 				vo.setChildren(extractField(info.getChildren()));
@@ -419,7 +419,7 @@ public class MethodResponseUtil {
 		if (tempVo != null) {
 			tempVo.setRequired(param.required());
 			if (!FieldUtil.isEmpty(param.describe())) {
-				tempVo.setDescribe(param.describe());
+				tempVo.setName(param.describe());
 			}
 		}
 	}

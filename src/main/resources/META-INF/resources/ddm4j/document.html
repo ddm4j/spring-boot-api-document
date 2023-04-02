@@ -249,7 +249,7 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item.describe}}</td>
+									<td class="left">{{item.name}}</td>
 									<td class="length">{{(item.min || item.min == 0)?item.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item.max || item.max == 0)?item.max:'-'}}</td>
 									<td class="reg">{{item.regexp}}</td>
 								</tr>
@@ -280,7 +280,7 @@ body {
 									<td class="type">{{item.type}}</td>
 									<td class="required">
 										<span class="required_true">是</span>
-									<td class="left">{{item.describe}}</td>
+									<td class="left">{{item.name}}</td>
 									<td class="length">{{(item.min || item.min == 0)?item.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item.max || item.max == 0)?item.max:'-'}}</td>
 									<td class="reg">{{item.regexp}}</td>
 								</tr>
@@ -328,7 +328,7 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item.describe}}</td>
+									<td class="left">{{item.name}}</td>
 									<td class="length">{{(item.min || item.min == 0)?item.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item.max || item.max == 0)?item.max:'-'}}</td>
 									<td class="reg">{{item.regexp}}</td>
 									
@@ -349,7 +349,7 @@ body {
 									<td class="required"><span v-if="item2.required"
 										class="required_true">是</span> <span v-if="!item2.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item2.describe}}</td>
+									<td class="left">{{item2.name}}</td>
 									<td class="length">{{(item2.min || item2.min == 0)?item2.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item2.max || item2.max == 0)?item2.max:'-'}}</td>
 									<td class="reg">{{item2.regexp}}</td>
 								</tr>
@@ -369,7 +369,7 @@ body {
 										class="required_true">是</span> <span v-if="!item3.required"
 										class="required_false">否</span></td>
 									
-									<td class="left">{{item3.describe}}</td>
+									<td class="left">{{item3.name}}</td>
 									<td class="length">{{(item3.min || item3.min == 0 )?item3.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item3.max || item3.max == 0)?item3.max:'-'}}</td>
 									<td class="reg">{{item3.regexp}}</td>
 								</tr>
@@ -388,7 +388,7 @@ body {
 									<td class="required"><span v-if="item4.required"
 										class="required_true">是</span> <span v-if="!item4.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item4.describe}}</td>
+									<td class="left">{{item4.name}}</td>
 									<td class="length">{{(item4.min || item4.min == 0)?item4.min:'-'}}&nbsp;&nbsp;/&nbsp;&nbsp;{{(item4.max || item4.max == 0)?item4.max:'-'}}</td>
 									<td class="reg">{{item4.regexp}}</td>
 								</tr>
@@ -428,7 +428,7 @@ body {
 									<td class="required"><span v-if="item.required"
 										class="required_true">是</span> <span v-if="!item.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item.describe}}</td>
+									<td class="left">{{item.name}}</td>
 								</tr>
 								<template v-if="show.response.one[index].show"
 									v-for="(item2,index2) in item.children"> <!-- 第二层 -->
@@ -445,7 +445,7 @@ body {
 									<td class="required"><span v-if="item2.required"
 										class="required_true">是</span> <span v-if="!item2.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item2.describe}}</td>
+									<td class="left">{{item2.name}}</td>
 								</tr>
 								<template v-if="show.response.two[index2].show"
 									v-for="(item3,index3) in item2.children"> <!-- 第三层 -->
@@ -462,7 +462,7 @@ body {
 									<td class="required"><span v-if="item3.required"
 										class="required_true">是</span> <span v-if="!item3.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item3.describe}}</td>
+									<td class="left">{{item3.name}}</td>
 								</tr>
 								<!-- 第四层 -->
 								<tr v-if="show.response.three[index3].show"
@@ -476,7 +476,7 @@ body {
 									<td class="required"><span v-if="item4.required"
 										class="required_true">是</span> <span v-if="!item4.required"
 										class="required_false">否</span></td>
-									<td class="left">{{item4.describe}}</td>
+									<td class="left">{{item4.name}}</td>
 								</tr>
 								</template> </template> </template>
 							</tbody>
@@ -753,7 +753,7 @@ body {
         		// 整理URI参数
         		if(that.test_uri_params && that.test_uri_params.length > 0){
         			that.test_uri_params.forEach(function(item,index){
-        				url = url.replaceAll("{"+item.field+"}",item.value);
+        				url = url.replace("{"+item.field+"}",item.value);
         			});
         		}
         		// 整理Get请求参数

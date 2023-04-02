@@ -8,7 +8,7 @@ public abstract class ParamBaseVo implements Serializable {
 	private String fieldName;
 	private String type;
 	private boolean required = false;
-	private String describe;
+	private String name;
 
 	public String getField() {
 		return field;
@@ -42,12 +42,11 @@ public abstract class ParamBaseVo implements Serializable {
 		this.required = required;
 	}
 
-	public String getDescribe() {
-		return describe;
+	public String getName() {
+		return name;
 	}
 
-	public void setDescribe(String describe) {
-		this.describe = describe;
+	public void setName(String name) {
+		this.name = name;
 	}
-
 }

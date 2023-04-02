@@ -176,8 +176,8 @@ public class ScanControllerUtil {
 				boolean isOk = true;
 				for (HeadVo vo : ivo.getHeads()) {
 					if (vo.getField().equals(head.getField())) {
-						if (FieldUtil.isEmpty(vo.getDescribe())) {
-							vo.setDescribe(head.getDescribe());
+						if (FieldUtil.isEmpty(vo.getName())) {
+							vo.setName(head.getName());
 						}
 						isOk = false;
 						break;
@@ -218,8 +218,6 @@ public class ScanControllerUtil {
 
 	/**
 	 * 提取类上面的请求头信息
-	 * 
-	 * @param cla
 	 * @return
 	 */
 	private List<HeadVo> extractHeaderInfo() {
@@ -230,7 +228,7 @@ public class ScanControllerUtil {
 
 			vo.setField(bean.getKey());
 			if (null != bean.getValue()) {
-				vo.setDescribe(bean.getValue().getDescribe());
+				vo.setName(bean.getValue().getDescribe());
 				vo.setMax(bean.getValue().getMax());
 				vo.setMin(bean.getValue().getMin());
 				vo.setRegexp(bean.getValue().getRegexp());
