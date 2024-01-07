@@ -803,7 +803,11 @@ public class ApiParamCheck {
         info.setMessage(message);
         info.setName(apiParam.name());
         if (null == apiParam.name() || apiParam.name().trim().equals("")) {
-            info.setName(apiField.name());
+            if(null == apiField){
+                info.setName(apiParam.field());
+            }else{
+                info.setName(apiField.name());
+            }
         }
         return info;
     }
