@@ -335,7 +335,7 @@ public class ApiParamCheck {
             // 判断是不是数组和集合
             else if (value.getClass().isArray() || Collection.class.isAssignableFrom(value.getClass())) {
                 // 数组或集合
-                KVEntity<Boolean, ApiCheckInfo> info = checkParamArray(value, keys, index, apiParam, message, null);
+                KVEntity<Boolean, ApiCheckInfo> info = checkParamArray(fieldName, value, keys, index, apiParam, message, null);
                 if (null != info) {
                     empty = info.getLeft();
                     if (null != info.getRight())
@@ -344,7 +344,7 @@ public class ApiParamCheck {
             }
             // 其他类型
             else {
-                KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(value, keys, index, apiParam, message);
+                KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(fieldName, value, keys, index, apiParam, message);
                 if (null != info) {
                     empty = info.getLeft();
                     if (null != info.getRight())
@@ -382,13 +382,13 @@ public class ApiParamCheck {
      * @throws Exception
      */
     @SuppressWarnings("unchecked")
-    private KVEntity<Boolean, ApiCheckInfo> checkParamArray(Object value, String[] keys, int index, ApiParam apiParam,
+    private KVEntity<Boolean, ApiCheckInfo> checkParamArray(String paramFieldName,Object value, String[] keys, int index, ApiParam apiParam,
                                                             MessageBean message, ApiField apiField) throws Exception {
         if (value.getClass().isArray()) {
             Object[] objs = (Object[]) value;
             if (objs.length > 0) {
                 for (Object obj : objs) {
-                    KVEntity<Boolean, ApiCheckInfo> info = checkArrayValue(obj, keys, index, apiParam, message, apiField);
+                    KVEntity<Boolean, ApiCheckInfo> info = checkArrayValue(paramFieldName, obj, keys, index, apiParam, message, apiField);
                     if (null != info) {
                         return info;
                     }
@@ -406,7 +406,7 @@ public class ApiParamCheck {
         }
         if (!collection.isEmpty()) {
             for (Object obj : collection) {
-                KVEntity<Boolean, ApiCheckInfo> info = checkArrayValue(obj, keys, index, apiParam, message, apiField);
+                KVEntity<Boolean, ApiCheckInfo> info = checkArrayValue(paramFieldName, obj, keys, index, apiParam, message, apiField);
                 if (null != info) {
                     return info;
                 }
@@ -430,14 +430,14 @@ public class ApiParamCheck {
      * @return
      * @throws Exception
      */
-    private KVEntity<Boolean, ApiCheckInfo> checkArrayValue(Object obj, String[] keys, int index, ApiParam apiParam,
+    private KVEntity<Boolean, ApiCheckInfo> checkArrayValue(String paramFieldName,Object obj, String[] keys, int index, ApiParam apiParam,
                                                             MessageBean message, ApiField apiField) throws Exception {
         // 判断还是不是 数组集合
         if (obj.getClass().isArray() || List.class.isAssignableFrom(obj.getClass())
                 || Set.class.isAssignableFrom(obj.getClass())) {
-            return checkParamArray(obj, keys, index, apiParam, message, apiField);
+            return checkParamArray(paramFieldName, obj, keys, index, apiParam, message, apiField);
         } else {
-            KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(obj, keys, index, apiParam, message);
+            KVEntity<Boolean, ApiCheckInfo> info = checkFieldValue(paramFieldName, obj, keys, index, apiParam, message);
             if (null != info) {
                 return info;
             }
@@ -456,49 +456,48 @@ public class ApiParamCheck {
      * @return
      * @throws Exception
      */
-    private KVEntity<Boolean, ApiCheckInfo> checkFieldValue(Object value, String[] keys, int index, ApiParam apiParam,
+    private KVEntity<Boolean, ApiCheckInfo> checkFieldValue(String paramFieldName, Object value, String[] keys, int index, ApiParam apiParam,
                                                             MessageBean message) throws Exception {
         KVEntity<Boolean, ApiCheckInfo> info = new KVEntity<>();
         info.setLeft(true);
 
-        if (keys.length < index - 1) {
-            Object value2 = value;
-            Field field = null;
-            for (int i = index; i < keys.length; i++) {
-                field = getField(value2.getClass(), keys[i]);
-                if (null != field && i < keys.length - 1) {
-                    field.setAccessible(true);
-                    value2 = field.get(value2);
-                    ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
-                    if (null == value2) {
-                        if (apiParam.required()) {
-                            info.setRight(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired(), afi));
-                            info.setLeft(false);
-                        }
-                        return info;
-                    }
-                    if (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType())) {
-                        // 递归校验
-                        return checkParamArray(value2, keys, i + 1, apiParam, message, afi);
-                    }
-                }
-            }
-            // 校验值
-            if (null != field) {
-                info.setLeft(false);
-                field.setAccessible(true);
-                Object v = field.get(value2);
-                ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
-                // 校验值
-                ApiCheckInfo checkInfo = checkValue(v, apiParam, message, afi);
-                if (null != checkInfo) {
-                    info.setRight(checkInfo);
-                }
-            }
-        } else {
-            // 校验值
+        if(!isEmpty(paramFieldName) && paramFieldName.equals(apiParam.field()) && index == 0 && keys.length == 1){
             info.setLeft(false);
             ApiCheckInfo checkInfo = checkValue(value, apiParam, message, null);
+            if (null != checkInfo) {
+                info.setRight(checkInfo);
+            }
+        }
+
+        Object value2 = value;
+        Field field = null;
+        for (int i = index; i < keys.length; i++) {
+            field = getField(value2.getClass(), keys[i]);
+            if (null != field && i < keys.length - 1) {
+                field.setAccessible(true);
+                value2 = field.get(value2);
+                ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
+                if (null == value2) {
+                    if (apiParam.required()) {
+                        info.setRight(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired(), afi));
+                        info.setLeft(false);
+                    }
+                    return info;
+                }
+                if (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType())) {
+                    // 递归校验
+                    return checkParamArray(paramFieldName, value2, keys, i + 1, apiParam, message, afi);
+                }
+            }
+        }
+        // 校验值
+        if (null != field) {
+            info.setLeft(false);
+            field.setAccessible(true);
+            Object v = field.get(value2);
+            ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
+            // 校验值
+            ApiCheckInfo checkInfo = checkValue(v, apiParam, message, afi);
             if (null != checkInfo) {
                 info.setRight(checkInfo);
             }
