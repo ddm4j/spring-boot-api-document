@@ -460,36 +460,45 @@ public class ApiParamCheck {
                                                             MessageBean message) throws Exception {
         KVEntity<Boolean, ApiCheckInfo> info = new KVEntity<>();
         info.setLeft(true);
-        Object value2 = value;
-        Field field = null;
-        for (int i = index; i < keys.length; i++) {
-            field = getField(value2.getClass(), keys[i]);
-            if (null != field && i < keys.length - 1) {
-                field.setAccessible(true);
-                value2 = field.get(value2);
-                ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
-                if (null == value2) {
-                    if (apiParam.required()) {
-                        info.setRight(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired(), afi));
-                        info.setLeft(false);
+
+        if (keys.length < index - 1) {
+            Object value2 = value;
+            Field field = null;
+            for (int i = index; i < keys.length; i++) {
+                field = getField(value2.getClass(), keys[i]);
+                if (null != field && i < keys.length - 1) {
+                    field.setAccessible(true);
+                    value2 = field.get(value2);
+                    ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
+                    if (null == value2) {
+                        if (apiParam.required()) {
+                            info.setRight(getCheckInfo(apiParam, ApiCheckError.EMPTY, message.getRequired(), afi));
+                            info.setLeft(false);
+                        }
+                        return info;
                     }
-                    return info;
-                }
-                if (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType())) {
-                    // 递归校验
-                    return checkParamArray(value2, keys, i + 1, apiParam, message, afi);
+                    if (field.getType().isArray() || Collection.class.isAssignableFrom(field.getType())) {
+                        // 递归校验
+                        return checkParamArray(value2, keys, i + 1, apiParam, message, afi);
+                    }
                 }
             }
-        }
-
-        // 校验值
-        if (null != field) {
-            info.setLeft(false);
-            field.setAccessible(true);
-            Object v = field.get(value2);
-            ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
             // 校验值
-            ApiCheckInfo checkInfo = checkValue(v, apiParam, message, afi);
+            if (null != field) {
+                info.setLeft(false);
+                field.setAccessible(true);
+                Object v = field.get(value2);
+                ApiField afi = AnnotationUtils.getAnnotation(field, ApiField.class);
+                // 校验值
+                ApiCheckInfo checkInfo = checkValue(v, apiParam, message, afi);
+                if (null != checkInfo) {
+                    info.setRight(checkInfo);
+                }
+            }
+        } else {
+            // 校验值
+            info.setLeft(false);
+            ApiCheckInfo checkInfo = checkValue(value, apiParam, message, null);
             if (null != checkInfo) {
                 info.setRight(checkInfo);
             }
@@ -803,9 +812,9 @@ public class ApiParamCheck {
         info.setMessage(message);
         info.setName(apiParam.name());
         if (null == apiParam.name() || apiParam.name().trim().equals("")) {
-            if(null == apiField){
+            if (null == apiField) {
                 info.setName(apiParam.field());
-            }else{
+            } else {
                 info.setName(apiField.name());
             }
         }
