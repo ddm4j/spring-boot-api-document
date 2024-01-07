@@ -1,6 +1,7 @@
 package com.github.ddm4j.api.document.common.check;
 
 import com.github.ddm4j.api.document.common.exception.bean.ApiCheckInfo;
+import org.aspectj.lang.ProceedingJoinPoint;
 
 import java.util.List;
 
@@ -14,5 +15,5 @@ public interface ApiParamCheckFailHandler {
      * @param infoList 异常校验失败集合
      * @return null 表示忽略，继续向下执行，反之为拦截，不执行
      */
-    Object checkApiParamFail(List<ApiCheckInfo> infoList);
+    Object checkApiParamFail(ProceedingJoinPoint jp, Object resultVo, List<ApiCheckInfo> infoList) throws Exception;
 }

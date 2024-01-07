@@ -673,7 +673,7 @@ body {
         	drag(el, bindings){
        	      el.onmousedown = function(e) {
        	    	// 限制，只能是拖动标题才能移动
-       	    	if(e.path[0].id != "test_bar"){
+       	    	if(e.target.id != "test_bar"){
        	    		return;
        	    	}
        	        var disx = e.pageX - el.offsetLeft;

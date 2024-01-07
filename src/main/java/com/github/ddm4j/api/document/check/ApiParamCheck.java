@@ -130,7 +130,7 @@ public class ApiParamCheck {
             if (null == infos || infos.isEmpty()) {
                 return jp.proceed();
             } else {
-                result = apiParamCheckFailHandler.checkApiParamFail(infos);
+                result = apiParamCheckFailHandler.checkApiParamFail(jp, findResultObject(jp), infos);
                 if (null == result) {
                     result = jp.proceed();
                 }
@@ -142,6 +142,28 @@ public class ApiParamCheck {
             }
         }
         return jp.proceed();
+    }
+
+    /**
+     * 获取返回值对象
+     *
+     * @param jp
+     * @return
+     */
+    private Object findResultObject(ProceedingJoinPoint jp) {
+        MethodSignature signature = (MethodSignature) jp.getSignature();
+        Class returnType = signature.getReturnType();
+
+        if (!returnType.equals(Void.class)) {
+            try {
+                return returnType.newInstance();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     /**
@@ -718,6 +740,7 @@ public class ApiParamCheck {
 
     /**
      * 获致正则表达式
+     *
      * @param regexp
      * @return
      */
@@ -725,7 +748,7 @@ public class ApiParamCheck {
         if (isEmpty(regexp)) {
             return null;
         }
-        if (regexp.startsWith("${") && regexp.endsWith("}")) {
+        if ((regexp.startsWith("${") || regexp.startsWith("#{")) && regexp.endsWith("}")) {
             String key = regexp.substring(2, regexp.length() - 1);
             String reg = config.getRegexps().get(key);
             if (isEmpty(reg)) {
@@ -739,6 +762,7 @@ public class ApiParamCheck {
 
     /**
      * 获取错误消息
+     *
      * @param apiParam
      * @return
      */
@@ -779,13 +803,14 @@ public class ApiParamCheck {
         info.setMessage(message);
         info.setName(apiParam.name());
         if (null == apiParam.name() || apiParam.name().trim().equals("")) {
-           info.setName(apiField.name());
+            info.setName(apiField.name());
         }
         return info;
     }
 
     /**
      * 获取属性
+     *
      * @param cla
      * @param key
      * @return
