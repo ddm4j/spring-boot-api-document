@@ -20,6 +20,9 @@ spring-boot-api-document 是一个基本SpringBoot开发的一个接口文档管
 
 # 版本历史
 ```
+ 2.7.1 : 1.解决接口文档上，测试窗口，不能移动问题。
+         2.接口 ApiParamCheckFailHandler，增加 返回值对象传入。
+         3.接口 regexp 校验，支持使用 #{} 方式获取。
  2.7.0 : 1.增加 校验失败处理 接口 ApiParamCheckFailHandler，必须实现该接口，可用于校验失败后是否继续执行或返回错误信息，
          2.删除 ApiParam 注解 describe 属性。
          3.修复接口文档上测试窗口，uri 上需要携带参数，测试异常问题。 
