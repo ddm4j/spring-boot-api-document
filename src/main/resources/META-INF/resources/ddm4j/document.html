@@ -1149,9 +1149,9 @@ body {
                     	}
                     }
                 }
-                
-                
-                if(!interfaces.json){
+
+                if(!interfaces.json && this.test_params && that.test_params.length > 0){
+					console.log(this.test_params);
                 	this.test_params.forEach(function(item,index){
                 		if(item.type.indexOf("Array") == 0){
                 			item['array'] = 1;

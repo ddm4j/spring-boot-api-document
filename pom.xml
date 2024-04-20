@@ -5,7 +5,7 @@
 	<groupId>com.github.ddm4j</groupId>
 	<artifactId>spring-boot-api-document</artifactId>
 	<name>spring-boot-api-document</name>
-	<version>2.7.2</version>
+	<version>2.7.3</version>
 	<packaging>jar</packaging>
 	<url>https://github.com/ddm4j/spring-boot-api-document</url>
 	<description>spring boot api document</description>
