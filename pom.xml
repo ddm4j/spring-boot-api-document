@@ -5,7 +5,7 @@
 	<groupId>com.github.ddm4j</groupId>
 	<artifactId>spring-boot-api-document</artifactId>
 	<name>spring-boot-api-document</name>
-	<version>2.7.3</version>
+	<version>2.7.4</version>
 	<packaging>jar</packaging>
 	<url>https://github.com/ddm4j/spring-boot-api-document</url>
 	<description>spring boot api document</description>
@@ -31,9 +31,15 @@
 	<!-- 开发者信息 -->
 	<developers>
 		<developer>
+			<!--对应你maven配置中的server id-->
+			<id>ossrh</id>
 			<name>DDM</name>
 			<email>916951890@qq.com</email>
 			<url>https://github.com/ddm4j/spring-boot-api-document</url>
+			<roles>
+				<role>Project Manager</role>
+				<role>Developer</role>
+			</roles>
 		</developer>
 	</developers>
 
@@ -47,20 +53,16 @@
 	<build>
 		<plugins>
 			<!--配置生成Javadoc包 -->
-			<!--Compiler -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
+			<!--   javadoc插件 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-<!--				 <version>2.10.4</version>-->
+				<version>3.1.1</version>
 				<configuration>
-					<encoding>UTF-8</encoding>
-					<aggregate>true</aggregate>
 					<charset>UTF-8</charset>
+					<encoding>UTF-8</encoding>
 					<docencoding>UTF-8</docencoding>
+					<additionalJOption>-Xdoclint:none</additionalJOption>
 				</configuration>
 				<executions>
 					<execution>
@@ -68,9 +70,6 @@
 						<goals>
 							<goal>jar</goal>
 						</goals>
-						<configuration>
-							<additionalparam>-Xdoclint:none</additionalparam>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -90,22 +89,32 @@
 			</plugin>
 			<!--Nexus Staging Maven插件是将组件部署到OSSRH并将其发布到Central Repository的推荐方法 -->
 			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.7</version>
-				<extensions>true</extensions>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.2.0</version>
 				<configuration>
-					<serverId>sonatype-nexus-staging</serverId>
-					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+					<encoding>UTF-8</encoding>
+					<resources>
+						<resource>
+							<directory>src/main/resources</directory>
+							<filtering>false</filtering>
+						</resource>
+					</resources>
 				</configuration>
 			</plugin>
-			<!-- release plugin,用于发布到release仓库部署插件 -->
+			<!--   central发布插件    -->
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.4.2</version>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>0.4.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>ossrh</publishingServerId>
+					<tokenAuth>true</tokenAuth>
+				</configuration>
 			</plugin>
+
+
 			<!--Maven GPG插件用于使用以下配置对组件进行签名 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -121,15 +130,15 @@
 					</execution>
 				</executions>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-        </plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>8</source>
+					<target>8</target>
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
 
 	<!-- 【注】snapshotRepository 与 repository 中的 id 一定要与 setting.xml 中 server 

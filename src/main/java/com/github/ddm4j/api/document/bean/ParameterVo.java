@@ -5,23 +5,23 @@ import java.io.Serializable;
 public class ParameterVo extends ParamChildrenVo implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String regexp;
-	private Integer min;
-	private Integer max;
+	private Long min;
+	private Long max;
 	private boolean get;
 
-	public Integer getMin() {
+	public Long getMin() {
 		return min;
 	}
 
-	public void setMin(Integer min) {
+	public void setMin(Long min) {
 		this.min = min;
 	}
 
-	public Integer getMax() {
+	public Long getMax() {
 		return max;
 	}
 
-	public void setMax(Integer max) {
+	public void setMax(Long max) {
 		this.max = max;
 	}
 

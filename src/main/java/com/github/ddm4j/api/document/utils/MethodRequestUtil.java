@@ -130,8 +130,8 @@ public class MethodRequestUtil {
 							}
 							uriVo.setRequired(param.required());
 
-							uriVo.setMax(2147483647 == param.max() ? null : param.max());
-							uriVo.setMin(-2147483648 == param.min() ? null : param.min());
+							uriVo.setMax(Long.MAX_VALUE == param.max() ? null : param.max());
+							uriVo.setMin(Long.MIN_VALUE == param.min() ? null : param.min());
 
 							uriVo.setRegexp(getRegexp(param.regexp()));
 						}
@@ -154,8 +154,8 @@ public class MethodRequestUtil {
 							}
 							headVo.setRequired(param.required());
 
-							headVo.setMax(2147483647 == param.max() ? null : param.max());
-							headVo.setMin(-2147483648 == param.min() ? null : param.min());
+							headVo.setMax(Long.MAX_VALUE == param.max() ? null : param.max());
+							headVo.setMin(Long.MIN_VALUE == param.min() ? null : param.min());
 
 							headVo.setRegexp(getRegexp(param.regexp()));
 						}
@@ -561,8 +561,8 @@ public class MethodRequestUtil {
 			tempVo.setRegexp(getRegexp(param.regexp()));
 
 			// 最大或最小
-			tempVo.setMax(2147483647 == param.max() ? null : param.max());
-			tempVo.setMin(-2147483648 == param.min() ? null : param.min());
+			tempVo.setMax(Long.MAX_VALUE == param.max() ? null : param.max());
+			tempVo.setMin(Long.MIN_VALUE == param.min() ? null : param.min());
 			
 			// 所有上级，设置为必须
 			if(tempVo.isRequired()) {

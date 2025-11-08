@@ -7,8 +7,8 @@ public class RequestHeaderBean {
 	private String type;
 	private Boolean required = false;
 	private String regexp;
-	private Integer min;
-	private Integer max;
+	private Long min;
+	private Long max;
 	private String describe;
 
 	public String getType() {
@@ -35,19 +35,19 @@ public class RequestHeaderBean {
 		this.regexp = regexp;
 	}
 
-	public Integer getMin() {
+	public Long getMin() {
 		return min;
 	}
 
-	public void setMin(Integer min) {
+	public void setMin(Long min) {
 		this.min = min;
 	}
 
-	public Integer getMax() {
+	public Long getMax() {
 		return max;
 	}
 
-	public void setMax(Integer max) {
+	public void setMax(Long max) {
 		this.max = max;
 	}
 
