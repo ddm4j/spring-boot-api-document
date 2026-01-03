@@ -66,14 +66,14 @@ public @interface ApiParam {
      *
      * @return 最小值
      */
-    public long min() default Long.MAX_VALUE;
+    public long min() default Long.MIN_VALUE;
 
     /**
      * 数字类型判断值,字符串判断长度,设置的值不能是：2147483647
      *
      * @return 最大值
      */
-    public long max() default Long.MIN_VALUE;
+    public long max() default Long.MAX_VALUE;
 
     /**
      * 名称
